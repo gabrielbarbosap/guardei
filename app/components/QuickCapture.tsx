@@ -38,17 +38,26 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
     setLocating(true);
     setStep("preview");
 
-    // agora pede GPS, depois que a câmera já foi liberada
+    // tenta GPS preciso; se falhar cai para localização por rede (WiFi/antena)
     navigator.geolocation.getCurrentPosition(
       (pos) => {
         setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
         setLocating(false);
       },
       () => {
-        setLocating(false);
-        setErrorMsg("Não foi possível obter a localização. Permita o acesso e tente de novo.");
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+            setLocating(false);
+          },
+          () => {
+            setLocating(false);
+            setErrorMsg("Não foi possível obter a localização. Verifique as permissões do navegador.");
+          },
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+        );
       },
-      { enableHighAccuracy: true, timeout: 15000 },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
     );
   }
 
