@@ -6,6 +6,7 @@ import type { FirebaseError } from "firebase/app";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import MapView from "../components/MapView";
 import UploadForm from "../components/UploadForm";
+import QuickCapture from "../components/QuickCapture";
 import { auth, signOutUser } from "@/lib/auth";
 import { getLocations, deleteLocation } from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
@@ -143,6 +144,11 @@ export default function MapPage() {
           </div>
         </div>
       </header>
+
+      {/* ── QUICK CAPTURE ── */}
+      {!selectedLocation && (
+        <QuickCapture userId={user!.uid} onCaptured={handleUploaded} />
+      )}
 
       {/* ── UPLOAD PANEL floats top-left ── */}
       {selectedLocation && (
