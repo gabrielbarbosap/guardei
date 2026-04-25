@@ -8,7 +8,7 @@ type Props = {
   onCaptured: () => Promise<void>;
 };
 
-type Step = "idle" | "locating" | "preview" | "saving";
+type Step = "idle" | "preview" | "saving";
 
 export default function QuickCapture({ userId, onCaptured }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
@@ -16,69 +16,56 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [locating, setLocating] = useState(false);
   const [description, setDescription] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // pendingFile holds a file that arrived before GPS was ready
-  const pendingFile = useRef<File | null>(null);
-
+  // abre só a câmera — GPS vem depois
   function handleButtonClick() {
     setErrorMsg("");
-    setStep("locating");
-
-    // start GPS
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        const loc = { lat: pos.coords.latitude, lng: pos.coords.longitude };
-        setCoords(loc);
-        // if photo was already chosen, go straight to preview
-        if (pendingFile.current) {
-          const url = URL.createObjectURL(pendingFile.current);
-          setFile(pendingFile.current);
-          setPreviewUrl(url);
-          pendingFile.current = null;
-          setStep("preview");
-        }
-      },
-      () => {
-        setErrorMsg("Não foi possível obter sua localização. Permita o acesso e tente de novo.");
-        setStep("idle");
-        pendingFile.current = null;
-      },
-      { enableHighAccuracy: true, timeout: 15000 },
-    );
-
-    // open camera immediately in parallel
     inputRef.current?.click();
   }
 
   function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const chosen = e.target.files?.[0] ?? null;
     e.target.value = "";
-    if (!chosen) { setStep("idle"); return; }
+    if (!chosen) return;
 
-    if (coords) {
-      // GPS already ready
-      const url = URL.createObjectURL(chosen);
-      setFile(chosen);
-      setPreviewUrl(url);
-      setStep("preview");
-    } else {
-      // wait for GPS
-      pendingFile.current = chosen;
-      // step stays "locating" — spinner shows
-    }
+    const url = URL.createObjectURL(chosen);
+    setFile(chosen);
+    setPreviewUrl(url);
+    setCoords(null);
+    setLocating(true);
+    setStep("preview");
+
+    // agora pede GPS, depois que a câmera já foi liberada
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setLocating(false);
+      },
+      () => {
+        setLocating(false);
+        setErrorMsg("Não foi possível obter a localização. Permita o acesso e tente de novo.");
+      },
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
   }
 
   async function handleSave() {
-    if (!file || !coords) return;
+    if (!file) return;
+    if (!coords) {
+      setErrorMsg("Aguarde a localização ser detectada.");
+      return;
+    }
     setStep("saving");
+    setErrorMsg("");
     try {
       await uploadPhoto({ file, lat: coords.lat, lng: coords.lng, description, userId });
       await onCaptured();
       reset();
     } catch {
-      setErrorMsg("Falha ao salvar a memória.");
+      setErrorMsg("Falha ao salvar. Tente de novo.");
       setStep("preview");
     }
   }
@@ -89,8 +76,9 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setCoords(null);
+    setLocating(false);
     setDescription("");
-    pendingFile.current = null;
+    setErrorMsg("");
   }
 
   return (
@@ -118,7 +106,7 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
             boxShadow: "0 4px 24px rgba(42,31,20,0.45)",
             display: "flex", alignItems: "center", justifyContent: "center",
             cursor: "pointer", color: "var(--paper-50)",
-            transition: "transform 0.15s ease, box-shadow 0.15s ease",
+            transition: "transform 0.15s ease",
           }}
           onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1.08)"; }}
           onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.transform = "scale(1)"; }}
@@ -131,26 +119,8 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
         </button>
       )}
 
-      {/* ── LOCATING spinner ── */}
-      {step === "locating" && (
-        <div style={{
-          position: "fixed", bottom: 32, right: 28, zIndex: 55,
-          width: 60, height: 60, borderRadius: "50%",
-          background: "var(--ink-900)",
-          border: "2px solid var(--paper-300)",
-          boxShadow: "0 4px 24px rgba(42,31,20,0.45)",
-          display: "flex", alignItems: "center", justifyContent: "center",
-        }}>
-          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="var(--paper-50)" strokeWidth="2" strokeLinecap="round">
-            <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
-              <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
-            </path>
-          </svg>
-        </div>
-      )}
-
-      {/* ── PREVIEW panel ── */}
-      {(step === "preview" || step === "saving") && previewUrl && coords && (
+      {/* ── PREVIEW / SAVING panel ── */}
+      {(step === "preview" || step === "saving") && previewUrl && (
         <div style={{
           position: "fixed", inset: 0, zIndex: 60,
           display: "flex", alignItems: "flex-end", justifyContent: "center",
@@ -172,27 +142,41 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
             }} />
 
             <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
-              {/* photo thumbnail */}
+              {/* thumbnail */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
                 alt="preview"
                 style={{
                   width: 96, height: 96, objectFit: "cover",
-                  borderRadius: "var(--radius-sm)",
-                  flexShrink: 0,
+                  borderRadius: "var(--radius-sm)", flexShrink: 0,
                   border: "1px solid var(--paper-300)",
                 }}
               />
-              <div style={{ flex: 1 }}>
-                {/* coords badge */}
+              <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
+                {/* localização */}
                 <div style={{
                   fontFamily: "var(--font-mono)", fontSize: 10,
-                  letterSpacing: "0.15em", textTransform: "uppercase",
-                  color: "var(--ink-500)", marginBottom: 8,
+                  letterSpacing: "0.12em", textTransform: "uppercase",
+                  color: locating ? "var(--ink-400)" : "var(--ink-600)",
+                  display: "flex", alignItems: "center", gap: 6,
                 }}>
-                  📍 {coords.lat.toFixed(5)}, {coords.lng.toFixed(5)}
+                  {locating ? (
+                    <>
+                      <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
+                        <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83">
+                          <animateTransform attributeName="transform" type="rotate" from="0 12 12" to="360 12 12" dur="1s" repeatCount="indefinite"/>
+                        </path>
+                      </svg>
+                      obtendo localização…
+                    </>
+                  ) : coords ? (
+                    <>📍 {coords.lat.toFixed(4)}, {coords.lng.toFixed(4)}</>
+                  ) : (
+                    <>📍 localização indisponível</>
+                  )}
                 </div>
+
                 <textarea
                   autoFocus
                   rows={3}
@@ -205,8 +189,7 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
                     color: "var(--ink-800)", background: "var(--paper-100)",
                     border: "1px solid var(--paper-300)",
                     borderRadius: "var(--radius-sm)",
-                    padding: "8px 10px", lineHeight: 1.5,
-                    outline: "none",
+                    padding: "8px 10px", lineHeight: 1.5, outline: "none",
                   }}
                 />
               </div>
@@ -236,24 +219,26 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
               </button>
               <button
                 onClick={handleSave}
-                disabled={step === "saving"}
+                disabled={step === "saving" || locating}
                 style={{
                   flex: 2, padding: "12px",
                   fontFamily: "var(--font-mono)", fontSize: 12,
                   letterSpacing: "0.1em", textTransform: "uppercase",
-                  background: "var(--ink-900)", border: "none",
-                  borderRadius: "var(--radius-sm)", cursor: "pointer",
+                  background: locating ? "var(--ink-600)" : "var(--ink-900)",
+                  border: "none", borderRadius: "var(--radius-sm)",
+                  cursor: locating ? "default" : "pointer",
                   color: "var(--paper-50)",
+                  transition: "background 0.2s",
                 }}
               >
-                {step === "saving" ? "guardando…" : "guardar aqui"}
+                {step === "saving" ? "guardando…" : locating ? "aguardando gps…" : "guardar aqui"}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* error toast when step is idle */}
+      {/* error toast fora do preview */}
       {step === "idle" && errorMsg && (
         <div style={{
           position: "fixed", bottom: 104, right: 28, zIndex: 55,
