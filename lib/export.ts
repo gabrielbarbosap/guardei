@@ -147,22 +147,27 @@ export async function exportPolaroid(location: LocationPhoto): Promise<void> {
   ctx.restore();
 
   // ── 3. Branding ─────────────────────────────────────────────────────────
+  // logo + "guardei," side by side, centered
+  const logoSize = 72;
+  ctx.font = "italic 52px Georgia, serif";
+  const textW = ctx.measureText("guardei,").width;
+  const gap = 16;
+  const groupW = logoSize + gap + textW;
+  const groupX = W / 2 - groupW / 2;
+
   if (logoImg) {
-    const logoSize = 110;
     ctx.globalAlpha = 0.85;
-    ctx.drawImage(logoImg, W / 2 - logoSize / 2, H - 148, logoSize, logoSize);
+    ctx.drawImage(logoImg, groupX, H - logoSize - 38, logoSize, logoSize);
     ctx.globalAlpha = 1;
-  } else {
-    ctx.fillStyle = "rgba(250,246,236,0.90)";
-    ctx.font = "italic 42px Georgia, serif";
-    ctx.textAlign = "center";
-    ctx.fillText("guardei,", W / 2, H - 58);
   }
+  ctx.fillStyle = "rgba(250,246,236,0.90)";
+  ctx.textAlign = "left";
+  ctx.fillText("guardei,", groupX + logoSize + gap, H - 38 + logoSize / 2 + 18);
 
   ctx.fillStyle = "rgba(250,246,236,0.45)";
   ctx.font = "13px 'Courier New', monospace";
   ctx.textAlign = "center";
-  ctx.fillText("guardei.art  ·  suas memórias no mapa", W / 2, H - 20);
+  ctx.fillText("guardei.art  ·  suas memórias no mapa", W / 2, H - 14);
 
   // ── 4. Download ─────────────────────────────────────────────────────────
   const link = document.createElement("a");

@@ -385,9 +385,16 @@ export default function MapView({
               }}>
                 {selected.description}
               </p>
-              <div style={{ marginTop: 8, display: "flex", justifyContent: "center" }}>
+              <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src="/photos/logo.svg" alt="guardei" style={{ height: 24, width: "auto", opacity: 0.5 }} />
+                <img src="/photos/logo.svg" alt="" style={{ height: 20, width: "auto", opacity: 0.5 }} />
+                <p style={{
+                  margin: 0,
+                  fontFamily: "var(--font-cinzel-decorative)",
+                  fontSize: 9, letterSpacing: "0.3em",
+                  textTransform: "uppercase",
+                  color: "var(--ink-400)",
+                }}>guardei</p>
               </div>
             </div>
           </Popup>
