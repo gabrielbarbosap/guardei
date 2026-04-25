@@ -6,6 +6,7 @@ import { uploadPhoto } from "@/lib/upload";
 type Props = {
   userId: string;
   onCaptured: () => Promise<void>;
+  preloadedCoords: { lat: number; lng: number } | null;
 };
 
 type Step = "idle" | "preview" | "saving";
@@ -27,9 +28,8 @@ function getLocation(): Promise<{ lat: number; lng: number }> {
   });
 }
 
-export default function QuickCapture({ userId, onCaptured }: Props) {
+export default function QuickCapture({ userId, onCaptured, preloadedCoords }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
-  // guarda a Promise de localização iniciada no toque do botão
   const locationPromise = useRef<Promise<{ lat: number; lng: number }> | null>(null);
 
   const [step, setStep] = useState<Step>("idle");
@@ -42,9 +42,13 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
 
   function handleButtonClick() {
     setErrorMsg("");
-    // Inicia o pedido de localização DENTRO do gesto do usuário.
-    // iOS só exibe a caixa de permissão quando chamado diretamente de um toque.
-    locationPromise.current = getLocation();
+    if (preloadedCoords) {
+      // permissão já concedida — só pega posição fresca sem dialog
+      locationPromise.current = getLocation();
+    } else {
+      // permissão ainda não concedida — pede dentro do gesto do usuário
+      locationPromise.current = getLocation();
+    }
     inputRef.current?.click();
   }
 
@@ -56,15 +60,19 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
     const url = URL.createObjectURL(chosen);
     setFile(chosen);
     setPreviewUrl(url);
-    setCoords(null);
     setLocating(true);
     setStep("preview");
 
+    // usa coords pré-carregadas enquanto aguarda leitura fresca
+    if (preloadedCoords) setCoords(preloadedCoords);
+
     try {
       const loc = await locationPromise.current;
-      setCoords(loc ?? null);
+      setCoords(loc ?? preloadedCoords);
     } catch {
-      setErrorMsg("Não foi possível obter a localização. Verifique as permissões do navegador.");
+      if (!preloadedCoords) {
+        setErrorMsg("Não foi possível obter a localização. Verifique as permissões do navegador.");
+      }
     } finally {
       setLocating(false);
       locationPromise.current = null;

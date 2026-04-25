@@ -19,6 +19,8 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [userCoords, setUserCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [showLocationPopup, setShowLocationPopup] = useState(false);
 
   async function loadLocations(uid: string) {
     try {
@@ -53,11 +55,32 @@ export default function MapPage() {
       setUser(nextUser);
       await loadLocations(nextUser.uid);
       setLoading(false);
-      // pede permissão de localização logo ao entrar, para o QuickCapture funcionar sem atraso
-      navigator.geolocation?.getCurrentPosition(() => {}, () => {}, { maximumAge: Infinity });
+      // verifica se já tem permissão concedida; se não, mostra popup próprio
+      if (navigator.permissions) {
+        const result = await navigator.permissions.query({ name: "geolocation" });
+        if (result.state === "granted") {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+            () => {},
+          );
+        } else if (result.state === "prompt") {
+          setShowLocationPopup(true);
+        }
+      } else {
+        setShowLocationPopup(true);
+      }
     });
     return () => unsubscribe();
   }, [router]);
+
+  function handleAllowLocation() {
+    setShowLocationPopup(false);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setUserCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { enableHighAccuracy: true, timeout: 15000 },
+    );
+  }
 
   if (loading) {
     return (
@@ -149,7 +172,81 @@ export default function MapPage() {
 
       {/* ── QUICK CAPTURE ── */}
       {!selectedLocation && (
-        <QuickCapture userId={user!.uid} onCaptured={handleUploaded} />
+        <QuickCapture userId={user!.uid} onCaptured={handleUploaded} preloadedCoords={userCoords} />
+      )}
+
+      {/* ── POPUP PERMISSÃO DE LOCALIZAÇÃO ── */}
+      {showLocationPopup && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 70,
+          display: "flex", alignItems: "center", justifyContent: "center",
+          background: "rgba(20,14,8,0.5)",
+          backdropFilter: "blur(4px)",
+        }}>
+          <div style={{
+            background: "var(--paper-50)",
+            border: "1px solid var(--paper-300)",
+            borderRadius: "var(--radius-md)",
+            boxShadow: "0 8px 40px rgba(42,31,20,0.22)",
+            padding: "36px 32px 28px",
+            maxWidth: 360, width: "calc(100vw - 48px)",
+            position: "relative", transform: "rotate(-0.8deg)",
+          }}>
+            <div style={{
+              position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)",
+              width: 56, height: 18, background: "rgba(244,196,48,0.55)", borderRadius: 2,
+            }} />
+
+            <div style={{
+              fontFamily: "var(--font-mono)", fontSize: 10,
+              letterSpacing: "0.2em", textTransform: "uppercase",
+              color: "var(--ink-500)", marginBottom: 12,
+            }}>localização</div>
+
+            <div style={{
+              fontFamily: "var(--font-display)", fontSize: "var(--text-lg)",
+              color: "var(--ink-900)", lineHeight: "var(--leading-snug)", marginBottom: 12,
+            }}>
+              Posso saber onde<br />você está?
+            </div>
+
+            <p style={{
+              fontFamily: "var(--font-body)", fontSize: "var(--text-sm)",
+              color: "var(--ink-600)", lineHeight: "var(--leading-body)", marginBottom: 24,
+            }}>
+              Usamos sua localização para marcar automaticamente onde cada memória aconteceu.
+            </p>
+
+            <div style={{ display: "flex", gap: 10 }}>
+              <button
+                onClick={() => setShowLocationPopup(false)}
+                style={{
+                  flex: 1, padding: "11px",
+                  fontFamily: "var(--font-mono)", fontSize: 11,
+                  letterSpacing: "0.1em", textTransform: "uppercase",
+                  background: "none", border: "1px dashed var(--paper-400)",
+                  borderRadius: "var(--radius-sm)", cursor: "pointer",
+                  color: "var(--ink-500)",
+                }}
+              >
+                agora não
+              </button>
+              <button
+                onClick={handleAllowLocation}
+                style={{
+                  flex: 2, padding: "11px",
+                  fontFamily: "var(--font-mono)", fontSize: 11,
+                  letterSpacing: "0.1em", textTransform: "uppercase",
+                  background: "var(--ink-900)", border: "none",
+                  borderRadius: "var(--radius-sm)", cursor: "pointer",
+                  color: "var(--paper-50)",
+                }}
+              >
+                permitir localização
+              </button>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* ── UPLOAD PANEL floats top-left ── */}
