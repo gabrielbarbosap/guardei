@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
+import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, signInWithEmail, signInWithGoogle, signUpWithEmail } from "@/lib/auth";
 import dynamic from "next/dynamic";
@@ -153,7 +154,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
 
         <div className="hero-globe">
           <div className="globe-frame">
-            <InkGlobe size={560} autoRotate speed={0.12} cycleInterval={4200} onFocus={setCurrentPin} />
+            <InkGlobe size={560} autoRotate speed={0.12} cycleInterval={4200} onFocus={setCurrentPin} onlyWithPhoto />
           </div>
           <div className="globe-log">
             <span className="label">agora guardando</span>
@@ -203,10 +204,11 @@ function ValueSection() {
 }
 
 const MEMORIES = [
-  { author: "Marina · 31", place: "Porto, Portugal", grad: ["#8a6f44","#d9b585"] as [string,string], body: "Guardei o som da padaria da esquina. Achei que ia esquecer em uma semana. Era ontem.", rot: -2, mood: "tomato" },
-  { author: "Tomás · 27",  place: "Salvador",        grad: ["#8a4a3a","#d9843e"] as [string,string], body: "Meu avô morreu em março. Ainda entro na pasta \"Itapuã 98\" só pra ouvir a voz dele.", rot: 3, mood: "ink" },
-  { author: "Yuki · 29",   place: "Quioto",          grad: ["#6a3a3a","#c07878"] as [string,string], body: "Vim sozinha e escrevi todo dia. Voltei com um caderno. Caderno virou livro.", rot: -3, mood: "rose" },
-  { author: "Pedro · 34",  place: "Chapada",         grad: ["#4a5a3a","#9cb079"] as [string,string], body: "A gente esquece o nome das trilhas. Aqui tá tudo escrito — e ainda cheira a eucalipto.", rot: 2, mood: "moss" },
+  { author: "Marina · 31", place: "Porto, Portugal", photo: "/photos/two-little-brothers-standing-with-skateboard-near-guardrail-against-background-seacoast-sunset.jpg", body: "Guardei o som da padaria da esquina. Achei que ia esquecer em uma semana. Era ontem.", rot: -2, mood: "tomato" },
+  { author: "Tomás · 27",  place: "Salvador",        photo: "/photos/blonde-woman-hat-white-dress-smiles-looks-boyfriend-holds-pink-camera.jpg",                          body: "Meu avô morreu em março. Ainda entro na pasta \"Itapuã 98\" só pra ouvir a voz dele.", rot: 3,  mood: "ink" },
+  { author: "Yuki · 29",   place: "Quioto",          photo: "/photos/young-sportswoman-drinking-nature.jpg",                                                               body: "Vim sozinha e escrevi todo dia. Voltei com um caderno. Caderno virou livro.", rot: -3, mood: "rose" },
+  { author: "Pedro · 34",  place: "Chapada",         photo: "/photos/evening-summer-sun-makes-halo-around-beautiful-wedding-couple.jpg",                                   body: "A gente esquece o nome das trilhas. Aqui tá tudo escrito — e ainda cheira a eucalipto.", rot: 2,  mood: "moss" },
+  { author: "Ana · 26",    place: "São Paulo",       photo: "/photos/girls-hugging-graduation.jpg",                                                                        body: "Doze anos depois, a gente se formou junto. Essa foto vale mais que o diploma.", rot: -1, mood: "highlight" },
 ];
 
 function MemoryWall() {
@@ -221,7 +223,8 @@ function MemoryWall() {
         {MEMORIES.map((m, i) => (
           <article key={m.author} className="memo-card" style={{ transform: `rotate(${m.rot}deg)` }}>
             {i % 2 === 0 ? <div className="memo-tape" /> : <div className="memo-tape alt" />}
-            <div className="memo-photo" style={{ background: `linear-gradient(135deg, ${m.grad[0]}, ${m.grad[1]})` }}>
+            <div className="memo-photo">
+              <Image src={m.photo} alt={m.place} fill style={{ objectFit: "cover" }} sizes="320px" />
               <div className="memo-stamp" style={{ color: `var(--accent-${m.mood})` }}>★</div>
               <div className="memo-photo-grain" />
             </div>

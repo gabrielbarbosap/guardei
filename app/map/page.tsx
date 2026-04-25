@@ -7,7 +7,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import MapView from "../components/MapView";
 import UploadForm from "../components/UploadForm";
 import { auth, signOutUser } from "@/lib/auth";
-import { getLocations } from "@/lib/firestore";
+import { getLocations, deleteLocation } from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
 
 export default function MapPage() {
@@ -26,6 +26,7 @@ export default function MapPage() {
       setError("");
     } catch (err) {
       const firebaseError = err as FirebaseError;
+      console.error("loadLocations error:", firebaseError.code, firebaseError.message);
       setError(
         firebaseError.code === "permission-denied"
           ? "Sem permissão para ler os pontos."
@@ -38,6 +39,11 @@ export default function MapPage() {
   async function handleUploaded() {
     await loadLocations(user!.uid);
     setSelectedLocation(null);
+  }
+
+  async function handleDelete(locationId: string) {
+    await deleteLocation(user!.uid, locationId);
+    await loadLocations(user!.uid);
   }
 
   useEffect(() => {
@@ -79,6 +85,7 @@ export default function MapPage() {
           pickLocationEnabled
           selectedLocation={selectedLocation}
           onPickLocation={setSelectedLocation}
+          onDelete={handleDelete}
         />
       </div>
 

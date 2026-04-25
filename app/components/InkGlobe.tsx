@@ -27,16 +27,17 @@ export interface GlobePin {
   place: string;
   mood: "tomato" | "ink" | "moss" | "rose" | "highlight";
   photo: string;
+  photoSrc?: string;
 }
 
 export const PINS: GlobePin[] = [
-  { id: "paris",    lat: 48.86,  lon: 2.35,   title: "Primeira viagem juntos",  place: "Paris · 2019",      mood: "tomato",    photo: "paris" },
-  { id: "tokyo",    lat: 35.68,  lon: 139.69, title: "Sozinha, finalmente",     place: "Tóquio · 2023",     mood: "rose",      photo: "tokyo" },
-  { id: "saopaulo", lat: -23.55, lon: -46.63, title: "Formatura",               place: "São Paulo · 2022",  mood: "moss",      photo: "sp" },
-  { id: "lisbon",   lat: 38.72,  lon: -9.14,  title: "Aquela manhã na Alfama", place: "Lisboa · 2024",     mood: "highlight", photo: "lisbon" },
+  { id: "paris",    lat: 48.86,  lon: 2.35,   title: "Primeira viagem juntos",  place: "Paris · 2019",      mood: "tomato",    photo: "paris",  photoSrc: "/photos/blonde-woman-hat-white-dress-smiles-looks-boyfriend-holds-pink-camera.jpg" },
+  { id: "tokyo",    lat: 35.68,  lon: 139.69, title: "Sozinha, finalmente",     place: "Tóquio · 2023",     mood: "rose",      photo: "tokyo",  photoSrc: "/photos/young-sportswoman-drinking-nature.jpg" },
+  { id: "saopaulo", lat: -23.55, lon: -46.63, title: "Formatura",               place: "São Paulo · 2022",  mood: "moss",      photo: "sp",     photoSrc: "/photos/girls-hugging-graduation.jpg" },
+  { id: "lisbon",   lat: 38.72,  lon: -9.14,  title: "Aquela manhã na Alfama", place: "Lisboa · 2024",     mood: "highlight", photo: "lisbon", photoSrc: "/photos/two-little-brothers-standing-with-skateboard-near-guardrail-against-background-seacoast-sunset.jpg" },
   { id: "nyc",      lat: 40.71,  lon: -74.00, title: "Neve pela primeira vez", place: "Nova York · 2018",  mood: "ink",       photo: "nyc" },
   { id: "marrak",   lat: 31.63,  lon: -7.98,  title: "Cheiro de hortelã",      place: "Marrakech · 2021",  mood: "tomato",    photo: "mar" },
-  { id: "rio",      lat: -22.90, lon: -43.17, title: "Virada do ano",          place: "Rio · 2020",        mood: "rose",      photo: "rio" },
+  { id: "rio",      lat: -22.90, lon: -43.17, title: "Virada do ano",          place: "Rio · 2020",        mood: "rose",      photo: "rio",    photoSrc: "/photos/evening-summer-sun-makes-halo-around-beautiful-wedding-couple.jpg" },
   { id: "bali",     lat: -8.34,  lon: 115.09, title: "Ler na varanda",         place: "Ubud · 2023",       mood: "moss",      photo: "bali" },
   { id: "cape",     lat: -33.92, lon: 18.42,  title: "Vento do cabo",          place: "Cape Town · 2022",  mood: "ink",       photo: "cape" },
   { id: "iceland",  lat: 64.13,  lon: -21.94, title: "Aurora às 3h",           place: "Reykjavík · 2024",  mood: "highlight", photo: "ice" },
@@ -126,8 +127,16 @@ function Polaroid({ pin, size }: { pin: GlobePin & Projected; size: number }) {
       }}
     >
       <div className="pt-tape" />
-      <div className="pt-photo" style={{ background: `linear-gradient(135deg, ${g1}, ${g2})` }}>
-        <div className="pt-photo-grain" />
+      <div className="pt-photo" style={{ background: `linear-gradient(135deg, ${g1}, ${g2})`, position: "relative", overflow: "hidden" }}>
+        {pin.photoSrc && (
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
+            src={pin.photoSrc}
+            alt={pin.title}
+            style={{ position: "absolute", inset: 0, width: "100%", height: "100%", objectFit: "cover" }}
+          />
+        )}
+        <div className="pt-photo-grain" style={{ position: "relative", zIndex: 1 }} />
       </div>
       <div className="pt-caption">{pin.title}</div>
       <div className="pt-place">{pin.place}</div>
@@ -142,18 +151,20 @@ export interface InkGlobeProps {
   cycleInterval?: number;
   paused?: boolean;
   onFocus?: (pin: GlobePin) => void;
+  onlyWithPhoto?: boolean;
 }
 
 export default function InkGlobe({
   size = 560, autoRotate = true, speed = 0.12,
-  cycleInterval = 4200, paused = false, onFocus,
+  cycleInterval = 4200, paused = false, onFocus, onlyWithPhoto = false,
 }: InkGlobeProps) {
   const R = size / 2 - 18;
   const cx = size / 2, cy = size / 2;
+  const activePins = onlyWithPhoto ? PINS.filter(p => p.photoSrc) : PINS;
 
   const [lonOffset, setLonOffset] = useState(0);
   const [hover, setHover] = useState<string | null>(null);
-  const [focusId, setFocusId] = useState(PINS[0].id);
+  const [focusId, setFocusId] = useState(activePins[0].id);
   const rafRef = useRef<number>(0);
   const lastTRef = useRef<number>(0);
   const userInteractRef = useRef<number>(0);
@@ -183,8 +194,8 @@ export default function InkGlobe({
     if (paused) return;
     const id = setInterval(() => {
       setFocusId(cur => {
-        const i = PINS.findIndex(p => p.id === cur);
-        return PINS[(i + 1) % PINS.length].id;
+        const i = activePins.findIndex(p => p.id === cur);
+        return activePins[(i + 1) % activePins.length].id;
       });
     }, cycleInterval);
     return () => clearInterval(id);
@@ -192,13 +203,13 @@ export default function InkGlobe({
 
   // notify parent after focusId settles — safe, runs outside render
   useEffect(() => {
-    const pin = PINS.find(p => p.id === focusId);
+    const pin = activePins.find(p => p.id === focusId);
     if (pin) onFocusRef.current?.(pin);
   }, [focusId]);
 
   useEffect(() => {
     if (hover || paused) return;
-    const pin = PINS.find(x => x.id === focusId);
+    const pin = activePins.find(x => x.id === focusId);
     if (!pin) return;
     const target = -pin.lon;
     const start = performance.now();
@@ -218,7 +229,7 @@ export default function InkGlobe({
   }, [focusId]);
 
   const projected = useMemo(
-    () => PINS.map(p => ({ ...p, ...lonLatToXY(p.lon, p.lat, lonOffset, R, cx, cy) })),
+    () => activePins.map(p => ({ ...p, ...lonLatToXY(p.lon, p.lat, lonOffset, R, cx, cy) })),
     [lonOffset, R, cx, cy],
   );
   const continents = useMemo(

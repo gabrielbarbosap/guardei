@@ -1,11 +1,12 @@
 import {
   addDoc,
   collection,
+  deleteDoc,
+  doc,
   getDocs,
   getFirestore,
   orderBy,
   query,
-  where,
 } from "firebase/firestore";
 import { app } from "./firebase";
 import type { LocationPhoto } from "@/types/location";
@@ -16,12 +17,12 @@ type NewLocationInput = Omit<LocationPhoto, "id" | "createdAt"> & {
   createdAt?: number;
 };
 
+function userLocations(userId: string) {
+  return collection(db, "users", userId, "locations");
+}
+
 export async function getLocations(userId: string): Promise<LocationPhoto[]> {
-  const q = query(
-    collection(db, "locations"),
-    where("userId", "==", userId),
-    orderBy("createdAt", "desc"),
-  );
+  const q = query(userLocations(userId), orderBy("createdAt", "desc"));
   const snapshot = await getDocs(q);
 
   return snapshot.docs.map((doc) => {
@@ -31,10 +32,13 @@ export async function getLocations(userId: string): Promise<LocationPhoto[]> {
 }
 
 export async function addLocation(input: NewLocationInput) {
-  const payload = {
-    ...input,
-    createdAt: input.createdAt ?? Date.now(),
-  };
+  const { userId, ...rest } = input;
+  await addDoc(userLocations(userId), {
+    ...rest,
+    createdAt: rest.createdAt ?? Date.now(),
+  });
+}
 
-  await addDoc(collection(db, "locations"), payload);
+export async function deleteLocation(userId: string, locationId: string) {
+  await deleteDoc(doc(db, "users", userId, "locations", locationId));
 }
