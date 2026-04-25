@@ -53,6 +53,8 @@ export default function MapPage() {
       setUser(nextUser);
       await loadLocations(nextUser.uid);
       setLoading(false);
+      // pede permissão de localização logo ao entrar, para o QuickCapture funcionar sem atraso
+      navigator.geolocation?.getCurrentPosition(() => {}, () => {}, { maximumAge: Infinity });
     });
     return () => unsubscribe();
   }, [router]);
