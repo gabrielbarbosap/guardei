@@ -42,6 +42,10 @@ export async function exportPolaroid(location: LocationPhoto): Promise<void> {
   canvas.height = H;
   const ctx = canvas.getContext("2d")!;
 
+  // preload logo (used in polaroid stamp + bottom branding)
+  let logoImg: HTMLImageElement | null = null;
+  try { logoImg = await loadImage("/photos/logo.svg"); } catch { /* skip */ }
+
   // ── 1. Map background ──────────────────────────────────────────────────
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;
   const mapUrl =
@@ -127,23 +131,38 @@ export async function exportPolaroid(location: LocationPhoto): Promise<void> {
   ctx.textAlign = "center";
   wrapText(ctx, location.description || "", W / 2, capY, pW - 56, 34);
 
-  // "guardei" stamp
-  ctx.fillStyle = "#b5a081";
-  ctx.font = "11px 'Courier New', monospace";
-  ctx.textAlign = "center";
-  ctx.fillText("G U A R D E I", W / 2, pY + pH - 18);
+  // logo stamp inside polaroid
+  if (logoImg) {
+    const stampSize = 46;
+    ctx.globalAlpha = 0.42;
+    ctx.drawImage(logoImg, W / 2 - stampSize / 2, pY + pH - stampSize - 8, stampSize, stampSize);
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.fillStyle = "#b5a081";
+    ctx.font = "11px 'Courier New', monospace";
+    ctx.textAlign = "center";
+    ctx.fillText("G U A R D E I", W / 2, pY + pH - 18);
+  }
 
   ctx.restore();
 
   // ── 3. Branding ─────────────────────────────────────────────────────────
-  ctx.fillStyle = "rgba(250,246,236,0.90)";
-  ctx.font = "italic 42px Georgia, serif";
-  ctx.textAlign = "center";
-  ctx.fillText("guardei,", W / 2, H - 58);
+  if (logoImg) {
+    const logoSize = 110;
+    ctx.globalAlpha = 0.85;
+    ctx.drawImage(logoImg, W / 2 - logoSize / 2, H - 148, logoSize, logoSize);
+    ctx.globalAlpha = 1;
+  } else {
+    ctx.fillStyle = "rgba(250,246,236,0.90)";
+    ctx.font = "italic 42px Georgia, serif";
+    ctx.textAlign = "center";
+    ctx.fillText("guardei,", W / 2, H - 58);
+  }
 
-  ctx.fillStyle = "rgba(250,246,236,0.40)";
+  ctx.fillStyle = "rgba(250,246,236,0.45)";
   ctx.font = "13px 'Courier New', monospace";
-  ctx.fillText("guardei.app  ·  suas memórias no mapa", W / 2, H - 30);
+  ctx.textAlign = "center";
+  ctx.fillText("guardei.art  ·  suas memórias no mapa", W / 2, H - 20);
 
   // ── 4. Download ─────────────────────────────────────────────────────────
   const link = document.createElement("a");

@@ -98,7 +98,10 @@ function Header({ onLogin }: { onLogin: () => void }) {
   return (
     <header className="site-header">
       <div className="site-header-inner">
-        <div className="brand">guardei<span className="amp">,</span></div>
+        <div className="brand">
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/photos/logo.svg" alt="guardei" style={{ height: 44, width: "auto" }} />
+        </div>
         <nav className="nav">
           <a href="#como">Como funciona</a>
           <a href="#memorias">Memórias</a>
@@ -269,7 +272,10 @@ function SiteFooter() {
     <footer className="site-footer">
       <div className="sf-inner">
         <div className="sf-brand">
-          <div className="brand">guardei<span className="amp">,</span></div>
+          <div className="brand">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/photos/logo.svg" alt="guardei" style={{ height: 40, width: "auto" }} />
+          </div>
           <p className="mono">um caderno de viagens que nunca se perde.</p>
         </div>
         <div className="sf-cols">

@@ -103,9 +103,8 @@ export default function MapPage() {
           display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
         }}>
           <div style={{ display: "flex", alignItems: "baseline", gap: 14 }}>
-            <span className="brand" style={{ fontSize: 24 }}>
-              guardei<span className="amp">,</span>
-            </span>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src="/photos/logo.svg" alt="guardei" style={{ height: 40, width: "auto" }} />
             <span style={{
               fontFamily: "var(--font-mono)", fontSize: 11,
               letterSpacing: "0.2em", textTransform: "uppercase",
