@@ -10,8 +10,28 @@ type Props = {
 
 type Step = "idle" | "preview" | "saving";
 
+function getLocation(): Promise<{ lat: number; lng: number }> {
+  return new Promise((resolve, reject) => {
+    navigator.geolocation.getCurrentPosition(
+      (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {
+        // fallback: localização por rede (WiFi/antena)
+        navigator.geolocation.getCurrentPosition(
+          (pos) => resolve({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+          reject,
+          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
+        );
+      },
+      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
+    );
+  });
+}
+
 export default function QuickCapture({ userId, onCaptured }: Props) {
   const inputRef = useRef<HTMLInputElement>(null);
+  // guarda a Promise de localização iniciada no toque do botão
+  const locationPromise = useRef<Promise<{ lat: number; lng: number }> | null>(null);
+
   const [step, setStep] = useState<Step>("idle");
   const [file, setFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
@@ -20,13 +40,15 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
   const [description, setDescription] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // abre só a câmera — GPS vem depois
   function handleButtonClick() {
     setErrorMsg("");
+    // Inicia o pedido de localização DENTRO do gesto do usuário.
+    // iOS só exibe a caixa de permissão quando chamado diretamente de um toque.
+    locationPromise.current = getLocation();
     inputRef.current?.click();
   }
 
-  function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
+  async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const chosen = e.target.files?.[0] ?? null;
     e.target.value = "";
     if (!chosen) return;
@@ -38,35 +60,20 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
     setLocating(true);
     setStep("preview");
 
-    // tenta GPS preciso; se falhar cai para localização por rede (WiFi/antena)
-    navigator.geolocation.getCurrentPosition(
-      (pos) => {
-        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-        setLocating(false);
-      },
-      () => {
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
-            setLocating(false);
-          },
-          () => {
-            setLocating(false);
-            setErrorMsg("Não foi possível obter a localização. Verifique as permissões do navegador.");
-          },
-          { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 },
-        );
-      },
-      { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 },
-    );
+    try {
+      const loc = await locationPromise.current;
+      setCoords(loc ?? null);
+    } catch {
+      setErrorMsg("Não foi possível obter a localização. Verifique as permissões do navegador.");
+    } finally {
+      setLocating(false);
+      locationPromise.current = null;
+    }
   }
 
   async function handleSave() {
     if (!file) return;
-    if (!coords) {
-      setErrorMsg("Aguarde a localização ser detectada.");
-      return;
-    }
+    if (!coords) { setErrorMsg("Aguarde a localização ser detectada."); return; }
     setStep("saving");
     setErrorMsg("");
     try {
@@ -88,6 +95,7 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
     setLocating(false);
     setDescription("");
     setErrorMsg("");
+    locationPromise.current = null;
   }
 
   return (
@@ -144,14 +152,12 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
             boxShadow: "0 -8px 40px rgba(42,31,20,0.25)",
             position: "relative",
           }}>
-            {/* tape */}
             <div style={{
               position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)",
               width: 56, height: 18, background: "rgba(244,196,48,0.55)", borderRadius: 2,
             }} />
 
             <div style={{ display: "flex", gap: 16, marginBottom: 20 }}>
-              {/* thumbnail */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={previewUrl}
@@ -163,7 +169,6 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
                 }}
               />
               <div style={{ flex: 1, display: "flex", flexDirection: "column", gap: 8 }}>
-                {/* localização */}
                 <div style={{
                   fontFamily: "var(--font-mono)", fontSize: 10,
                   letterSpacing: "0.12em", textTransform: "uppercase",
@@ -185,7 +190,6 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
                     <>📍 localização indisponível</>
                   )}
                 </div>
-
                 <textarea
                   autoFocus
                   rows={3}
@@ -247,7 +251,6 @@ export default function QuickCapture({ userId, onCaptured }: Props) {
         </div>
       )}
 
-      {/* error toast fora do preview */}
       {step === "idle" && errorMsg && (
         <div style={{
           position: "fixed", bottom: 104, right: 28, zIndex: 55,
