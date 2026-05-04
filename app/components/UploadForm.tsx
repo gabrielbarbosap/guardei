@@ -20,6 +20,7 @@ export default function UploadForm({
 }: UploadFormProps) {
   const [file, setFile] = useState<File | null>(null);
   const [description, setDescription] = useState("");
+  const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
 
@@ -41,9 +42,11 @@ export default function UploadForm({
         lng: selectedLocation.lng,
         description,
         userId,
+        isPublic,
       });
       setFile(null);
       setDescription("");
+      setIsPublic(false);
       await onUploaded();
     } catch {
       setError("Falha ao enviar a foto.");
@@ -109,6 +112,42 @@ export default function UploadForm({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="uma linha basta…"
           />
+        </div>
+
+        {/* public toggle */}
+        <div className="upload-field">
+          <label
+            style={{
+              display: "flex", alignItems: "center", gap: 10,
+              cursor: "pointer", userSelect: "none",
+            }}
+          >
+            <span
+              role="switch"
+              aria-checked={isPublic}
+              onClick={() => setIsPublic(v => !v)}
+              style={{
+                display: "inline-flex", alignItems: "center",
+                width: 36, height: 20, borderRadius: 10,
+                background: isPublic ? "#00b4c8" : "var(--paper-300)",
+                border: "1px solid var(--paper-400)",
+                transition: "background 0.2s",
+                cursor: "pointer", flexShrink: 0, position: "relative",
+              }}
+            >
+              <span style={{
+                position: "absolute",
+                left: isPublic ? 18 : 2,
+                width: 14, height: 14, borderRadius: "50%",
+                background: "var(--paper-50)",
+                boxShadow: "0 1px 3px rgba(0,0,0,0.2)",
+                transition: "left 0.2s",
+              }} />
+            </span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.08em", color: "var(--ink-600)" }}>
+              tornar pública{isPublic && <span style={{ marginLeft: 6, fontSize: 13 }}>🌐</span>}
+            </span>
+          </label>
         </div>
 
         {error && <p className="upload-error">{error}</p>}

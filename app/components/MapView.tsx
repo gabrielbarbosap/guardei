@@ -191,30 +191,49 @@ export default function MapView({
               latitude={location.lat}
               anchor="center"
             >
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setSelected(location); }}
-                aria-label={`Abrir foto: ${location.description}`}
-                style={{
-                  width: 48, height: 48,
-                  borderRadius: "50%",
-                  border: "2.5px solid var(--paper-50)",
-                  boxShadow: "0 2px 12px rgba(0,229,255,0.45), var(--shadow-sm)",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  padding: 0,
-                  background: "var(--paper-300)",
-                }}
-              >
-                <Image
-                  src={location.imageUrl}
-                  alt={location.description}
-                  width={48}
-                  height={48}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  unoptimized
-                />
-              </button>
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setSelected(location); }}
+                  aria-label={`Abrir foto: ${location.description}`}
+                  style={{
+                    width: 48, height: 48,
+                    borderRadius: "50%",
+                    border: location.isPublic
+                      ? "2.5px solid #00b4c8"
+                      : "2.5px solid var(--paper-50)",
+                    boxShadow: location.isPublic
+                      ? "0 2px 12px rgba(0,180,200,0.55), var(--shadow-sm)"
+                      : "0 2px 12px rgba(0,229,255,0.45), var(--shadow-sm)",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    padding: 0,
+                    background: "var(--paper-300)",
+                  }}
+                >
+                  <Image
+                    src={location.imageUrl}
+                    alt={location.description}
+                    width={48}
+                    height={48}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    unoptimized
+                  />
+                </button>
+                {location.isPublic && (
+                  <span
+                    aria-label="memória pública"
+                    style={{
+                      position: "absolute", bottom: -2, right: -2,
+                      width: 18, height: 18, borderRadius: "50%",
+                      background: "#00b4c8",
+                      border: "1.5px solid var(--paper-50)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, lineHeight: 1,
+                    }}
+                  >🌐</span>
+                )}
+              </div>
             </Marker>
           ))}
 
