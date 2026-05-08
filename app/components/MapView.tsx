@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Map, {
   Layer,
@@ -90,9 +90,18 @@ export default function MapView({
   onDelete,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
+  const popupClickedRef = useRef(false);
   const [selected, setSelected] = useState<LocationPhoto | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [zoom, setZoom] = useState(1.8);
+
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      popupClickedRef.current = !!(e.target as Element).closest(".mapboxgl-popup");
+    }
+    document.addEventListener("mousedown", onDocMouseDown, true);
+    return () => document.removeEventListener("mousedown", onDocMouseDown, true);
+  }, []);
 
   const onMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
@@ -142,7 +151,8 @@ export default function MapView({
   }
 
   function onMapClick(event: MapMouseEvent) {
-    if (selected) setSelected(null);
+    if (popupClickedRef.current) { popupClickedRef.current = false; return; }
+    if (selected) { setSelected(null); setMenuOpen(false); return; }
     if (!pickLocationEnabled) return;
     onPickLocation({ lat: event.lngLat.lat, lng: event.lngLat.lng });
   }
