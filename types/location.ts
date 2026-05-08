@@ -7,4 +7,5 @@ export type LocationPhoto = {
   imageUrl: string;
   description: string;
   createdAt: number;
+  isPublic?: boolean;
 };

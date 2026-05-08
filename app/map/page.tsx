@@ -7,7 +7,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import MapView from "../components/MapView";
 import UploadForm from "../components/UploadForm";
 import { auth, signOutUser } from "@/lib/auth";
-import { getLocations, deleteLocation } from "@/lib/firestore";
+import { getLocations, deleteLocation, ensureUsername } from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
 
 export default function MapPage() {
@@ -18,6 +18,8 @@ export default function MapPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [onboardingDismissed, setOnboardingDismissed] = useState(false);
+  const [username, setUsername] = useState<string>("");
+  const [copied, setCopied] = useState(false);
 
   async function loadLocations(uid: string) {
     try {
@@ -46,11 +48,32 @@ export default function MapPage() {
     await loadLocations(user!.uid);
   }
 
+  async function handleShareProfile() {
+    const url = `https://guardei.art/u/${username}`;
+    try {
+      await navigator.clipboard.writeText(url);
+    } catch {
+      // clipboard API fallback
+      const el = document.createElement("textarea");
+      el.value = url;
+      document.body.appendChild(el);
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    }
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  }
+
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
       if (!nextUser) { router.replace("/"); return; }
       setUser(nextUser);
       await loadLocations(nextUser.uid);
+      // ensure username in background — don't block map load
+      ensureUsername(nextUser.uid, nextUser.displayName, nextUser.email)
+        .then(setUsername)
+        .catch(console.error);
       setLoading(false);
     });
     return () => unsubscribe();
@@ -124,6 +147,28 @@ export default function MapPage() {
             }}>
               {displayName}
             </span>
+
+            {/* share profile button — only shown when username is ready */}
+            {username && (
+              <button
+                onClick={handleShareProfile}
+                title={`guardei.art/u/${username}`}
+                style={{
+                  fontFamily: "var(--font-mono)", fontSize: 11,
+                  letterSpacing: "0.12em", textTransform: "uppercase",
+                  color: copied ? "#00b4c8" : "var(--ink-600)",
+                  background: "none",
+                  border: `1px dashed ${copied ? "#00b4c8" : "var(--paper-400)"}`,
+                  borderRadius: "var(--radius-sm)", padding: "6px 14px", cursor: "pointer",
+                  transition: "all var(--duration) var(--ease-soft)",
+                  display: "flex", alignItems: "center", gap: 6,
+                }}
+              >
+                <span style={{ fontSize: 13 }}>{copied ? "✓" : "🔗"}</span>
+                {copied ? "copiado!" : "compartilhar"}
+              </button>
+            )}
+
             <button
               onClick={() => signOutUser()}
               style={{
