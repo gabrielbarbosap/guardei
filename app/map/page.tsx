@@ -23,7 +23,6 @@ export default function MapPage() {
   const [username, setUsername] = useState<string>("");
   const [copied, setCopied] = useState(false);
 
-  // "On This Day" — filter memories matching today month+day from past years
   const onThisDayMemory = useMemo(() => {
     const now = new Date();
     const currentYear = now.getFullYear();
@@ -37,7 +36,6 @@ export default function MapPage() {
         d.getFullYear() < currentYear
       );
     });
-    // getLocations returns createdAt desc, so first match is most recent
     return matches[0] ?? null;
   }, [locations]);
 
