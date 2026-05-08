@@ -1,9 +1,11 @@
 import PublicProfile from "./PublicProfile";
 
-export default function PublicProfilePage({
+// Next.js 15+: params is a Promise
+export default async function PublicProfilePage({
   params,
 }: {
-  params: { username: string };
+  params: Promise<{ username: string }>;
 }) {
-  return <PublicProfile username={params.username} />;
+  const { username } = await params;
+  return <PublicProfile username={username} />;
 }

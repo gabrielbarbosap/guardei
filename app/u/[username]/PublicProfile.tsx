@@ -91,7 +91,8 @@ export default function PublicProfile({ username }: { username: string }) {
           setLocations(locs);
           setStatus("ready");
         }
-      } catch {
+      } catch (err) {
+        console.error("[perfil público] erro ao carregar:", err);
         if (!cancelled) setStatus("not-found");
       }
     }
