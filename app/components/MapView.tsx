@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import Map, {
   Layer,
@@ -90,9 +90,20 @@ export default function MapView({
   onDelete,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
+  const popupClickedRef = useRef(false);
   const [selected, setSelected] = useState<LocationPhoto | null>(null);
   const [menuOpen, setMenuOpen] = useState(false);
   const [zoom, setZoom] = useState(1.8);
+
+  // Track whether mousedown started inside the popup (native, fires before Mapbox click)
+  useEffect(() => {
+    function onDocMouseDown(e: MouseEvent) {
+      const target = e.target as Element;
+      popupClickedRef.current = !!target.closest(".mapboxgl-popup");
+    }
+    document.addEventListener("mousedown", onDocMouseDown, true);
+    return () => document.removeEventListener("mousedown", onDocMouseDown, true);
+  }, []);
 
   const onMapLoad = useCallback(() => {
     const map = mapRef.current?.getMap();
@@ -142,7 +153,12 @@ export default function MapView({
   }
 
   function onMapClick(event: MapMouseEvent) {
-    if (selected) setSelected(null);
+    // If mousedown happened inside the popup, ignore this map click entirely
+    if (popupClickedRef.current) {
+      popupClickedRef.current = false;
+      return;
+    }
+    if (selected) { setSelected(null); setMenuOpen(false); return; }
     if (!pickLocationEnabled) return;
     onPickLocation({ lat: event.lngLat.lat, lng: event.lngLat.lng });
   }
@@ -191,30 +207,49 @@ export default function MapView({
               latitude={location.lat}
               anchor="center"
             >
-              <button
-                type="button"
-                onClick={(e) => { e.stopPropagation(); setSelected(location); }}
-                aria-label={`Abrir foto: ${location.description}`}
-                style={{
-                  width: 48, height: 48,
-                  borderRadius: "50%",
-                  border: "2.5px solid var(--paper-50)",
-                  boxShadow: "0 2px 12px rgba(0,229,255,0.45), var(--shadow-sm)",
-                  overflow: "hidden",
-                  cursor: "pointer",
-                  padding: 0,
-                  background: "var(--paper-300)",
-                }}
-              >
-                <Image
-                  src={location.imageUrl}
-                  alt={location.description}
-                  width={48}
-                  height={48}
-                  style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
-                  unoptimized
-                />
-              </button>
+              <div style={{ position: "relative", display: "inline-block" }}>
+                <button
+                  type="button"
+                  onClick={(e) => { e.stopPropagation(); setSelected(location); }}
+                  aria-label={`Abrir foto: ${location.description}`}
+                  style={{
+                    width: 48, height: 48,
+                    borderRadius: "50%",
+                    border: location.isPublic
+                      ? "2.5px solid #00b4c8"
+                      : "2.5px solid var(--paper-50)",
+                    boxShadow: location.isPublic
+                      ? "0 2px 12px rgba(0,180,200,0.55), var(--shadow-sm)"
+                      : "0 2px 12px rgba(0,229,255,0.45), var(--shadow-sm)",
+                    overflow: "hidden",
+                    cursor: "pointer",
+                    padding: 0,
+                    background: "var(--paper-300)",
+                  }}
+                >
+                  <Image
+                    src={location.imageUrl}
+                    alt={location.description}
+                    width={48}
+                    height={48}
+                    style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+                    unoptimized
+                  />
+                </button>
+                {location.isPublic && (
+                  <span
+                    aria-label="memória pública"
+                    style={{
+                      position: "absolute", bottom: -2, right: -2,
+                      width: 18, height: 18, borderRadius: "50%",
+                      background: "#00b4c8",
+                      border: "1.5px solid var(--paper-50)",
+                      display: "flex", alignItems: "center", justifyContent: "center",
+                      fontSize: 10, lineHeight: 1,
+                    }}
+                  >🌐</span>
+                )}
+              </div>
             </Marker>
           ))}
 
