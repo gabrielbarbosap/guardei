@@ -6,11 +6,14 @@ import type { PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
 import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 
+const ADMIN_EMAIL = "gabriel@sistemap.com.br";
+
 type Props = {
   value: PosterFormat;
   onChange: (f: PosterFormat) => void;
   onNext: () => void;
   onBack: () => void;
+  userEmail?: string | null;
 };
 
 const GROUPS: { size: string; formats: PosterFormat[] }[] = [
@@ -25,7 +28,8 @@ const ORIENTATION_ICON: Record<string, string> = {
   a5_landscape: "▭",
 };
 
-export default function Step2Format({ value, onChange, onNext, onBack }: Props) {
+export default function Step2Format({ value, onChange, onNext, onBack, userEmail }: Props) {
+  const isAdmin = userEmail === ADMIN_EMAIL;
   const [view, setView] = useState<"showcase" | "select">("showcase");
   const [lightbox, setLightbox] = useState<string | null>(null);
 
@@ -181,6 +185,37 @@ export default function Step2Format({ value, onChange, onNext, onBack }: Props) 
           </div>
         ))}
       </div>
+
+      {/* Card de teste — só para admin */}
+      {isAdmin && (
+        <div>
+          <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-400)", marginBottom: 8 }}>
+            🔧 interno
+          </div>
+          <button
+            onClick={() => onChange("test")}
+            style={{
+              width: "100%",
+              cursor: "pointer",
+              border: `1.5px dashed ${value === "test" ? "#b8860b" : "var(--paper-300)"}`,
+              borderRadius: "var(--radius-sm)",
+              background: value === "test" ? "rgba(184,134,11,0.07)" : "var(--paper-50)",
+              padding: "10px 14px",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              transition: "all 0.15s ease",
+            }}
+          >
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: value === "test" ? "#b8860b" : "var(--ink-500)", letterSpacing: "0.08em" }}>
+              Produto de teste
+            </span>
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 12, fontWeight: 700, color: value === "test" ? "#b8860b" : "var(--ink-700)" }}>
+              {formatPrice(POSTER_PRICES["test"])}
+            </span>
+          </button>
+        </div>
+      )}
 
       <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
         <button

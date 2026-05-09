@@ -203,6 +203,7 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
               onChange={setFormat}
               onNext={() => setStep(2)}
               onBack={onClose}
+              userEmail={user.email}
             />
           )}
 

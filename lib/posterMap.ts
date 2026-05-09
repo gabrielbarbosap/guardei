@@ -31,6 +31,8 @@ export const FORMAT_DIMS: Record<PosterFormat, { w: number; h: number; label: st
   // A5 — 14,8 × 21 cm (150 DPI)
   a5_portrait:  { w:  874, h: 1240, label: "A5 Retrato",  physical: "14,8 × 21 cm", size: "A5" },
   a5_landscape: { w: 1240, h:  874, label: "A5 Paisagem", physical: "21 × 14,8 cm", size: "A5" },
+  // Produto interno — visível apenas para gabriel@sistemap.com.br
+  test:         { w:  874, h: 1240, label: "Teste Interno", physical: "teste", size: "TEST" },
 };
 
 function latToMercatorY(lat: number): number {

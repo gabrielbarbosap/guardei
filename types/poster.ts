@@ -18,7 +18,8 @@ export type PosterFormat =
   // | "a3_landscape"
   // | "a4_landscape"
   | "a5_portrait"
-  | "a5_landscape";
+  | "a5_landscape"
+  | "test";
 
 export type PosterOrderItem = {
   locationId: string;
