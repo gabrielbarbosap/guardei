@@ -32,8 +32,8 @@ const ORIENTATION_ICON: Record<string, string> = {
 };
 
 const EXAMPLES = [
-  { label: "Retrato", img: "/exemplo-poster-retrato.jpg", aspect: "2/3" },
-  { label: "Paisagem", img: "/exemplo-poster-paisagem.png", aspect: "3/2" },
+  { label: "Retrato", img: "/photos/poster-retrato.png", aspect: "2/3" },
+  { label: "Paisagem", img: "/photos/poster-paisagem.jpg", aspect: "3/2" },
 ];
 
 export default function Step2Format({ value, onChange, onNext, onBack }: Props) {
