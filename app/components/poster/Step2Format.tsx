@@ -1,5 +1,7 @@
 "use client";
 
+import { useState } from "react";
+import Image from "next/image";
 import type { PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
 import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
@@ -29,12 +31,89 @@ const ORIENTATION_ICON: Record<string, string> = {
   a5_landscape: "▭",
 };
 
+const EXAMPLES = [
+  { label: "Retrato", img: "/exemplo-poster-retrato.jpg", aspect: "2/3" },
+  { label: "Paisagem", img: "/exemplo-poster-paisagem.png", aspect: "3/2" },
+];
+
 export default function Step2Format({ value, onChange, onNext, onBack }: Props) {
+  const [lightbox, setLightbox] = useState<string | null>(null);
+
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
       <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink-600)", margin: 0 }}>
         Escolha o tamanho e orientação do poster para impressão.
       </p>
+
+      {/* Exemplos reais */}
+      <div>
+        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-400)", marginBottom: 10 }}>
+          exemplos reais
+        </div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
+          {EXAMPLES.map(({ label, img, aspect }) => (
+            <button
+              key={label}
+              onClick={() => setLightbox(img)}
+              style={{
+                padding: 0,
+                border: "1px solid var(--paper-300)",
+                borderRadius: "var(--radius-sm)",
+                overflow: "hidden",
+                cursor: "zoom-in",
+                background: "none",
+                position: "relative",
+                aspectRatio: aspect,
+              }}
+            >
+              <Image
+                src={img}
+                alt={`Exemplo poster ${label}`}
+                fill
+                style={{ objectFit: "cover" }}
+              />
+              <div style={{
+                position: "absolute",
+                bottom: 0,
+                left: 0,
+                right: 0,
+                background: "linear-gradient(transparent, rgba(0,0,0,0.6))",
+                padding: "16px 10px 8px",
+                fontFamily: "var(--font-mono)",
+                fontSize: 10,
+                letterSpacing: "0.1em",
+                textTransform: "uppercase",
+                color: "#fff",
+                textAlign: "left",
+              }}>
+                {label}
+              </div>
+            </button>
+          ))}
+        </div>
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--ink-400)", margin: "6px 0 0", textAlign: "center" }}>
+          clique para ampliar
+        </p>
+      </div>
+
+      {/* Lightbox */}
+      {lightbox && (
+        <div
+          onClick={() => setLightbox(null)}
+          style={{
+            position: "fixed", inset: 0, zIndex: 300,
+            background: "rgba(0,0,0,0.85)",
+            display: "flex", alignItems: "center", justifyContent: "center",
+            padding: 24, cursor: "zoom-out",
+          }}
+        >
+          <img
+            src={lightbox}
+            alt="Exemplo poster ampliado"
+            style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: 4, boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
+          />
+        </div>
+      )}
 
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {GROUPS.map(({ size, formats }) => (
