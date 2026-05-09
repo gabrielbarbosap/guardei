@@ -2,6 +2,7 @@
 
 import type { PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
+import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 
 type Props = {
   value: PosterFormat;
@@ -96,6 +97,19 @@ export default function Step2Format({ value, onChange, onNext, onBack }: Props) 
                       </div>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: isSelected ? "#b8860b" : "var(--ink-400)", marginTop: 3, opacity: 0.85 }}>
                         {info.physical}
+                      </div>
+                      <div style={{
+                        marginTop: 8,
+                        fontFamily: "var(--font-mono)",
+                        fontSize: 13,
+                        fontWeight: 700,
+                        color: isSelected ? "#b8860b" : "var(--ink-800)",
+                        letterSpacing: "0.02em",
+                      }}>
+                        {formatPrice(POSTER_PRICES[key])}
+                      </div>
+                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: isSelected ? "rgba(184,134,11,0.7)" : "var(--ink-400)", marginTop: 2, letterSpacing: "0.08em" }}>
+                        + frete
                       </div>
                     </div>
                   </button>
