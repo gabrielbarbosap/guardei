@@ -13,116 +13,121 @@ type Props = {
   onBack: () => void;
 };
 
-// Agrupa formatos por tamanho de papel
 const GROUPS: { size: string; formats: PosterFormat[] }[] = [
   { size: "A2", formats: ["a2_portrait", "a2_landscape"] },
-  // { size: "A3", formats: ["a3_portrait", "a3_landscape"] },
-  // { size: "A4", formats: ["a4_landscape"] },
   { size: "A5", formats: ["a5_portrait", "a5_landscape"] },
 ];
 
 const ORIENTATION_ICON: Record<string, string> = {
   a2_portrait:  "▯",
   a2_landscape: "▭",
-  a3_portrait:  "▯",
-  a3_landscape: "▭",
-  a4_landscape: "▭",
   a5_portrait:  "▯",
   a5_landscape: "▭",
 };
 
-const EXAMPLES = [
-  { label: "Retrato", img: "/photos/poster-retrato.png", aspect: "2/3" },
-  { label: "Paisagem", img: "/photos/poster-paisagem.jpg", aspect: "3/2" },
-];
-
 export default function Step2Format({ value, onChange, onNext, onBack }: Props) {
+  const [view, setView] = useState<"showcase" | "select">("showcase");
   const [lightbox, setLightbox] = useState<string | null>(null);
 
+  /* ── SHOWCASE ── */
+  if (view === "showcase") {
+    return (
+      <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0 }}>
+
+        {/* Título */}
+        <div style={{ textAlign: "center", marginBottom: 24 }}>
+          <div style={{ fontFamily: "var(--font-display)", fontSize: 22, color: "var(--ink-900)", letterSpacing: "-0.02em" }}>
+            Seu mapa de memórias
+          </div>
+          <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink-500)", margin: "8px 0 0", lineHeight: 1.6 }}>
+            Transforme suas viagens em um poster com fotos reais e impressão profissional.
+          </p>
+        </div>
+
+        {/* Fotos lado a lado */}
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1.5fr", gap: 12, width: "100%", maxWidth: 560 }}>
+
+          {/* Retrato */}
+          <button
+            onClick={() => setLightbox("/photos/poster-retrato.png")}
+            style={{ padding: 0, border: "none", background: "none", cursor: "zoom-in", borderRadius: 8, overflow: "hidden", position: "relative", aspectRatio: "2/3", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", transition: "transform 0.2s ease" }}
+            onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.02)")}
+            onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            <Image src="/photos/poster-retrato.png" alt="Exemplo retrato" fill style={{ objectFit: "cover" }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>retrato · A2 / A5</div>
+            </div>
+          </button>
+
+          {/* Paisagem */}
+          <button
+            onClick={() => setLightbox("/photos/poster-paisagem.jpg")}
+            style={{ padding: 0, border: "none", background: "none", cursor: "zoom-in", borderRadius: 8, overflow: "hidden", position: "relative", aspectRatio: "3/2", alignSelf: "start", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", transition: "transform 0.2s ease" }}
+            onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.02)")}
+            onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
+          >
+            <Image src="/photos/poster-paisagem.jpg" alt="Exemplo paisagem" fill style={{ objectFit: "cover" }} />
+            <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>paisagem · A2 / A5</div>
+            </div>
+          </button>
+        </div>
+
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--ink-400)", margin: "10px 0 0" }}>
+          clique para ampliar
+        </p>
+
+        {/* Botões */}
+        <div style={{ display: "flex", gap: 10, marginTop: 28, width: "100%", maxWidth: 560 }}>
+          <button
+            onClick={onBack}
+            style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", padding: "11px 20px", background: "none", color: "var(--ink-500)", border: "1px dashed var(--paper-400)", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
+          >
+            ← voltar
+          </button>
+          <button
+            onClick={() => setView("select")}
+            style={{ flex: 1, fontFamily: "var(--font-mono)", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", padding: "11px 20px", background: "var(--ink-900)", color: "var(--paper-50)", border: "none", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
+          >
+            criar o meu →
+          </button>
+        </div>
+
+        {/* Lightbox */}
+        {lightbox && (
+          <div
+            onClick={() => setLightbox(null)}
+            style={{ position: "fixed", inset: 0, zIndex: 300, background: "rgba(0,0,0,0.88)", display: "flex", alignItems: "center", justifyContent: "center", padding: 24, cursor: "zoom-out" }}
+          >
+            <img src={lightbox} alt="Exemplo ampliado" style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: 6, boxShadow: "0 8px 60px rgba(0,0,0,0.7)" }} />
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  /* ── SELECT ── */
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
-      <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink-600)", margin: 0 }}>
-        Escolha o tamanho e orientação do poster para impressão.
-      </p>
 
-      {/* Exemplos reais */}
-      <div>
-        <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-400)", marginBottom: 10 }}>
-          exemplos reais
+      {/* Chamada */}
+      <div style={{ textAlign: "center", padding: "4px 0 8px" }}>
+        <div style={{ fontFamily: "var(--font-display)", fontSize: 20, color: "var(--ink-900)", letterSpacing: "-0.02em" }}>
+          Agora você vai fazer o seu ✨
         </div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10 }}>
-          {EXAMPLES.map(({ label, img, aspect }) => (
-            <button
-              key={label}
-              onClick={() => setLightbox(img)}
-              style={{
-                padding: 0,
-                border: "1px solid var(--paper-300)",
-                borderRadius: "var(--radius-sm)",
-                overflow: "hidden",
-                cursor: "zoom-in",
-                background: "none",
-                position: "relative",
-                aspectRatio: aspect,
-              }}
-            >
-              <Image
-                src={img}
-                alt={`Exemplo poster ${label}`}
-                fill
-                style={{ objectFit: "cover" }}
-              />
-              <div style={{
-                position: "absolute",
-                bottom: 0,
-                left: 0,
-                right: 0,
-                background: "linear-gradient(transparent, rgba(0,0,0,0.6))",
-                padding: "16px 10px 8px",
-                fontFamily: "var(--font-mono)",
-                fontSize: 10,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                color: "#fff",
-                textAlign: "left",
-              }}>
-                {label}
-              </div>
-            </button>
-          ))}
-        </div>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--ink-400)", margin: "6px 0 0", textAlign: "center" }}>
-          clique para ampliar
+        <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--ink-500)", margin: "6px 0 0" }}>
+          Escolha o tamanho e a orientação do poster.
         </p>
       </div>
 
-      {/* Lightbox */}
-      {lightbox && (
-        <div
-          onClick={() => setLightbox(null)}
-          style={{
-            position: "fixed", inset: 0, zIndex: 300,
-            background: "rgba(0,0,0,0.85)",
-            display: "flex", alignItems: "center", justifyContent: "center",
-            padding: 24, cursor: "zoom-out",
-          }}
-        >
-          <img
-            src={lightbox}
-            alt="Exemplo poster ampliado"
-            style={{ maxWidth: "100%", maxHeight: "90vh", borderRadius: 4, boxShadow: "0 8px 40px rgba(0,0,0,0.6)" }}
-          />
-        </div>
-      )}
-
+      {/* Cards de formato */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {GROUPS.map(({ size, formats }) => (
           <div key={size}>
-            {/* Rótulo do grupo */}
             <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-400)", marginBottom: 8 }}>
               {size}
             </div>
-
             <div style={{ display: "grid", gridTemplateColumns: `repeat(${formats.length}, 1fr)`, gap: 8 }}>
               {formats.map((key) => {
                 const info = FORMAT_DIMS[key];
@@ -150,26 +155,11 @@ export default function Step2Format({ value, onChange, onNext, onBack }: Props) 
                       transition: "all 0.15s ease",
                     }}
                   >
-                    {/* Miniatura proporcional */}
-                    <div
-                      style={{
-                        width: previewW,
-                        height: previewH,
-                        background: isSelected ? "rgba(184,134,11,0.22)" : "var(--paper-300)",
-                        border: `1px solid ${isSelected ? "rgba(184,134,11,0.5)" : "var(--paper-400)"}`,
-                        borderRadius: 2,
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        flexShrink: 0,
-                      }}
-                    >
+                    <div style={{ width: previewW, height: previewH, background: isSelected ? "rgba(184,134,11,0.22)" : "var(--paper-300)", border: `1px solid ${isSelected ? "rgba(184,134,11,0.5)" : "var(--paper-400)"}`, borderRadius: 2, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>
                       <span style={{ fontSize: 10, opacity: 0.5, color: isSelected ? "#b8860b" : "var(--ink-500)" }}>
                         {ORIENTATION_ICON[key]}
                       </span>
                     </div>
-
-                    {/* Textos */}
                     <div style={{ textAlign: "center" }}>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.06em", color: isSelected ? "#b8860b" : "var(--ink-700)", textTransform: "uppercase", fontWeight: isSelected ? 600 : 400 }}>
                         {info.label}
@@ -177,14 +167,7 @@ export default function Step2Format({ value, onChange, onNext, onBack }: Props) 
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, color: isSelected ? "#b8860b" : "var(--ink-400)", marginTop: 3, opacity: 0.85 }}>
                         {info.physical}
                       </div>
-                      <div style={{
-                        marginTop: 8,
-                        fontFamily: "var(--font-mono)",
-                        fontSize: 13,
-                        fontWeight: 700,
-                        color: isSelected ? "#b8860b" : "var(--ink-800)",
-                        letterSpacing: "0.02em",
-                      }}>
+                      <div style={{ marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 700, color: isSelected ? "#b8860b" : "var(--ink-800)", letterSpacing: "0.02em" }}>
                         {formatPrice(POSTER_PRICES[key])}
                       </div>
                       <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: isSelected ? "rgba(184,134,11,0.7)" : "var(--ink-400)", marginTop: 2, letterSpacing: "0.08em" }}>
@@ -201,7 +184,7 @@ export default function Step2Format({ value, onChange, onNext, onBack }: Props) 
 
       <div style={{ display: "flex", gap: 8, marginTop: 4 }}>
         <button
-          onClick={onBack}
+          onClick={() => setView("showcase")}
           style={{ flex: 1, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", padding: "10px", background: "none", color: "var(--ink-600)", border: "1px dashed var(--paper-400)", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
         >
           ← voltar
