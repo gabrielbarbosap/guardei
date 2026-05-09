@@ -1,11 +1,14 @@
 import admin from "firebase-admin";
 
-if (!admin.apps.length) {
-  admin.initializeApp({
-    credential: admin.credential.cert(
-      JSON.parse(process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT!)
-    ),
-  });
+function getAdminDb(): admin.firestore.Firestore {
+  if (!admin.apps.length) {
+    const serviceAccount = process.env.FIREBASE_ADMIN_SERVICE_ACCOUNT;
+    if (!serviceAccount) throw new Error("FIREBASE_ADMIN_SERVICE_ACCOUNT não configurado.");
+    admin.initializeApp({
+      credential: admin.credential.cert(JSON.parse(serviceAccount)),
+    });
+  }
+  return admin.firestore();
 }
 
-export const adminDb = admin.firestore();
+export { getAdminDb };

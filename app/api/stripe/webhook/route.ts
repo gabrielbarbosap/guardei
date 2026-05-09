@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { adminDb } from "@/lib/firebaseAdmin";
+import { getAdminDb } from "@/lib/firebaseAdmin";
 import { sendAdminNotification, sendCustomerConfirmation } from "@/lib/emails";
 import type Stripe from "stripe";
 import type { PosterOrder } from "@/types/poster";
@@ -38,7 +38,7 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      const orderRef = adminDb.collection("posterOrders").doc(orderId);
+      const orderRef = getAdminDb().collection("posterOrders").doc(orderId);
 
       // 1. Marca pedido como pago
       await orderRef.update({
