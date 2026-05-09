@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\gabri\\\\Documents\\\\Programacao\\\\autonoma\\\\rememberme\\\\.claude\\\\worktrees\\\\trusting-wright-3a9987\" -Force)",
+      "Bash(npm install *)",
+      "Bash(npx tsc *)",
+      "Bash(npm run *)",
+      "Bash(git add *)"
+    ]
+  }
+}

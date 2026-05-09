@@ -12,6 +12,7 @@ import {
   setDoc,
   where,
 } from "firebase/firestore";
+import type { PosterOrder } from "@/types/poster";
 import { app } from "./firebase";
 import type { LocationPhoto } from "@/types/location";
 
@@ -107,6 +108,13 @@ export async function ensureUsername(
 
   await setDoc(userRef, { username }, { merge: true });
   return username;
+}
+
+// ── Poster orders ──────────────────────────────────────────────────────────────
+
+export async function savePosterOrder(order: Omit<PosterOrder, "id">): Promise<string> {
+  const ref = await addDoc(collection(db, "posterOrders"), order);
+  return ref.id;
 }
 
 // ── Public profile ─────────────────────────────────────────────────────────────
