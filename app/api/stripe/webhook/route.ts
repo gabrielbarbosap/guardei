@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { markOrderPaid, getPosterOrder } from "@/lib/firestore";
+import { adminDb } from "@/lib/firebaseAdmin";
 import { sendAdminNotification, sendCustomerConfirmation } from "@/lib/emails";
 import type Stripe from "stripe";
+import type { PosterOrder } from "@/types/poster";
 
 export const config = { api: { bodyParser: false } };
 
@@ -37,17 +38,25 @@ export async function POST(req: NextRequest) {
     }
 
     try {
-      // 1. Marca pedido como pago no Firestore
-      await markOrderPaid(orderId, stripeSessionId, amountPaid);
+      const orderRef = adminDb.collection("posterOrders").doc(orderId);
 
-      // 2. Busca dados completos do pedido para os emails
-      const order = await getPosterOrder(orderId);
+      // 1. Marca pedido como pago
+      await orderRef.update({
+        status: "paid",
+        stripeSessionId,
+        amountPaid,
+        paidAt: Date.now(),
+      });
+
+      // 2. Busca dados completos do pedido
+      const snap = await orderRef.get();
+      const order = snap.data() as PosterOrder | undefined;
       if (!order) throw new Error(`Pedido ${orderId} não encontrado.`);
 
       // 3. Email para o admin
       await sendAdminNotification(order, orderId, stripeSessionId, amountPaid, paymentIntentId);
 
-      // 4. Email para o cliente (se tiver email disponível)
+      // 4. Email para o cliente
       const customerEmail = session.customer_email
         ?? (order.contactType === "email" ? order.customerContact : null)
         ?? order.userEmail;
