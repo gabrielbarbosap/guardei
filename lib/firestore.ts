@@ -10,10 +10,12 @@ import {
   orderBy,
   query,
   setDoc,
+  updateDoc,
   where,
 } from "firebase/firestore";
 import { app } from "./firebase";
 import type { LocationPhoto } from "@/types/location";
+import type { PosterOrder } from "@/types/poster";
 
 export const db = getFirestore(app);
 
@@ -107,6 +109,30 @@ export async function ensureUsername(
 
   await setDoc(userRef, { username }, { merge: true });
   return username;
+}
+
+// ── Poster orders ──────────────────────────────────────────────────────────────
+
+export async function savePosterOrder(order: Omit<PosterOrder, "id">): Promise<string> {
+  const ref = await addDoc(collection(db, "posterOrders"), order);
+  return ref.id;
+}
+
+export async function setPosterOrderImageUrl(orderId: string, posterImageUrl: string): Promise<void> {
+  await updateDoc(doc(db, "posterOrders", orderId), { posterImageUrl });
+}
+
+export async function markOrderPaid(
+  orderId: string,
+  stripeSessionId: string,
+  amountPaid: number,
+): Promise<void> {
+  await updateDoc(doc(db, "posterOrders", orderId), {
+    status: "paid",
+    stripeSessionId,
+    amountPaid,
+    paidAt: Date.now(),
+  });
 }
 
 // ── Public profile ─────────────────────────────────────────────────────────────

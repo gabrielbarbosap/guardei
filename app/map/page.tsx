@@ -7,6 +7,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import MapView from "../components/MapView";
 import OnThisDay from "../components/OnThisDay";
 import UploadForm from "../components/UploadForm";
+import PosterWizard from "../components/poster/PosterWizard";
 import { auth, signOutUser } from "@/lib/auth";
 import { getLocations, deleteLocation, ensureUsername } from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
@@ -22,6 +23,7 @@ export default function MapPage() {
   const [onThisDayDismissed, setOnThisDayDismissed] = useState(false);
   const [username, setUsername] = useState<string>("");
   const [copied, setCopied] = useState(false);
+  const [posterOpen, setPosterOpen] = useState(false);
 
   const onThisDayMemory = useMemo(() => {
     const now = new Date();
@@ -143,6 +145,18 @@ export default function MapPage() {
               {displayName}
             </span>
 
+            {locations.length > 0 && (
+              <button
+                onClick={() => setPosterOpen(true)}
+                style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-600)", background: "none", border: "1px dashed var(--paper-400)", borderRadius: "var(--radius-sm)", padding: "6px 14px", cursor: "pointer", transition: "all var(--duration) var(--ease-soft)", display: "flex", alignItems: "center", gap: 6 }}
+                onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = "#b8860b"; (e.target as HTMLButtonElement).style.borderColor = "#b8860b"; }}
+                onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = "var(--ink-600)"; (e.target as HTMLButtonElement).style.borderColor = "var(--paper-400)"; }}
+              >
+                <span style={{ fontSize: 13 }}>🖼️</span>
+                poster
+              </button>
+            )}
+
             {username && (
               <button
                 onClick={handleShareProfile}
@@ -202,6 +216,14 @@ export default function MapPage() {
             <div style={{ marginTop: 24, fontFamily: "var(--font-hand)", fontSize: "var(--text-md)", color: "var(--ink-400)", textAlign: "right" }}>guardei.</div>
           </div>
         </div>
+      )}
+
+      {posterOpen && user && (
+        <PosterWizard
+          user={user}
+          locations={locations}
+          onClose={() => setPosterOpen(false)}
+        />
       )}
 
       {error && (
