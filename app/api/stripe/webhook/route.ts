@@ -1,9 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { markOrderPaid } from "@/lib/firestore";
+import { markOrderPaid, getPosterOrder } from "@/lib/firestore";
+import { sendAdminNotification, sendCustomerConfirmation } from "@/lib/emails";
 import type Stripe from "stripe";
 
-// Next.js App Router: desativa body parser para o Stripe poder verificar a assinatura
 export const config = { api: { bodyParser: false } };
 
 export async function POST(req: NextRequest) {
@@ -28,51 +28,38 @@ export async function POST(req: NextRequest) {
     const orderId = session.metadata?.orderId;
     const stripeSessionId = session.id;
     const amountPaid = session.amount_total ?? 0;
+    const paymentIntentId = typeof session.payment_intent === "string"
+      ? session.payment_intent
+      : undefined;
 
-    if (orderId) {
-      try {
-        await markOrderPaid(orderId, stripeSessionId, amountPaid);
-        await notifyAdmin(orderId, session);
-      } catch (err) {
-        console.error("[stripe/webhook] Erro ao marcar pedido como pago:", err);
-        return NextResponse.json({ error: "Erro interno." }, { status: 500 });
+    if (!orderId) {
+      return NextResponse.json({ received: true });
+    }
+
+    try {
+      // 1. Marca pedido como pago no Firestore
+      await markOrderPaid(orderId, stripeSessionId, amountPaid);
+
+      // 2. Busca dados completos do pedido para os emails
+      const order = await getPosterOrder(orderId);
+      if (!order) throw new Error(`Pedido ${orderId} não encontrado.`);
+
+      // 3. Email para o admin
+      await sendAdminNotification(order, orderId, stripeSessionId, amountPaid, paymentIntentId);
+
+      // 4. Email para o cliente (se tiver email disponível)
+      const customerEmail = session.customer_email
+        ?? (order.contactType === "email" ? order.customerContact : null)
+        ?? order.userEmail;
+
+      if (customerEmail) {
+        await sendCustomerConfirmation(order, orderId, customerEmail, amountPaid);
       }
+    } catch (err) {
+      console.error("[stripe/webhook] Erro ao processar pedido:", err);
+      return NextResponse.json({ error: "Erro interno." }, { status: 500 });
     }
   }
 
   return NextResponse.json({ received: true });
-}
-
-async function notifyAdmin(orderId: string, session: Stripe.Checkout.Session) {
-  const resendKey = process.env.RESEND_API_KEY;
-  if (!resendKey) return;
-
-  const format = session.metadata?.format ?? "";
-  const customer = session.customer_email ?? session.metadata?.contact ?? "—";
-  const amount = ((session.amount_total ?? 0) / 100).toLocaleString("pt-BR", {
-    style: "currency",
-    currency: "BRL",
-  });
-
-  await fetch("https://api.resend.com/emails", {
-    method: "POST",
-    headers: {
-      Authorization: `Bearer ${resendKey}`,
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({
-      from: "Guardei.art <pedidos@guardei.art>",
-      to: ["gabriel@sistemap.com.br"],
-      subject: `💳 Novo pedido pago — ${format} — ${amount}`,
-      html: `
-        <h2>Novo pedido pago no Guardei.art</h2>
-        <p><strong>Pedido:</strong> #${orderId.slice(0, 8).toUpperCase()}</p>
-        <p><strong>Formato:</strong> ${format}</p>
-        <p><strong>Valor:</strong> ${amount}</p>
-        <p><strong>Cliente:</strong> ${customer}</p>
-        <p><strong>Sessão Stripe:</strong> ${session.id}</p>
-        <p><a href="https://dashboard.stripe.com/payments/${session.payment_intent}">Ver no Stripe →</a></p>
-      `,
-    }),
-  });
 }

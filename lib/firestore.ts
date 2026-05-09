@@ -122,6 +122,12 @@ export async function setPosterOrderImageUrl(orderId: string, posterImageUrl: st
   await updateDoc(doc(db, "posterOrders", orderId), { posterImageUrl });
 }
 
+export async function getPosterOrder(orderId: string): Promise<PosterOrder | null> {
+  const snap = await getDoc(doc(db, "posterOrders", orderId));
+  if (!snap.exists()) return null;
+  return { id: snap.id, ...(snap.data() as Omit<PosterOrder, "id">) };
+}
+
 export async function markOrderPaid(
   orderId: string,
   stripeSessionId: string,
