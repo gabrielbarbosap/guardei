@@ -9,6 +9,7 @@ import { savePosterOrder, setPosterOrderImageUrl } from "@/lib/firestore";
 import { renderPosterFromLayout, buildPosterParams } from "@/lib/posterCanvas";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
 import { layoutPolaroids } from "@/lib/posterLayout";
+import { PREVIEW_W, previewHeightFor } from "@/lib/posterPreview";
 import { storage } from "@/lib/storage";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Step2Format from "./Step2Format";
@@ -101,8 +102,7 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
       // Escala o layout da prévia para resolução final
       let fullLayout: PlacedPolaroid[];
       if (userLayout && userLayout.length > 0) {
-        const PREVIEW_W = 560;
-        const previewH = Math.round(PREVIEW_W * (dims.h / dims.w));
+        const previewH = previewHeightFor(dims.w, dims.h);
         const scaleX = dims.w / PREVIEW_W;
         const scaleY = dims.h / previewH;
         fullLayout = userLayout.map((p) => ({
@@ -153,11 +153,12 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
 
   return (
     <div
-      style={{ position: "fixed", inset: 0, zIndex: 210, display: "flex", alignItems: "center", justifyContent: "center", background: "rgba(42,31,20,0.55)", backdropFilter: "blur(4px)", WebkitBackdropFilter: "blur(4px)", padding: "16px" }}
+      className="poster-modal-overlay"
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
     >
       <div
-        style={{ background: "var(--paper-50)", border: "1px solid var(--paper-300)", borderRadius: "var(--radius-md)", boxShadow: "0 24px 80px rgba(42,31,20,0.28), 0 4px 16px rgba(42,31,20,0.14)", width: "100%", maxWidth: step === 2 ? 1100 : 720, maxHeight: "94vh", display: "flex", flexDirection: "column", overflow: "hidden", transition: "max-width 0.3s ease" }}
+        className="poster-modal"
+        style={{ maxWidth: step === 2 ? 1100 : 720 }}
       >
         {/* Header */}
         <div style={{ padding: "18px 24px 14px", borderBottom: "1px solid var(--paper-300)", display: "flex", alignItems: "center", justifyContent: "space-between", flexShrink: 0 }}>
