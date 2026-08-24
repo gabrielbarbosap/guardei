@@ -14,6 +14,7 @@ import Map, {
 import type { FeatureCollection, Point } from "geojson";
 import { Globe, MapPin } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
+import { formatMemoryDate, memoryDateOf } from "@/lib/memoryDate";
 import { sharePolaroid } from "@/lib/share";
 import { exportPolaroid } from "@/lib/export";
 
@@ -422,6 +423,14 @@ export default function MapView({
               color: "var(--ink-700)",
             }}>
               {selected.description}
+            </p>
+            <p style={{
+              margin: "8px 0 0", textAlign: "center",
+              fontFamily: "var(--font-mono)", fontSize: 9,
+              letterSpacing: "0.18em", textTransform: "uppercase",
+              color: "var(--ink-500)",
+            }}>
+              {formatMemoryDate(memoryDateOf(selected))}
             </p>
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}

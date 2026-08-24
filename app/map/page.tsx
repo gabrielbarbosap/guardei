@@ -10,6 +10,8 @@ import OnThisDay from "../components/OnThisDay";
 import UploadForm from "../components/UploadForm";
 import PosterNudge from "../components/PosterNudge";
 import PosterWizard from "../components/poster/PosterWizard";
+import MapFilter from "../components/MapFilter";
+import { ALL_MEMORIES, applyDateFilter, memoryDateOf, type DateFilter } from "@/lib/memoryDate";
 import { auth, signOutUser } from "@/lib/auth";
 import { getLocations, deleteLocation, ensureUsername } from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
@@ -26,6 +28,12 @@ export default function MapPage() {
   const [username, setUsername] = useState<string>("");
   const [copied, setCopied] = useState(false);
   const [posterOpen, setPosterOpen] = useState(false);
+  const [dateFilter, setDateFilter] = useState<DateFilter>(ALL_MEMORIES);
+
+  const visibleLocations = useMemo(
+    () => applyDateFilter(locations, dateFilter),
+    [locations, dateFilter],
+  );
 
   const onThisDayMemory = useMemo(() => {
     const now = new Date();
@@ -33,7 +41,8 @@ export default function MapPage() {
     const todayMonth = now.getMonth();
     const todayDate = now.getDate();
     const matches = locations.filter((m) => {
-      const d = new Date(m.createdAt);
+      // usa quando a memória aconteceu, não quando foi enviada
+      const d = new Date(memoryDateOf(m));
       return (
         d.getMonth() === todayMonth &&
         d.getDate() === todayDate &&
@@ -47,7 +56,7 @@ export default function MapPage() {
     if (!onThisDayMemory) return 0;
     return (
       new Date().getFullYear() -
-      new Date(onThisDayMemory.createdAt).getFullYear()
+      new Date(memoryDateOf(onThisDayMemory)).getFullYear()
     );
   }, [onThisDayMemory]);
 
@@ -71,6 +80,8 @@ export default function MapPage() {
   async function handleUploaded() {
     await loadLocations(user!.uid);
     setSelectedLocation(null);
+    // sem isso, uma memória com data fora do filtro atual sumiria assim que salva
+    setDateFilter(ALL_MEMORIES);
   }
 
   async function handleDelete(locationId: string) {
@@ -124,7 +135,7 @@ export default function MapPage() {
     <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
       <div style={{ position: "absolute", inset: 0 }}>
         <MapView
-          locations={locations}
+          locations={visibleLocations}
           pickLocationEnabled
           selectedLocation={selectedLocation}
           onPickLocation={setSelectedLocation}
@@ -177,6 +188,16 @@ export default function MapPage() {
           </div>
         </div>
       </header>
+
+      {/* o painel de nova memória ocupa o mesmo canto: um de cada vez */}
+      {!selectedLocation && (
+        <MapFilter
+          locations={locations}
+          filter={dateFilter}
+          onChange={setDateFilter}
+          visibleCount={visibleLocations.length}
+        />
+      )}
 
       {selectedLocation && (
         <UploadForm

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { X, Camera, Globe } from "lucide-react";
 import { uploadPhoto } from "@/lib/upload";
+import { fromDateInputValue, toDateInputValue } from "@/lib/memoryDate";
 
 type SelectedLocation = { lat: number; lng: number };
 
@@ -24,9 +25,13 @@ export default function UploadForm({
   const [isPublic, setIsPublic] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState("");
+  const [dateMode, setDateMode] = useState<"today" | "custom">("today");
+  const [customDate, setCustomDate] = useState("");
 
   const lat = selectedLocation?.lat.toFixed(5) ?? "";
   const lng = selectedLocation?.lng.toFixed(5) ?? "";
+  // avaliado uma vez na montagem: ler o relógio no render quebra a pureza
+  const [todayValue] = useState(() => toDateInputValue(Date.now()));
 
   async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -34,6 +39,14 @@ export default function UploadForm({
 
     if (!file) { setError("Selecione uma imagem."); return; }
     if (!selectedLocation) { setError("Clique no mapa para escolher o ponto."); return; }
+
+    let memoryDate = Date.now();
+    if (dateMode === "custom") {
+      const parsed = customDate ? fromDateInputValue(customDate) : null;
+      if (parsed === null) { setError("Escolha uma data válida."); return; }
+      if (parsed > Date.now()) { setError("A data não pode ser no futuro."); return; }
+      memoryDate = parsed;
+    }
 
     setIsSaving(true);
     try {
@@ -44,10 +57,13 @@ export default function UploadForm({
         description,
         userId,
         isPublic,
+        memoryDate,
       });
       setFile(null);
       setDescription("");
       setIsPublic(false);
+      setDateMode("today");
+      setCustomDate("");
       await onUploaded();
     } catch {
       setError("Falha ao enviar a foto.");
@@ -109,6 +125,37 @@ export default function UploadForm({
             onChange={(e) => setDescription(e.target.value)}
             placeholder="uma linha basta…"
           />
+        </div>
+
+        {/* quando aconteceu */}
+        <div className="upload-field">
+          <label>quando foi?</label>
+          <div className="date-choice">
+            <button
+              type="button"
+              className={`date-choice-btn${dateMode === "today" ? " is-active" : ""}`}
+              onClick={() => setDateMode("today")}
+            >
+              hoje
+            </button>
+            <button
+              type="button"
+              className={`date-choice-btn${dateMode === "custom" ? " is-active" : ""}`}
+              onClick={() => setDateMode("custom")}
+            >
+              outra data
+            </button>
+          </div>
+          {dateMode === "custom" && (
+            <input
+              type="date"
+              className="date-input"
+              value={customDate}
+              max={todayValue}
+              onChange={(e) => { setCustomDate(e.target.value); setError(""); }}
+              aria-label="Data da memória"
+            />
+          )}
         </div>
 
         {/* public toggle */}

@@ -1017,6 +1017,106 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
 .upload-submit:hover:not(:disabled) { background: var(--ink-800); transform: translateY(-1px); box-shadow: var(--shadow); }
 .upload-submit:disabled { opacity: 0.55; cursor: not-allowed; }
 
+/* ---------- data da memória ---------- */
+.date-choice { display: flex; gap: 6px; margin-top: 2px; }
+.date-choice-btn {
+  flex: 1; cursor: pointer;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-600);
+  background: none; border: 1px dashed var(--paper-400);
+  border-radius: var(--radius-sm); padding: 8px 6px;
+  transition: all var(--duration) var(--ease-soft);
+}
+.date-choice-btn:hover { color: var(--ink-900); border-color: var(--ink-400); }
+.date-choice-btn.is-active {
+  color: var(--paper-50); background: var(--ink-900);
+  border-style: solid; border-color: var(--ink-900);
+}
+.date-input {
+  margin-top: 8px; width: 100%;
+  background: transparent; border: none;
+  border-bottom: 1.5px solid var(--paper-400);
+  padding: 8px 2px;
+  font-family: var(--font-mono); font-size: 12px; color: var(--ink-900);
+  outline: none;
+  transition: border-color var(--duration) var(--ease-soft);
+}
+.date-input:focus { border-bottom-color: var(--accent-tomato); }
+/* o ícone nativo do date picker é escuro demais para o papel */
+.date-input::-webkit-calendar-picker-indicator {
+  opacity: 0.45; cursor: pointer;
+  transition: opacity var(--duration) var(--ease-soft);
+}
+.date-input::-webkit-calendar-picker-indicator:hover { opacity: 0.85; }
+
+/* ---------- filtro de datas no mapa ---------- */
+.map-filter {
+  position: fixed; top: 76px; left: 20px; z-index: 12;
+  background: rgba(245, 239, 224, 0.92);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border: 1px solid var(--paper-300); border-radius: var(--radius-md);
+  padding: 10px 12px; box-shadow: var(--shadow);
+  max-width: min(560px, calc(100vw - 40px));
+  animation: filter-in 320ms var(--ease-soft) both;
+}
+@keyframes filter-in { from { opacity: 0; transform: translateY(-8px); } }
+.map-filter-chips { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.filter-chip {
+  display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-600);
+  background: var(--paper-50); border: 1px solid var(--paper-300);
+  border-radius: var(--radius-full); padding: 6px 12px;
+  transition: color var(--duration) var(--ease-soft),
+              border-color var(--duration) var(--ease-soft),
+              background var(--duration) var(--ease-soft);
+}
+.filter-chip:hover { color: var(--ink-900); border-color: var(--ink-400); }
+.filter-chip.is-active {
+  color: var(--paper-50); background: var(--ink-900); border-color: var(--ink-900);
+}
+.filter-chip .chip-count {
+  font-size: 9px; letter-spacing: 0.04em;
+  color: var(--ink-500); background: var(--paper-200);
+  border-radius: var(--radius-full); padding: 1px 6px;
+}
+.filter-chip.is-active .chip-count {
+  color: var(--paper-50); background: rgba(250, 246, 236, 0.22);
+}
+.map-filter-range {
+  display: flex; align-items: flex-end; gap: 12px;
+  margin-top: 10px; padding-top: 10px;
+  border-top: 1px dashed var(--paper-400);
+}
+.map-filter-range label { display: flex; flex-direction: column; gap: 2px; flex: 1; min-width: 0; }
+.map-filter-range label span {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-500);
+}
+.map-filter-range .date-input { margin-top: 2px; font-size: 11px; }
+.range-clear {
+  background: none; border: 1px dashed var(--paper-400); border-radius: var(--radius-sm);
+  color: var(--ink-500); cursor: pointer; padding: 6px; display: flex; flex-shrink: 0;
+  transition: all var(--duration) var(--ease-soft);
+}
+.range-clear:hover { color: var(--accent-tomato); border-color: var(--accent-tomato); }
+.map-filter-summary {
+  margin-top: 8px; padding-top: 8px;
+  border-top: 1px dashed var(--paper-400);
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ink-500);
+}
+@media (max-width: 640px) {
+  .map-filter { top: 68px; left: 12px; right: 12px; max-width: none; padding: 9px 10px; }
+  .map-filter-chips { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
+  .map-filter-chips::-webkit-scrollbar { display: none; }
+  .filter-chip { flex-shrink: 0; }
+  .map-filter-range { flex-wrap: wrap; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .map-filter { animation: none; }
+}
+
 /* map error toast */
 .map-error-toast {
   position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);

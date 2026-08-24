@@ -8,6 +8,8 @@ type UploadPhotoInput = {
   description: string;
   userId: string;
   isPublic?: boolean;
+  /** Quando a memória aconteceu; se omitido, vale hoje. */
+  memoryDate?: number;
 };
 
 function compressToBase64(file: File, maxPx = 800, quality = 0.78): Promise<string> {
@@ -45,11 +47,15 @@ export async function uploadPhoto({
   description,
   userId,
   isPublic = false,
+  memoryDate,
 }: UploadPhotoInput) {
   const [imageUrl, countryCode] = await Promise.all([
     compressToBase64(file),
     getCountryCodeFromCoordinates(lat, lng),
   ]);
 
-  await addLocation({ userId, lat, lng, countryCode, imageUrl, description, isPublic });
+  await addLocation({
+    userId, lat, lng, countryCode, imageUrl, description, isPublic,
+    memoryDate: memoryDate ?? Date.now(),
+  });
 }

@@ -39,10 +39,15 @@ export async function getLocations(userId: string): Promise<LocationPhoto[]> {
 
 export async function addLocation(input: NewLocationInput) {
   const { userId, ...rest } = input;
-  await addDoc(userLocations(userId), {
+  const payload: Record<string, unknown> = {
     ...rest,
     createdAt: rest.createdAt ?? Date.now(),
-  });
+  };
+  // o Firestore rejeita `undefined`; campos opcionais simplesmente não vão
+  for (const key of Object.keys(payload)) {
+    if (payload[key] === undefined) delete payload[key];
+  }
+  await addDoc(userLocations(userId), payload);
 }
 
 export async function deleteLocation(userId: string, locationId: string) {
