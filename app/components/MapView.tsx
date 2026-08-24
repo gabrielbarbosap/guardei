@@ -271,25 +271,12 @@ export default function MapView({
       {/* polaroid overlay — rendered outside <Map> so React events funcionam normalmente */}
       {selected && popupPos && (
         <div
-          style={{
-            position: "absolute",
-            left: popupPos.x,
-            top: popupPos.y,
-            transform: "translateX(-50%) translateY(calc(-100% - 16px))",
-            zIndex: 10,
-            pointerEvents: "all",
-          }}
+          className="map-popup-anchor"
+          style={{ "--px": `${popupPos.x}px`, "--py": `${popupPos.y}px` } as React.CSSProperties}
         >
           <div
-            style={{
-              position: "relative",
-              width: 288,
-              background: "var(--paper-50)",
-              padding: "18px 18px 56px",
-              boxShadow: "var(--shadow-polaroid)",
-              border: "1px solid rgba(61,46,31,0.08)",
-              rotate: `${tiltDeg(selected.id)}deg`,
-            }}
+            className="map-popup"
+            style={{ rotate: `${tiltDeg(selected.id)}deg` }}
           >
             {/* tape strip */}
             <div style={{

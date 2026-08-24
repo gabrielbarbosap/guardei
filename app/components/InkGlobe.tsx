@@ -178,13 +178,28 @@ export interface InkGlobeProps {
 }
 
 export default function InkGlobe({
-  size = 560, autoRotate = true, speed = 0.12,
+  size: maxSize = 560, autoRotate = true, speed = 0.12,
   cycleInterval = 4200, paused = false, onFocus, onlyWithPhoto = false,
 }: InkGlobeProps) {
+  const wrapRef = useRef<HTMLDivElement>(null);
+
+  /* O globo acompanha a largura disponível: `size` é o teto, não um valor fixo.
+     Sem isso o canvas mantinha 560px e furava a viewport no celular. */
+  const [measured, setMeasured] = useState<number | null>(null);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver((entries) => {
+      const w = entries[0]?.contentRect.width ?? 0;
+      if (w > 0) setMeasured(Math.round(Math.min(maxSize, w)));
+    });
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [maxSize]);
+
+  const size = measured ?? maxSize;
   const R = size / 2 - 18;
   const cx = size / 2, cy = size / 2;
-
-  const wrapRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const polaroidRef = useRef<HTMLDivElement>(null);
 
@@ -267,8 +282,11 @@ export default function InkGlobe({
     const dpr = Math.min(2, window.devicePixelRatio || 1);
     canvas.width = size * dpr;
     canvas.height = size * dpr;
-    canvas.style.width = `${size}px`;
-    canvas.style.height = `${size}px`;
+    /* O CSS manda no tamanho exibido (o contêiner é quadrado por aspect-ratio) e o
+       bitmap acompanha `size`. Assim o globo nunca fura a viewport mesmo antes de
+       o ResizeObserver medir — a medição só ajusta a resolução do desenho. */
+    canvas.style.width = "100%";
+    canvas.style.height = "100%";
     ctx.scale(dpr, dpr);
 
     const palette = readPalette(wrap);
@@ -588,11 +606,14 @@ export default function InkGlobe({
   });
 
   return (
-    <div ref={wrapRef} style={{ width: size, height: size, position: "relative" }}>
+    <div
+      ref={wrapRef}
+      style={{ width: "100%", maxWidth: maxSize, aspectRatio: "1", position: "relative" }}
+    >
       {/* static compass ring — never repaints */}
       <svg
-        viewBox={`0 0 ${size} ${size}`} width={size} height={size}
-        style={{ position: "absolute", inset: 0, display: "block", overflow: "visible", pointerEvents: "none" }}
+        viewBox={`0 0 ${size} ${size}`}
+        style={{ position: "absolute", inset: 0, width: "100%", height: "100%", display: "block", overflow: "visible", pointerEvents: "none" }}
         aria-hidden
       >
         <g opacity="0.6">
@@ -612,7 +633,9 @@ export default function InkGlobe({
       <canvas
         ref={canvasRef}
         className="globe-canvas"
-        style={{ display: "block", position: "relative", touchAction: "none", cursor: hoverId ? "pointer" : "grab", opacity: ready ? 1 : 0 }}
+        /* pan-y, não none: no celular o dedo deslizando para cima precisa rolar a
+           página. O giro horizontal continua funcionando. */
+        style={{ display: "block", position: "relative", maxWidth: "100%", touchAction: "pan-y", cursor: hoverId ? "pointer" : "grab", opacity: ready ? 1 : 0 }}
         onPointerDown={handlePointerDown}
         onPointerMove={handlePointerMove}
         onPointerUp={endDrag}
@@ -623,6 +646,8 @@ export default function InkGlobe({
         aria-label="Globo com memórias guardadas pelo mundo"
       />
 
+      {/* em tela estreita o CSS esconde este card: ele orbita para fora do globo e
+          sairia da viewport. O log abaixo do globo já mostra a mesma memória. */}
       <Polaroid pin={activePin} innerRef={polaroidRef} />
 
       <div className="globe-caption">

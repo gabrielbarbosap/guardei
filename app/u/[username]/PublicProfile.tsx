@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react";
 import Image from "next/image";
+import Link from "next/link";
+import { MapPinned, Globe } from "lucide-react";
 import Map, {
   Layer,
   Marker,
@@ -158,13 +160,13 @@ export default function PublicProfile({ username }: { username: string }) {
           background: "var(--paper-50)",
           border: "1px solid var(--paper-300)",
           borderRadius: "var(--radius-md)",
-          padding: "40px 48px",
+          padding: "clamp(28px, 7vw, 40px) clamp(22px, 7vw, 48px)",
           textAlign: "center",
-          maxWidth: 380,
+          width: "min(380px, calc(100vw - 40px))",
           transform: "rotate(-1deg)",
           boxShadow: "0 8px 40px rgba(42,31,20,0.12)",
         }}>
-          <div style={{ fontSize: 40, marginBottom: 16 }}>🗺️</div>
+          <MapPinned size={38} strokeWidth={1.4} style={{ color: "var(--ink-400)", marginBottom: 16 }} />
           <div style={{
             fontFamily: "var(--font-display)", fontSize: "var(--text-xl)",
             color: "var(--ink-900)", marginBottom: 10,
@@ -177,19 +179,9 @@ export default function PublicProfile({ username }: { username: string }) {
           }}>
             O usuário <strong style={{ fontFamily: "var(--font-mono)" }}>@{username}</strong> não existe ou ainda não criou memórias públicas.
           </p>
-          <a
-            href="/"
-            style={{
-              fontFamily: "var(--font-mono)", fontSize: 11,
-              letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "var(--ink-600)",
-              border: "1px dashed var(--paper-400)",
-              borderRadius: "var(--radius-sm)", padding: "8px 16px",
-              textDecoration: "none", display: "inline-block",
-            }}
-          >
+          <Link href="/" className="map-btn" style={{ display: "inline-flex" }}>
             ← guardei.art
-          </a>
+          </Link>
         </div>
       </main>
     );
@@ -342,45 +334,16 @@ export default function PublicProfile({ username }: { username: string }) {
       </div>
 
       {/* HEADER — read-only, no auth actions */}
-      <header style={{
-        position: "absolute", top: 0, left: 0, right: 0, zIndex: 50,
-        background: "rgba(245, 239, 224, 0.82)",
-        backdropFilter: "blur(10px)",
-        WebkitBackdropFilter: "blur(10px)",
-        borderBottom: "1px solid var(--paper-300)",
-      }}>
-        <div style={{
-          padding: "12px 28px",
-          display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24,
-        }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <header className="map-header">
+        <div className="map-header-inner">
+          <div className="map-brand-block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/photos/logo.svg" alt="guardei" style={{ height: 36, width: "auto" }} />
             <span className="brand" style={{ fontSize: 22 }}>guardei<span className="amp">,</span></span>
-            <span style={{
-              fontFamily: "var(--font-mono)", fontSize: 11,
-              letterSpacing: "0.2em", textTransform: "uppercase",
-              color: "var(--ink-500)", paddingLeft: 14,
-              borderLeft: "1px solid var(--paper-400)",
-            }}>
-              @{username}
-            </span>
+            <span className="profile-handle">@{username}</span>
           </div>
 
-          <a
-            href="/"
-            style={{
-              fontFamily: "var(--font-mono)", fontSize: 11,
-              letterSpacing: "0.12em", textTransform: "uppercase",
-              color: "var(--ink-600)",
-              border: "1px dashed var(--paper-400)",
-              borderRadius: "var(--radius-sm)", padding: "6px 14px",
-              textDecoration: "none",
-              transition: "all var(--duration) var(--ease-soft)",
-            }}
-          >
-            criar conta
-          </a>
+          <Link href="/" className="map-btn">criar conta</Link>
         </div>
       </header>
 
@@ -396,12 +359,12 @@ export default function PublicProfile({ username }: { username: string }) {
             background: "var(--paper-50)",
             border: "1px solid var(--paper-300)",
             borderRadius: "var(--radius-md)",
-            padding: "36px 40px",
-            maxWidth: 360, textAlign: "center",
+            padding: "clamp(26px, 7vw, 36px) clamp(20px, 6vw, 40px)",
+            width: "min(360px, calc(100vw - 40px))", textAlign: "center",
             transform: "rotate(-1deg)",
             boxShadow: "0 8px 40px rgba(42,31,20,0.12)",
           }}>
-            <div style={{ fontSize: 36, marginBottom: 12 }}>🌐</div>
+            <Globe size={34} strokeWidth={1.4} style={{ color: "var(--ink-400)", marginBottom: 12 }} />
             <div style={{
               fontFamily: "var(--font-display)", fontSize: "var(--text-xl)",
               color: "var(--ink-900)", marginBottom: 8,

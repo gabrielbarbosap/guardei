@@ -305,8 +305,9 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--paper-
 .hero-meta strong { color: var(--ink-900); font-weight: 600; }
 .hero-meta .sep { color: var(--accent-tomato); }
 
-.hero-globe { position: relative; display: flex; flex-direction: column; align-items: center; }
-.globe-frame { position: relative; width: 560px; height: 560px; }
+.hero-globe { position: relative; display: flex; flex-direction: column; align-items: center; min-width: 0; }
+/* fluido: o globo mede o contêiner e se ajusta, com 560px de teto */
+.globe-frame { position: relative; width: min(560px, 100%); aspect-ratio: 1; }
 .globe-caption {
   position: absolute; bottom: -8px; left: 50%; transform: translateX(-50%);
   display: flex; gap: 20px; font-family: var(--font-mono); font-size: 10px;
@@ -691,24 +692,64 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   .share-grid { grid-template-columns: 1fr; gap: 26px; }
   .sf-inner { grid-template-columns: 1fr; gap: 40px; }
 }
+/* faixa intermediária: com 4 links + 2 botões o cabeçalho não cabe inteiro */
+@media (max-width: 900px) {
+  .site-header-inner { padding: 16px 20px; gap: 16px; }
+  .nav { gap: 14px; }
+  .nav a { font-size: 13.5px; }
+  /* o botão de criar abre o mesmo modal de entrar: some com o redundante */
+  .link-ghost { display: none; }
+  .btn-stamp { padding: 9px 13px; font-size: 12px; }
+}
+
 @media (max-width: 640px) {
   .site-header-inner { padding: 14px 20px; }
   .nav { display: none; }
+  .link-ghost { display: inline-flex; }
   .hero { padding: 48px 20px 24px; }
   .values, .memories { padding: 40px 20px; margin: 40px auto; }
   .poster-sec, .share-sec { padding: 40px 20px; margin: 40px auto; }
-  .share-link { padding: 10px 11px; gap: 8px; }
-  .share-link .sl-url { font-size: 11px; }
-  .poster-frame.portrait { width: 180px; }
-  .poster-frame.landscape { width: 210px; margin: 90px 0 0 -32px; }
-  .poster-price { left: 0; }
+  /* o chip precisa poder quebrar, senão trava a largura mínima do card */
+  .share-link { padding: 10px 11px; gap: 8px; flex-wrap: wrap; max-width: 100%; }
+  .share-link .sl-url { font-size: 11px; word-break: break-all; }
+  .share-card, .share-stage { min-width: 0; }
+  /* o rodapé mantinha 48px de padding em qualquer largura */
+  .site-footer { padding: 44px 20px 32px; }
+  .sf-inner { gap: 32px; margin-bottom: 32px; }
+  .sf-cols { grid-template-columns: repeat(2, 1fr); gap: 24px; }
+  .sf-bottom { flex-direction: column; gap: 8px; }
+  .poster-frames { padding-bottom: 66px; }
+  .poster-frame.portrait { width: 40vw; max-width: 180px; }
+  .poster-frame.landscape { width: 45vw; max-width: 210px; margin: 70px 0 0 -5vw; }
+  .poster-price { left: 50%; bottom: 0; transform: translateX(-50%) rotate(-3deg); }
+  /* alvos de toque confortáveis no celular */
+  .link-ghost { padding: 10px 6px; }
+  .sf-cols a { padding: 8px 0; margin-bottom: 0; }
+  .btn-stamp { padding: 13px 18px; min-height: 44px; }
+  .btn-primary, .btn-ghost { min-height: 46px; }
   .postcard { padding: 40px 28px; }
   .pc-stamp { top: 14px; right: 14px; width: 90px; height: 90px; font-size: 9px; }
   .pc-stamp .big { font-size: 24px; }
   .values-grid, .memories-grid { grid-template-columns: 1fr; }
-  .globe-frame { width: 320px !important; height: 320px !important; }
   .hero-headline { font-size: 2.8rem; }
+  /* o card orbita para fora do globo e não cabe: o globe-log abaixo já informa */
+  .globe-polaroid { display: none; }
   .scrap-stamp, .scrap-ticket { display: none; }
+}
+
+/* telas bem estreitas (≈320px): o cabeçalho não cabe inteiro */
+@media (max-width: 400px) {
+  .site-header-inner { padding: 12px 14px; gap: 10px; }
+  .brand { font-size: 20px; }
+  .brand img { display: none; }
+  .nav-cta { gap: 8px; }
+  .btn-stamp { padding: 9px 12px; font-size: 11px; letter-spacing: 0.06em; }
+  .btn-stamp svg { display: none; }
+  .link-ghost { font-size: 14px; }
+  .hero { padding: 40px 16px 20px; }
+  .values, .memories, .poster-sec, .share-sec { padding: 36px 16px; }
+  .final-cta { padding: 0 16px; }
+  .sf-cols { grid-template-columns: 1fr; }
 }
 
 /* ================================================
@@ -799,6 +840,18 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   white-space: nowrap;
 }
 .map-actions { display: flex; align-items: center; gap: 8px; }
+
+/* @usuario no perfil público: ao contrário do rótulo do mapa, precisa continuar
+   visível no celular — é a identidade da página */
+.profile-handle {
+  font-family: var(--font-mono); font-size: 11px;
+  letter-spacing: 0.2em; text-transform: uppercase; color: var(--ink-500);
+  padding-left: 14px; border-left: 1px solid var(--paper-400);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 30vw;
+}
+@media (max-width: 520px) {
+  .profile-handle { padding-left: 10px; letter-spacing: 0.12em; }
+}
 
 /* nome do usuário, separado das ações por um fio */
 .map-user-name {
@@ -1017,6 +1070,34 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
 .upload-submit:hover:not(:disabled) { background: var(--ink-800); transform: translateY(-1px); box-shadow: var(--shadow); }
 .upload-submit:disabled { opacity: 0.55; cursor: not-allowed; }
 
+@media (max-width: 640px) {
+  /* folha inferior: o painel fixo de 300px no canto não cabe em pé nem deitado,
+     e cobria justamente o ponto que a pessoa acabou de marcar */
+  .upload-panel {
+    top: auto; bottom: 0; left: 0; right: 0;
+    width: auto; max-height: 88dvh; overflow-y: auto;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 22px 18px calc(18px + env(safe-area-inset-bottom));
+    box-shadow: 0 -8px 32px rgba(42,31,20,0.25);
+    animation: sheet-up 260ms var(--ease-soft) both;
+    z-index: 60;
+  }
+  .upload-panel-tape { display: none; }
+  .upload-panel-close { top: 14px; right: 14px; padding: 6px; }
+  .upload-submit { padding: 14px; min-height: 46px; }
+}
+
+/* O iOS dá zoom automático em qualquer campo com fonte menor que 16px, e depois
+   não volta ao zoom anterior. Vale para todos os formulários do site. */
+@media (max-width: 640px) {
+  .upload-field input, .upload-field textarea,
+  .auth-modal .field input,
+  .date-input,
+  input[type="text"], input[type="email"], input[type="password"], input[type="date"], textarea {
+    font-size: 16px;
+  }
+}
+
 /* ---------- data da memória ---------- */
 .date-choice { display: flex; gap: 6px; margin-top: 2px; }
 .date-choice-btn {
@@ -1116,6 +1197,44 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
 @media (prefers-reduced-motion: reduce) {
   .map-filter { animation: none; }
 }
+
+/* ---------- polaroid do pin ---------- */
+.map-popup-anchor {
+  position: absolute;
+  /* a largura vive numa variável para o clamp abaixo poder usá-la */
+  --pw: min(288px, calc(100vw - 32px));
+  /* mantém o card dentro da tela mesmo com o pin colado na borda */
+  left: clamp(calc(var(--pw) / 2 + 8px), var(--px), calc(100vw - var(--pw) / 2 - 8px));
+  top: var(--py);
+  transform: translateX(-50%) translateY(calc(-100% - 16px));
+  z-index: 10;
+  pointer-events: all;
+}
+.map-popup {
+  position: relative; width: var(--pw);
+  background: var(--paper-50);
+  padding: 18px 18px 56px;
+  box-shadow: var(--shadow-polaroid);
+  border: 1px solid rgba(61,46,31,0.08);
+}
+@media (max-width: 640px) {
+  /* no celular vira folha inferior: sempre cabe, não cobre o pin e não depende
+     de onde o ponto caiu na tela */
+  .map-popup-anchor {
+    position: fixed; left: 0; right: 0; bottom: 0; top: auto;
+    transform: none; --pw: 100%;
+    z-index: 60;
+  }
+  .map-popup {
+    rotate: 0deg !important;
+    border-radius: var(--radius-lg) var(--radius-lg) 0 0;
+    padding: 16px 16px 28px;
+    max-height: 80dvh; overflow-y: auto;
+    box-shadow: 0 -8px 32px rgba(42,31,20,0.25);
+    animation: sheet-up 260ms var(--ease-soft) both;
+  }
+}
+@keyframes sheet-up { from { transform: translateY(18px); opacity: 0; } }
 
 /* map error toast */
 .map-error-toast {

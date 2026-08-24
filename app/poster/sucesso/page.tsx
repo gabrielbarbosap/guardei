@@ -2,6 +2,8 @@
 
 import { useSearchParams } from "next/navigation";
 import { Suspense } from "react";
+import Link from "next/link";
+import { Frame } from "lucide-react";
 
 function SuccessContent() {
   const params = useSearchParams();
@@ -34,7 +36,7 @@ function SuccessContent() {
           gap: 16,
         }}
       >
-        <div style={{ fontSize: 56 }}>🖼️</div>
+        <Frame size={50} strokeWidth={1.3} style={{ color: "var(--poster-gold)" }} />
 
         <div
           style={{
@@ -105,7 +107,7 @@ function SuccessContent() {
           </a>
         </p>
 
-        <a
+        <Link
           href="/"
           style={{
             marginTop: 8,
@@ -113,7 +115,7 @@ function SuccessContent() {
             fontSize: 11,
             letterSpacing: "0.12em",
             textTransform: "uppercase",
-            padding: "10px 28px",
+            padding: "13px 28px",
             background: "var(--ink-900)",
             color: "var(--paper-50)",
             border: "none",
@@ -121,10 +123,11 @@ function SuccessContent() {
             cursor: "pointer",
             textDecoration: "none",
             display: "inline-block",
+            minHeight: 44,
           }}
         >
           voltar ao início
-        </a>
+        </Link>
       </div>
     </div>
   );
