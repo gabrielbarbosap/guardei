@@ -31,6 +31,9 @@
   --accent-highlight: #f4c430;
   --accent-moss:      #6b8e4e;
   --accent-rose:      #c76c8a;
+  /* dourado do produto impresso — já usado no wizard e nos emails do pedido */
+  --poster-gold:      #b8860b;
+  --accent-cyan:      #00b4c8;
 
   /* ---------- COLORS: Estados ---------- */
   --success: #6b8e4e;
@@ -775,35 +778,160 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   top: 0; left: 0; right: 0;
   z-index: 50;
 }
+.map-header {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 50;
+  background: rgba(245, 239, 224, 0.82);
+  backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--paper-300);
+}
 .map-header-inner {
   max-width: unset;
-  padding: 12px 28px;
-  display: flex; align-items: center; justify-content: space-between; gap: 24px;
+  padding: 10px 24px;
+  display: flex; align-items: center; justify-content: space-between; gap: 20px;
 }
-.map-brand-block { display: flex; align-items: baseline; gap: 14px; }
+.map-brand-block { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .map-page-title {
   font-family: var(--font-mono);
   font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
   color: var(--ink-500);
   padding-left: 14px;
   border-left: 1px solid var(--paper-400);
+  white-space: nowrap;
 }
-.map-user {
-  display: flex; align-items: center; gap: 12px;
-}
+.map-actions { display: flex; align-items: center; gap: 8px; }
+
+/* nome do usuário, separado das ações por um fio */
 .map-user-name {
   font-family: var(--font-mono); font-size: 11px;
-  color: var(--ink-600); letter-spacing: 0.1em;
-  max-width: 180px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--ink-600); letter-spacing: 0.08em;
+  max-width: 170px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  padding-right: 12px; margin-right: 2px;
+  border-right: 1px solid var(--paper-400);
 }
-.map-signout {
+
+/* botão de ação secundário (compartilhar, sair) */
+.map-btn {
+  display: inline-flex; align-items: center; gap: 7px;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ink-600);
   background: none; border: 1px dashed var(--paper-400);
-  border-radius: var(--radius-sm); padding: 6px 12px; cursor: pointer;
-  transition: all var(--duration) var(--ease-soft);
+  border-radius: var(--radius-sm); padding: 7px 13px; cursor: pointer;
+  transition: color var(--duration) var(--ease-soft),
+              border-color var(--duration) var(--ease-soft),
+              transform var(--duration) var(--ease-bounce);
 }
-.map-signout:hover { border-color: var(--accent-tomato); color: var(--accent-tomato); }
+.map-btn:hover { color: var(--ink-900); border-color: var(--ink-400); transform: translateY(-1px); }
+.map-btn.is-danger:hover { color: var(--accent-tomato); border-color: var(--accent-tomato); }
+.map-btn.is-done { color: var(--accent-cyan); border-color: var(--accent-cyan); }
+.map-btn svg { flex-shrink: 0; }
+
+/* CTA do pôster — o único item preenchido da barra, para se destacar */
+.map-cta-poster {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--paper-50); background: var(--poster-gold);
+  border: 1px solid var(--poster-gold); border-radius: var(--radius-sm);
+  padding: 8px 15px; cursor: pointer; box-shadow: var(--shadow-sm);
+  transition: transform var(--duration) var(--ease-bounce),
+              box-shadow var(--duration) var(--ease-soft),
+              filter var(--duration) var(--ease-soft);
+}
+.map-cta-poster:hover { transform: translateY(-1px) rotate(-0.4deg); box-shadow: var(--shadow); filter: brightness(1.06); }
+.map-cta-poster:disabled {
+  background: none; color: var(--ink-400); border: 1px dashed var(--paper-400);
+  box-shadow: none; cursor: not-allowed; transform: none; filter: none;
+}
+.map-cta-poster .cta-count {
+  font-size: 9px; letter-spacing: 0.08em;
+  background: rgba(250, 246, 236, 0.24); border-radius: var(--radius-full);
+  padding: 2px 7px;
+}
+
+@media (max-width: 820px) {
+  .map-page-title, .map-user-name { display: none; }
+  .map-btn .btn-label { display: none; }
+  .map-btn { padding: 7px 10px; }
+  .map-header-inner { padding: 10px 14px; gap: 10px; }
+}
+
+/* ================================================
+   POSTER NUDGE — descoberta do produto impresso
+   ================================================ */
+.poster-nudge {
+  position: fixed; right: 20px; bottom: 20px; z-index: 45;
+  width: 310px; background: var(--paper-50);
+  border: 1px solid var(--paper-300); border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 22px 22px 20px;
+  transform: rotate(-0.8deg);
+  animation: nudge-in 520ms var(--ease-bounce) both;
+}
+@keyframes nudge-in {
+  from { opacity: 0; transform: rotate(-0.8deg) translateY(24px) scale(0.96); }
+}
+.poster-nudge-tape {
+  position: absolute; top: -11px; left: 50%;
+  width: 84px; height: 20px;
+  background: rgba(184, 134, 11, 0.42); mix-blend-mode: multiply;
+  transform: translateX(-50%) rotate(-2deg);
+  border-left: 1px dashed rgba(138,111,68,0.3);
+  border-right: 1px dashed rgba(138,111,68,0.3);
+}
+.poster-nudge-close {
+  position: absolute; top: 10px; right: 10px;
+  background: none; border: none; cursor: pointer;
+  color: var(--ink-400); padding: 4px; line-height: 1; border-radius: var(--radius-sm);
+  transition: color var(--duration-fast) var(--ease-soft);
+}
+.poster-nudge-close:hover { color: var(--ink-900); }
+.poster-nudge-eyebrow {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--poster-gold); margin-bottom: 12px;
+}
+/* prévia: as fotos reais da pessoa, empilhadas como polaroids */
+.nudge-stack { display: flex; justify-content: center; margin: 4px 0 18px; height: 92px; }
+.nudge-shot {
+  position: relative; width: 68px; background: var(--paper-50);
+  padding: 5px 5px 14px; box-shadow: var(--shadow-sm);
+  border: 1px solid rgba(61,46,31,0.08);
+  transition: transform var(--duration-slow) var(--ease-bounce);
+}
+.nudge-shot .ns-img { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; background: var(--paper-300); }
+.nudge-shot:nth-child(1) { transform: rotate(-7deg); z-index: 1; }
+.nudge-shot:nth-child(2) { transform: rotate(2deg) translateY(-5px); margin: 0 -12px; z-index: 3; }
+.nudge-shot:nth-child(3) { transform: rotate(8deg); z-index: 2; }
+.poster-nudge:hover .nudge-shot:nth-child(1) { transform: rotate(-11deg) translateX(-4px); }
+.poster-nudge:hover .nudge-shot:nth-child(3) { transform: rotate(12deg) translateX(4px); }
+.poster-nudge h3 {
+  font-family: var(--font-display); font-size: 21px; color: var(--ink-900);
+  line-height: 1.15; margin: 0 0 9px;
+}
+.poster-nudge p {
+  font-family: var(--font-body); font-size: 13.5px; color: var(--ink-700);
+  line-height: 1.55; margin: 0 0 16px;
+}
+.poster-nudge p strong { color: var(--ink-900); }
+.poster-nudge-cta {
+  width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.12em; text-transform: uppercase;
+  color: var(--paper-50); background: var(--poster-gold);
+  border: none; border-radius: var(--radius-sm); padding: 11px 14px; cursor: pointer;
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--duration) var(--ease-bounce), filter var(--duration) var(--ease-soft);
+}
+.poster-nudge-cta:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.poster-nudge-price {
+  margin-top: 10px; text-align: center;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
+  text-transform: uppercase; color: var(--ink-500);
+}
+@media (max-width: 640px) {
+  .poster-nudge { right: 12px; left: 12px; bottom: 12px; width: auto; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster-nudge { animation: none; }
+}
 
 .map-body {
   position: absolute;
@@ -908,6 +1036,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   box-shadow: var(--shadow-sm);
   animation: bob 1.5s ease-in-out infinite;
   white-space: nowrap;
+  display: inline-flex; align-items: center; gap: 5px;
 }
 
 /* ================================================

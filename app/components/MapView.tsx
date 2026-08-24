@@ -12,6 +12,7 @@ import Map, {
   type ViewStateChangeEvent,
 } from "react-map-gl/mapbox";
 import type { FeatureCollection, Point } from "geojson";
+import { Globe, MapPin } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
 import { sharePolaroid } from "@/lib/share";
 import { exportPolaroid } from "@/lib/export";
@@ -241,12 +242,14 @@ export default function MapView({
                     style={{
                       position: "absolute", bottom: -2, right: -2,
                       width: 18, height: 18, borderRadius: "50%",
-                      background: "#00b4c8",
+                      background: "var(--accent-cyan)",
                       border: "1.5px solid var(--paper-50)",
                       display: "flex", alignItems: "center", justifyContent: "center",
-                      fontSize: 10, lineHeight: 1,
+                      color: "var(--paper-50)",
                     }}
-                  >🌐</span>
+                  >
+                    <Globe size={11} strokeWidth={2} />
+                  </span>
                 )}
               </div>
             </Marker>
@@ -255,7 +258,10 @@ export default function MapView({
         {/* new-point indicator */}
         {selectedLocation && (
           <Marker longitude={selectedLocation.lng} latitude={selectedLocation.lat} anchor="bottom">
-            <div className="map-pin-new">novo ponto ↑</div>
+            <div className="map-pin-new">
+              <MapPin size={11} strokeWidth={2} />
+              novo ponto
+            </div>
           </Marker>
         )}
 

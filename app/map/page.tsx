@@ -4,9 +4,11 @@ import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import type { FirebaseError } from "firebase/app";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import { Frame, Link2, Check, LogOut, MapPin, X } from "lucide-react";
 import MapView from "../components/MapView";
 import OnThisDay from "../components/OnThisDay";
 import UploadForm from "../components/UploadForm";
+import PosterNudge from "../components/PosterNudge";
 import PosterWizard from "../components/poster/PosterWizard";
 import { auth, signOutUser } from "@/lib/auth";
 import { getLocations, deleteLocation, ensureUsername } from "@/lib/firestore";
@@ -116,6 +118,7 @@ export default function MapPage() {
   }
 
   const displayName = user?.displayName ?? user?.email ?? "viajante";
+  const showOnThisDay = Boolean(onThisDayMemory) && !onThisDayDismissed;
 
   return (
     <div style={{ position: "fixed", inset: 0, zIndex: 0 }}>
@@ -129,52 +132,47 @@ export default function MapPage() {
         />
       </div>
 
-      <header style={{ position: "absolute", top: 0, left: 0, right: 0, zIndex: 50, background: "rgba(245, 239, 224, 0.82)", backdropFilter: "blur(10px)", WebkitBackdropFilter: "blur(10px)", borderBottom: "1px solid var(--paper-300)" }}>
-        <div style={{ padding: "12px 28px", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 24 }}>
-          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+      <header className="map-header">
+        <div className="map-header-inner">
+          <div className="map-brand-block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src="/photos/logo.svg" alt="guardei" style={{ height: 36, width: "auto" }} />
             <span className="brand" style={{ fontSize: 22 }}>guardei<span className="amp">,</span></span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ink-500)", paddingLeft: 14, borderLeft: "1px solid var(--paper-400)" }}>
-              mapa de memorias
-            </span>
+            <span className="map-page-title">mapa de memórias</span>
           </div>
 
-          <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-600)", letterSpacing: "0.1em", maxWidth: 200, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-              {displayName}
-            </span>
+          <div className="map-actions">
+            <span className="map-user-name">{displayName}</span>
 
-            {locations.length > 0 && (
-              <button
-                onClick={() => setPosterOpen(true)}
-                style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-600)", background: "none", border: "1px dashed var(--paper-400)", borderRadius: "var(--radius-sm)", padding: "6px 14px", cursor: "pointer", transition: "all var(--duration) var(--ease-soft)", display: "flex", alignItems: "center", gap: 6 }}
-                onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = "#b8860b"; (e.target as HTMLButtonElement).style.borderColor = "#b8860b"; }}
-                onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = "var(--ink-600)"; (e.target as HTMLButtonElement).style.borderColor = "var(--paper-400)"; }}
-              >
-                <span style={{ fontSize: 13 }}>🖼️</span>
-                poster
-              </button>
-            )}
+            <button
+              className="map-cta-poster"
+              onClick={() => setPosterOpen(true)}
+              disabled={locations.length === 0}
+              title={
+                locations.length === 0
+                  ? "Guarde uma memória primeiro para montar seu pôster"
+                  : "Monte um pôster com suas memórias"
+              }
+            >
+              <Frame size={14} strokeWidth={1.7} />
+              pôster
+              {locations.length > 0 && <span className="cta-count">{locations.length}</span>}
+            </button>
 
             {username && (
               <button
+                className={`map-btn${copied ? " is-done" : ""}`}
                 onClick={handleShareProfile}
                 title={`guardei.art/u/${username}`}
-                style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: copied ? "#00b4c8" : "var(--ink-600)", background: "none", border: `1px dashed ${copied ? "#00b4c8" : "var(--paper-400)"}`, borderRadius: "var(--radius-sm)", padding: "6px 14px", cursor: "pointer", transition: "all var(--duration) var(--ease-soft)", display: "flex", alignItems: "center", gap: 6 }}
               >
-                <span style={{ fontSize: 13 }}>{copied ? "✓" : "🔗"}</span>
-                {copied ? "copiado!" : "compartilhar"}
+                {copied ? <Check size={14} strokeWidth={1.8} /> : <Link2 size={14} strokeWidth={1.7} />}
+                <span className="btn-label">{copied ? "copiado!" : "compartilhar"}</span>
               </button>
             )}
 
-            <button
-              onClick={() => signOutUser()}
-              style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-600)", background: "none", border: "1px dashed var(--paper-400)", borderRadius: "var(--radius-sm)", padding: "6px 14px", cursor: "pointer", transition: "all var(--duration) var(--ease-soft)" }}
-              onMouseEnter={e => { (e.target as HTMLButtonElement).style.color = "var(--accent-tomato)"; (e.target as HTMLButtonElement).style.borderColor = "var(--accent-tomato)"; }}
-              onMouseLeave={e => { (e.target as HTMLButtonElement).style.color = "var(--ink-600)"; (e.target as HTMLButtonElement).style.borderColor = "var(--paper-400)"; }}
-            >
-              sair
+            <button className="map-btn is-danger" onClick={() => signOutUser()} title="Sair da conta">
+              <LogOut size={14} strokeWidth={1.7} />
+              <span className="btn-label">sair</span>
             </button>
           </div>
         </div>
@@ -189,7 +187,7 @@ export default function MapPage() {
         />
       )}
 
-      {!loading && onThisDayMemory && !onThisDayDismissed && (
+      {showOnThisDay && (
         <OnThisDay
           memory={onThisDayMemory}
           yearsAgo={onThisDayYearsAgo}
@@ -201,21 +199,29 @@ export default function MapPage() {
         <div style={{ position: "fixed", inset: 0, zIndex: 55, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
           <div style={{ pointerEvents: "all", background: "var(--paper-50)", border: "1px solid var(--paper-300)", borderRadius: "var(--radius-md)", boxShadow: "0 8px 40px rgba(42,31,20,0.18), 0 2px 8px rgba(42,31,20,0.10)", padding: "36px 40px 32px", maxWidth: 400, width: "calc(100vw - 48px)", position: "relative", transform: "rotate(-1deg)" }}>
             <div style={{ position: "absolute", top: -10, left: "50%", transform: "translateX(-50%)", width: 64, height: 20, background: "rgba(212,190,148,0.55)", borderRadius: 2 }} />
-            <button onClick={() => setOnboardingDismissed(true)} aria-label="Fechar" style={{ position: "absolute", top: 14, right: 16, background: "none", border: "none", cursor: "pointer", fontFamily: "var(--font-mono)", fontSize: 13, color: "var(--ink-400)", lineHeight: 1, padding: 4 }}>{"✕"}</button>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ink-500)", marginBottom: 14 }}>primeira memoria</div>
+            <button onClick={() => setOnboardingDismissed(true)} aria-label="Fechar" style={{ position: "absolute", top: 14, right: 16, background: "none", border: "none", cursor: "pointer", color: "var(--ink-400)", lineHeight: 1, padding: 4, display: "flex" }}><X size={15} strokeWidth={1.8} /></button>
+            <div style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.2em", textTransform: "uppercase", color: "var(--ink-500)", marginBottom: 14 }}>primeira memória</div>
             <div style={{ fontFamily: "var(--font-display)", fontSize: "var(--text-xl)", color: "var(--ink-900)", lineHeight: "var(--leading-snug)", marginBottom: 14 }}>
-              Seu mapa ainda<br />esta em branco.
+              Seu mapa ainda<br />está em branco.
             </div>
             <p style={{ fontFamily: "var(--font-body)", fontSize: "var(--text-sm)", color: "var(--ink-600)", lineHeight: "var(--leading-body)", marginBottom: 20 }}>
-              Clique em qualquer lugar do mapa para marcar onde uma memoria aconteceu.
+              Clique em qualquer lugar do mapa para marcar onde uma memória aconteceu.
             </p>
             <div style={{ display: "flex", alignItems: "center", gap: 10, padding: "12px 16px", background: "var(--paper-100)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--paper-400)" }}>
-              <span style={{ fontSize: 18 }}>{"📍"}</span>
+              <MapPin size={17} strokeWidth={1.6} style={{ color: "var(--accent-tomato)", flexShrink: 0 }} />
               <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--ink-600)", letterSpacing: "0.05em" }}>toque no mapa, escolha a foto, guarde</span>
+            </div>
+            <div style={{ marginTop: 18, paddingTop: 16, borderTop: "1px dashed var(--paper-400)", fontFamily: "var(--font-body)", fontSize: 12.5, color: "var(--ink-500)", lineHeight: 1.55 }}>
+              Depois de algumas memórias, dá para imprimir tudo num pôster e pendurar na parede.
             </div>
             <div style={{ marginTop: 24, fontFamily: "var(--font-hand)", fontSize: "var(--text-md)", color: "var(--ink-400)", textAlign: "right" }}>guardei.</div>
           </div>
         </div>
+      )}
+
+      {/* um convite de cada vez: o "há um ano" tem prioridade sobre o pôster */}
+      {!loading && !posterOpen && !selectedLocation && !showOnThisDay && (
+        <PosterNudge locations={locations} onOpenPoster={() => setPosterOpen(true)} />
       )}
 
       {posterOpen && user && (

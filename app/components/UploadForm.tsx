@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { X, Camera, Globe } from "lucide-react";
 import { uploadPhoto } from "@/lib/upload";
 
 type SelectedLocation = { lat: number; lng: number };
@@ -67,7 +68,7 @@ export default function UploadForm({
         onClick={onCancel}
         aria-label="Fechar"
       >
-        ✕
+        <X size={16} strokeWidth={1.8} />
       </button>
 
       <div className="upload-panel-title">Nova memória</div>
@@ -80,11 +81,7 @@ export default function UploadForm({
         <div className="upload-field">
           <label>foto</label>
           <label className={`upload-file-label${file ? " has-file" : ""}`}>
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round">
-              <rect x="3" y="6" width="18" height="14" rx="2"/>
-              <circle cx="12" cy="13" r="3.5"/>
-              <path d="M8 6l2-2h4l2 2"/>
-            </svg>
+            <Camera size={16} strokeWidth={1.8} />
             {file ? file.name.slice(0, 22) + (file.name.length > 22 ? "…" : "") : "escolher imagem"}
             <input
               type="file"
@@ -144,8 +141,9 @@ export default function UploadForm({
                 transition: "left 0.2s",
               }} />
             </span>
-            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.08em", color: "var(--ink-600)" }}>
-              tornar pública{isPublic && <span style={{ marginLeft: 6, fontSize: 13 }}>🌐</span>}
+            <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.08em", color: "var(--ink-600)", display: "inline-flex", alignItems: "center", gap: 6 }}>
+              tornar pública
+              {isPublic && <Globe size={13} strokeWidth={1.7} style={{ color: "var(--accent-cyan)" }} />}
             </span>
           </label>
         </div>
