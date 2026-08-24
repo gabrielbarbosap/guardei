@@ -107,6 +107,7 @@ function Header({ onLogin }: { onLogin: () => void }) {
         <nav className="nav">
           <a href="#como">Como funciona</a>
           <a href="#memorias">Memórias</a>
+          <a href="#compartilhar">Compartilhar</a>
           <a href="#poster">Pôster impresso</a>
         </nav>
         <div className="nav-cta">
@@ -165,6 +166,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
           <div className="globe-frame">
             <InkGlobe size={560} autoRotate speed={0.12} cycleInterval={4200} onFocus={setCurrentPin} onlyWithPhoto />
           </div>
+          <div className="globe-hint">arraste para girar o mundo</div>
           <div className="globe-log">
             <span className="label">agora guardando</span>
             <div className="log-title">{currentPin.title}</div>
@@ -247,6 +249,66 @@ function MemoryWall() {
           </article>
         ))}
       </div>
+    </section>
+  );
+}
+
+function ShareSection() {
+  return (
+    <section id="compartilhar" className="share-sec">
+      <div className="section-head" data-reveal>
+        <div className="eyebrow">para dividir com quem estava lá</div>
+        <h2>Um link. Só as memórias<br />que <em>você escolher</em>.</h2>
+        <p className="sh-lead">
+          Seu caderno é privado por padrão. Quando quiser, você abre uma memória — ou o caderno inteiro — para quem importa.
+        </p>
+      </div>
+
+      <div className="share-grid" data-reveal-children>
+        <article className="share-card">
+          <div className="vc-tape" />
+          <div className="share-stage">
+            <div className="share-link">
+              <span className="sl-icon">🔗</span>
+              <span className="sl-url">guardei.art/u/<strong>marina</strong></span>
+              <span className="sl-copy">copiar</span>
+            </div>
+          </div>
+          <h3>Seu caderno tem endereço</h3>
+          <p>
+            Cada pessoa ganha um link só seu. Manda para a família, para quem viajou junto,
+            coloca na bio — e eles veem seu mapa com as memórias que você deixou públicas.
+            O resto continua só seu.
+          </p>
+        </article>
+
+        <article className="share-card">
+          <div className="vc-tape" />
+          <div className="share-stage">
+            <div className="share-polaroid">
+              <div className="sp-photo">
+                <Image src="/photos/girls-hugging-graduation.jpg" alt="" fill style={{ objectFit: "cover" }} sizes="140px" />
+                <div className="memo-photo-grain" />
+              </div>
+              <div className="sp-cap">a gente conseguiu</div>
+            </div>
+            <div className="share-arrow" aria-hidden>
+              <svg width="34" height="20" viewBox="0 0 34 20" fill="none" stroke="currentColor" strokeWidth="1.4" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 10h27" strokeDasharray="3 4" /><path d="M24 4l6 6-6 6" />
+              </svg>
+            </div>
+            <span className="share-send">enviar</span>
+          </div>
+          <h3>Ou só aquela foto</h3>
+          <p>
+            Achou a memória certa para mandar num grupo? Ela sai daqui já montada como
+            uma polaroid, com a sua legenda escrita à mão — pronta para o WhatsApp,
+            sem precisar do caderno inteiro.
+          </p>
+        </article>
+      </div>
+
+      <p className="share-note" data-reveal>você decide o que é público. sempre.</p>
     </section>
   );
 }
@@ -420,6 +482,7 @@ export default function Home() {
         <Hero onLogin={() => setShowAuth(true)} />
         <ValueSection />
         <MemoryWall />
+        <ShareSection />
         <PosterSection onLogin={() => setShowAuth(true)} />
         <FinalCTA onLogin={() => setShowAuth(true)} />
         <SiteFooter />

@@ -1,23 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useRef, useState, useCallback, useLayoutEffect } from "react";
-
-// ---- world silhouettes (low-res ink-sketch polygons) ----------------
-const CONTINENTS: [number, number][][] = [
-  [[-168,66],[-156,71],[-140,70],[-128,70],[-108,72],[-92,74],[-78,73],[-66,60],[-54,49],[-60,42],[-74,38],[-80,25],[-97,25],[-106,22],[-116,32],[-124,40],[-130,54],[-140,59],[-156,60],[-168,66]],
-  [[-92,18],[-82,10],[-76,8],[-78,2],[-82,8],[-90,15],[-92,18]],
-  [[-78,12],[-62,10],[-52,5],[-48,-2],[-38,-8],[-36,-22],[-44,-32],[-58,-38],[-66,-44],[-72,-52],[-70,-55],[-66,-50],[-62,-40],[-58,-32],[-66,-24],[-72,-16],[-78,-6],[-80,2],[-78,12]],
-  [[-46,82],[-18,82],[-22,70],[-38,60],[-52,66],[-54,74],[-46,82]],
-  [[-10,36],[2,44],[-4,54],[4,60],[10,58],[18,56],[28,58],[32,54],[40,50],[42,44],[32,38],[22,36],[10,38],[-2,36],[-10,36]],
-  [[-16,16],[-16,28],[-6,36],[8,34],[20,32],[32,32],[36,22],[44,14],[50,10],[46,0],[40,-12],[34,-22],[20,-34],[14,-34],[8,-24],[8,-14],[2,-4],[-4,4],[-14,8],[-16,16]],
-  [[34,32],[44,32],[54,24],[58,22],[50,12],[44,16],[36,22],[34,32]],
-  [[32,54],[40,60],[58,66],[72,70],[88,72],[104,72],[126,72],[146,68],[158,62],[164,60],[170,68],[178,68],[178,60],[158,52],[142,48],[130,42],[122,38],[128,32],[120,22],[108,18],[100,12],[98,4],[108,-2],[118,-6],[126,-10],[134,-4],[130,4],[122,10],[118,18],[122,26],[112,24],[98,22],[88,22],[76,26],[72,36],[60,38],[54,42],[46,46],[40,50],[32,54]],
-  [[68,24],[76,24],[82,16],[86,8],[80,6],[74,18],[68,24]],
-  [[96,2],[106,-4],[118,-8],[130,-8],[140,-6],[132,2],[122,4],[110,4],[100,4],[96,2]],
-  [[114,-22],[130,-14],[142,-12],[152,-24],[150,-36],[138,-38],[126,-34],[118,-34],[114,-22]],
-  [[166,-40],[174,-36],[176,-44],[172,-46],[166,-40]],
-  [[-180,-72],[-120,-78],[-60,-74],[0,-72],[60,-76],[120,-78],[180,-72],[180,-88],[-180,-88],[-180,-72]],
-];
+import { useEffect, useRef, useState, useLayoutEffect } from "react";
+import { geoOrthographic, geoPath, geoGraticule, geoDistance, geoInterpolate } from "d3-geo";
+import type { GeoProjection } from "d3-geo";
+import { feature, mesh } from "topojson-client";
 
 export interface GlobePin {
   id: string;
@@ -44,12 +30,12 @@ export const PINS: GlobePin[] = [
   { id: "kyoto",    lat: 35.01,  lon: 135.76, title: "Templo com a avó",       place: "Kyoto · 2019",      mood: "rose",      photo: "ky" },
 ];
 
-const MOOD: Record<string, string> = {
-  tomato: "var(--accent-tomato)",
-  ink:    "var(--accent-ink)",
-  moss:   "var(--accent-moss)",
-  rose:   "var(--accent-rose)",
-  highlight: "var(--accent-highlight)",
+const MOOD_VAR: Record<string, string> = {
+  tomato: "--accent-tomato",
+  ink: "--accent-ink",
+  moss: "--accent-moss",
+  rose: "--accent-rose",
+  highlight: "--accent-highlight",
 };
 
 const PHOTO_GRAD: Record<string, [string, string]> = {
@@ -66,66 +52,103 @@ const PHOTO_GRAD: Record<string, [string, string]> = {
   ky:     ["#6a3a3a","#c07878"],
 };
 
-interface Projected { x: number; y: number; z: number; visible: boolean; }
+/** Palette resolved from the CSS custom properties so canvas matches the design tokens. */
+interface Palette {
+  paper50: string; paper100: string; paper300: string;
+  ink800: string; ink600: string;
+  sepia: string; sepiaLight: string;
+  moods: Record<string, string>;
+}
 
-function lonLatToXY(lon: number, lat: number, lonOffset: number, R: number, cx: number, cy: number): Projected {
-  const l = ((lon + lonOffset + 540) % 360) - 180;
-  const phi = (lat * Math.PI) / 180;
-  const lam = (l * Math.PI) / 180;
+function readPalette(el: HTMLElement): Palette {
+  const cs = getComputedStyle(el);
+  const v = (name: string, fallback: string) => cs.getPropertyValue(name).trim() || fallback;
   return {
-    x: cx + R * Math.cos(phi) * Math.sin(lam),
-    y: cy - R * Math.sin(phi),
-    z: Math.cos(phi) * Math.cos(lam),
-    visible: Math.cos(phi) * Math.cos(lam) > 0.02,
+    paper50:    v("--paper-50", "#faf6ec"),
+    paper100:   v("--paper-100", "#f5efe0"),
+    paper300:   v("--paper-300", "#e0d3b3"),
+    ink800:     v("--ink-800", "#3d2e1f"),
+    ink600:     v("--ink-600", "#7a6147"),
+    sepia:      v("--sepia", "#b89968"),
+    sepiaLight: v("--sepia-light", "#d9c9a8"),
+    moods: Object.fromEntries(
+      Object.entries(MOOD_VAR).map(([k, name]) => [k, v(name, "#d94e3b")]),
+    ),
   };
 }
 
-function continentPath(poly: [number, number][], lonOffset: number, R: number, cx: number, cy: number): string {
-  const segs: Projected[][] = [];
-  let cur: Projected[] = [];
-  for (const [lon, lat] of poly) {
-    const p = lonLatToXY(lon, lat, lonOffset, R, cx, cy);
-    if (p.visible) cur.push(p);
-    else if (cur.length) { segs.push(cur); cur = []; }
+function hexToRgba(color: string, alpha: number): string {
+  const hex = color.replace("#", "");
+  if (hex.length !== 3 && hex.length !== 6) return color;
+  const full = hex.length === 3 ? hex.split("").map(c => c + c).join("") : hex;
+  const n = parseInt(full, 16);
+  return `rgba(${(n >> 16) & 255}, ${(n >> 8) & 255}, ${n & 255}, ${alpha})`;
+}
+
+/** One-off paper grain tile, generated once and reused every frame. */
+function makeGrain(sizePx: number): HTMLCanvasElement {
+  const c = document.createElement("canvas");
+  c.width = c.height = sizePx;
+  const ctx = c.getContext("2d")!;
+  const img = ctx.createImageData(sizePx, sizePx);
+  for (let i = 0; i < img.data.length; i += 4) {
+    const n = 200 + Math.random() * 55;
+    img.data[i] = n * 0.42;
+    img.data[i + 1] = n * 0.32;
+    img.data[i + 2] = n * 0.2;
+    img.data[i + 3] = Math.random() * 46;
   }
-  if (cur.length) segs.push(cur);
-  return segs.filter(s => s.length > 1).map(s => {
-    let d = `M ${s[0].x.toFixed(1)} ${s[0].y.toFixed(1)}`;
-    for (let i = 1; i < s.length; i++) d += ` L ${s[i].x.toFixed(1)} ${s[i].y.toFixed(1)}`;
-    return d + " Z";
-  }).join(" ");
+  ctx.putImageData(img, 0, 0);
+  return c;
 }
 
-function buildLine(pts: Projected[]): string {
-  if (pts.length < 2) return "";
-  let d = `M ${pts[0].x.toFixed(1)} ${pts[0].y.toFixed(1)}`;
-  for (let i = 1; i < pts.length; i++) d += ` L ${pts[i].x.toFixed(1)} ${pts[i].y.toFixed(1)}`;
-  return d;
+/** Shortest signed delta between two angles, in degrees. */
+function angleDelta(from: number, to: number): number {
+  return ((to - from + 540) % 360) - 180;
 }
 
-function Polaroid({ pin, size }: { pin: GlobePin & Projected; size: number }) {
-  const cx = size / 2, cy = size / 2;
-  const dx = pin.x - cx, dy = pin.y - cy;
-  const len = Math.hypot(dx, dy) || 1;
-  const outR = size / 2 + 40;
-  const ox = cx + (dx / len) * outR;
-  const oy = cy + (dy / len) * outR;
-  const leftSide = ox < cx;
+/** Frame-rate independent exponential approach: fraction of the gap to close over dt. */
+function approach(dt: number, halfLifeMs: number): number {
+  return 1 - Math.pow(2, -dt / halfLifeMs);
+}
+
+type GeoFeatureCollection = { type: "FeatureCollection"; features: unknown[] };
+type WorldShapes = { land: GeoFeatureCollection; borders: unknown };
+
+let worldPromise: Promise<WorldShapes> | null = null;
+
+function loadWorld(): Promise<WorldShapes> {
+  if (!worldPromise) {
+    worldPromise = fetch("/geo/countries-110m.json")
+      .then(r => r.json())
+      .then((topo) => {
+        /* eslint-disable @typescript-eslint/no-explicit-any */
+        const objects = (topo as any).objects;
+        return {
+          // merged landmass: one clean coastline, half the cost of stroking every country
+          land: feature(topo as any, objects.land) as unknown as GeoFeatureCollection,
+          borders: mesh(topo as any, objects.countries, (a: any, b: any) => a !== b),
+        };
+        /* eslint-enable @typescript-eslint/no-explicit-any */
+      })
+      .catch((err) => {
+        worldPromise = null;
+        throw err;
+      });
+  }
+  return worldPromise;
+}
+
+function Polaroid({
+  pin,
+  innerRef,
+}: {
+  pin: GlobePin;
+  innerRef: React.RefObject<HTMLDivElement | null>;
+}) {
   const [g1, g2] = PHOTO_GRAD[pin.photo] ?? ["#8a6f44", "#d9b585"];
-
   return (
-    <div
-      className="polaroid-tooltip"
-      style={{
-        position: "absolute",
-        left: ox,
-        top: oy,
-        transform: `translate(${leftSide ? "-100%" : "0"}, -50%) rotate(${leftSide ? -4 : 4}deg)`,
-        width: 190,
-        pointerEvents: "none",
-        zIndex: 4,
-      }}
-    >
+    <div ref={innerRef} className="polaroid-tooltip globe-polaroid">
       <div className="pt-tape" />
       <div className="pt-photo" style={{ background: `linear-gradient(135deg, ${g1}, ${g2})`, position: "relative", overflow: "hidden" }}>
         {pin.photoSrc && (
@@ -160,149 +183,422 @@ export default function InkGlobe({
 }: InkGlobeProps) {
   const R = size / 2 - 18;
   const cx = size / 2, cy = size / 2;
+
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const polaroidRef = useRef<HTMLDivElement>(null);
+
   const activePins = onlyWithPhoto ? PINS.filter(p => p.photoSrc) : PINS;
+  const pinsRef = useRef(activePins);
 
-  const [lonOffset, setLonOffset] = useState(0);
-  const [hover, setHover] = useState<string | null>(null);
   const [focusId, setFocusId] = useState(activePins[0].id);
-  const rafRef = useRef<number>(0);
-  const lastTRef = useRef<number>(0);
-  const userInteractRef = useRef<number>(0);
+  const [hoverId, setHoverId] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
-  useEffect(() => {
-    if (paused) return;
-    lastTRef.current = performance.now();
-    const tick = (t: number) => {
-      const dt = Math.min(64, t - lastTRef.current);
-      lastTRef.current = t;
-      if (autoRotate) {
-        const active = hover !== null || Date.now() - userInteractRef.current < 900;
-        setLonOffset(v => (v + speed * dt * 0.06 * (active ? 0.15 : 1)) % 360);
-      }
-      rafRef.current = requestAnimationFrame(tick);
-    };
-    rafRef.current = requestAnimationFrame(tick);
-    return () => cancelAnimationFrame(rafRef.current);
-  }, [autoRotate, speed, paused, hover]);
+  /* Rotation lives in refs so the animation loop never re-renders React. */
+  const rotRef = useRef({ lambda: -activePins[0].lon, phi: -activePins[0].lat * 0.55 });
+  const targetRef = useRef({ lambda: -activePins[0].lon, phi: -activePins[0].lat * 0.55 });
+  const modeRef = useRef<"settling" | "drifting" | "user">("settling");
+  const dragRef = useRef({ active: false, lastX: 0, lastY: 0, vx: 0, vy: 0, moved: false });
+  const idleUntilRef = useRef(0);
+  const focusIdRef = useRef(focusId);
+  const hoverIdRef = useRef<string | null>(null);
+  const visibleRef = useRef(true);
 
-  // Keep a stable ref to onFocus so the interval never needs to re-register
   const onFocusRef = useRef(onFocus);
+  useLayoutEffect(() => { pinsRef.current = activePins; });
   useLayoutEffect(() => { onFocusRef.current = onFocus; });
+  useLayoutEffect(() => { focusIdRef.current = focusId; });
+  useLayoutEffect(() => { hoverIdRef.current = hoverId; });
 
-  // auto-cycle — only updates focusId, never calls onFocus inside the updater
+  const activePin =
+    activePins.find(p => p.id === (hoverId ?? focusId)) ?? activePins[0];
+
+  /* ---- auto-cycle through memories ---- */
   useEffect(() => {
     if (paused) return;
     const id = setInterval(() => {
+      if (Date.now() < idleUntilRef.current || hoverIdRef.current) return;
       setFocusId(cur => {
-        const i = activePins.findIndex(p => p.id === cur);
-        return activePins[(i + 1) % activePins.length].id;
+        const list = pinsRef.current;
+        const i = list.findIndex(p => p.id === cur);
+        return list[(i + 1) % list.length].id;
       });
     }, cycleInterval);
     return () => clearInterval(id);
   }, [cycleInterval, paused]);
 
-  // notify parent after focusId settles — safe, runs outside render
+  /* ---- aim the globe at the focused memory ---- */
   useEffect(() => {
-    const pin = activePins.find(p => p.id === focusId);
-    if (pin) onFocusRef.current?.(pin);
-  }, [focusId]);
-
-  useEffect(() => {
-    if (hover || paused) return;
-    const pin = activePins.find(x => x.id === focusId);
+    const pin = pinsRef.current.find(p => p.id === focusId);
     if (!pin) return;
-    const target = -pin.lon;
-    const start = performance.now();
-    const dur = 1200;
-    let startVal = 0;
-    setLonOffset(v => { startVal = v; return v; });
-    let raf: number;
-    const step = (t: number) => {
-      const k = Math.min(1, (t - start) / dur);
-      const diff = ((target - startVal + 540) % 360) - 180;
-      setLonOffset(((startVal + diff * (1 - Math.pow(1 - k, 3))) % 360 + 360) % 360);
-      if (k < 1) raf = requestAnimationFrame(step);
+    onFocusRef.current?.(pin);
+    targetRef.current = {
+      lambda: -pin.lon,
+      // partial latitude tilt: turns toward the pin without flipping the globe over
+      phi: Math.max(-38, Math.min(38, -pin.lat * 0.55)),
     };
-    raf = requestAnimationFrame(step);
-    return () => cancelAnimationFrame(raf);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    if (modeRef.current !== "user") modeRef.current = "settling";
   }, [focusId]);
 
-  const projected = useMemo(
-    () => activePins.map(p => ({ ...p, ...lonLatToXY(p.lon, p.lat, lonOffset, R, cx, cy) })),
-    [lonOffset, R, cx, cy],
-  );
-  const continents = useMemo(
-    () => CONTINENTS.map(poly => continentPath(poly, lonOffset, R, cx, cy)),
-    [lonOffset, R, cx, cy],
-  );
-  const meridians = useMemo(() => {
-    const lines: string[] = [];
-    for (let lon = -180; lon < 180; lon += 30) {
-      let pts: Projected[] = [];
-      for (let lat = -90; lat <= 90; lat += 6) {
-        const p = lonLatToXY(lon, lat, lonOffset, R, cx, cy);
-        if (p.visible) pts.push(p);
-        else if (pts.length) { lines.push(buildLine(pts)); pts = []; }
-      }
-      if (pts.length > 1) lines.push(buildLine(pts));
-    }
-    return lines;
-  }, [lonOffset, R, cx, cy]);
-  const parallels = useMemo(() => {
-    const lines: string[] = [];
-    for (let lat = -60; lat <= 60; lat += 20) {
-      let pts: Projected[] = [];
-      for (let lon2 = -180; lon2 <= 180; lon2 += 4) {
-        const p = lonLatToXY(lon2, lat, lonOffset, R, cx, cy);
-        if (p.visible) pts.push(p);
-        else if (pts.length) { lines.push(buildLine(pts)); pts = []; }
-      }
-      if (pts.length > 1) lines.push(buildLine(pts));
-    }
-    return lines;
-  }, [lonOffset, R, cx, cy]);
+  /* ---- pause work while off-screen or on a hidden tab ---- */
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => { visibleRef.current = entry.isIntersecting; },
+      { threshold: 0 },
+    );
+    io.observe(el);
+    const onVis = () => { visibleRef.current = !document.hidden; };
+    document.addEventListener("visibilitychange", onVis);
+    return () => { io.disconnect(); document.removeEventListener("visibilitychange", onVis); };
+  }, []);
 
-  const ticks = useMemo(() => Array.from({ length: 72 }, (_, i) => {
+  /* ---- the render loop ---- */
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    const wrap = wrapRef.current;
+    if (!canvas || !wrap) return;
+
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return;
+
+    const dpr = Math.min(2, window.devicePixelRatio || 1);
+    canvas.width = size * dpr;
+    canvas.height = size * dpr;
+    canvas.style.width = `${size}px`;
+    canvas.style.height = `${size}px`;
+    ctx.scale(dpr, dpr);
+
+    const palette = readPalette(wrap);
+    const grain = makeGrain(220);
+    const grainPattern = ctx.createPattern(grain, "repeat");
+    const reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+    const projection: GeoProjection = geoOrthographic()
+      .translate([cx, cy])
+      .scale(R)
+      .clipAngle(90)
+      .precision(1.2);
+
+    const path = geoPath(projection, ctx);
+    const graticule = geoGraticule().step([20, 20])();
+
+    let world: WorldShapes | null = null;
+    let landFade = 0;
+    loadWorld()
+      .then((w) => { world = w; setReady(true); })
+      .catch(() => setReady(true));
+
+    /* Great-circle routes between consecutive memories — the travel-journal thread. */
+    const routes = pinsRef.current.slice(0, -1).map((from, i) => {
+      const to = pinsRef.current[i + 1];
+      const interp = geoInterpolate([from.lon, from.lat], [to.lon, to.lat]);
+      return {
+        type: "LineString" as const,
+        coordinates: Array.from({ length: 40 }, (_, k) => interp(k / 39)),
+      };
+    });
+
+    // gradient for the ocean sphere, built once
+    const ocean = ctx.createRadialGradient(
+      cx - R * 0.24, cy - R * 0.3, R * 0.12,
+      cx, cy, R * 1.02,
+    );
+    ocean.addColorStop(0, palette.paper50);
+    ocean.addColorStop(0.6, palette.paper100);
+    ocean.addColorStop(1, palette.paper300);
+
+    // soft darkening toward the limb, so the sphere reads as a sphere
+    const limb = ctx.createRadialGradient(cx, cy, R * 0.72, cx, cy, R);
+    limb.addColorStop(0, "rgba(0,0,0,0)");
+    limb.addColorStop(1, hexToRgba(palette.ink800, 0.24));
+
+    let raf = 0;
+    let last = performance.now();
+
+    const draw = (now: number) => {
+      const dt = Math.min(64, now - last);
+      last = now;
+
+      if (!visibleRef.current) { raf = requestAnimationFrame(draw); return; }
+
+      /* ---------- motion ---------- */
+      const rot = rotRef.current;
+      const drag = dragRef.current;
+
+      if (drag.active) {
+        // rotation is applied directly in the pointer handler
+      } else if (Math.abs(drag.vx) > 0.01 || Math.abs(drag.vy) > 0.01) {
+        // momentum after release, with friction
+        rot.lambda += drag.vx * dt;
+        rot.phi = Math.max(-60, Math.min(60, rot.phi + drag.vy * dt));
+        const friction = Math.pow(0.9975, dt);
+        drag.vx *= friction;
+        drag.vy *= friction;
+      } else if (!paused && !reduceMotion) {
+        if (modeRef.current === "settling") {
+          const k = approach(dt, 260);
+          const dl = angleDelta(rot.lambda, targetRef.current.lambda);
+          const dp = targetRef.current.phi - rot.phi;
+          rot.lambda += dl * k;
+          rot.phi += dp * k;
+          if (Math.abs(dl) < 0.35 && Math.abs(dp) < 0.35) modeRef.current = "drifting";
+        } else if (modeRef.current === "drifting" && autoRotate) {
+          const slow = hoverIdRef.current ? 0.18 : 1;
+          rot.lambda += speed * 50 * (dt / 1000) * slow;
+          // ease the tilt back toward the equator as it drifts
+          rot.phi += (targetRef.current.phi - rot.phi) * approach(dt, 900);
+        }
+      }
+
+      rot.lambda = ((rot.lambda % 360) + 540) % 360 - 180;
+      // gamma keeps a hint of the planet's axial tilt
+      projection.rotate([rot.lambda, rot.phi, -8]);
+
+      /* ---------- paint ---------- */
+      ctx.clearRect(0, 0, size, size);
+
+      // ocean
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fillStyle = ocean;
+      ctx.fill();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.clip();
+
+      // graticule
+      ctx.beginPath();
+      path(graticule);
+      ctx.strokeStyle = hexToRgba(palette.sepia, 0.34);
+      ctx.lineWidth = 0.6;
+      ctx.stroke();
+
+      // land
+      if (world) {
+        landFade = Math.min(1, landFade + dt / 700);
+        ctx.globalAlpha = landFade;
+
+        ctx.beginPath();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        path(world.land as any);
+        ctx.fillStyle = hexToRgba(palette.sepiaLight, 0.62);
+        ctx.fill();
+        ctx.strokeStyle = hexToRgba(palette.ink800, 0.68);
+        ctx.lineWidth = 0.9;
+        ctx.lineJoin = "round";
+        ctx.stroke();
+
+        // country borders, a whisper under the coastlines
+        ctx.beginPath();
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        path(world.borders as any);
+        ctx.strokeStyle = hexToRgba(palette.ink600, 0.26);
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        ctx.globalAlpha = 1;
+      }
+
+      // travel routes, drawn as flowing ink dashes
+      const dashPhase = (now / 55) % 14;
+      ctx.setLineDash([5, 9]);
+      ctx.lineDashOffset = -dashPhase;
+      ctx.strokeStyle = hexToRgba(palette.ink600, 0.42);
+      ctx.lineWidth = 1;
+      for (const route of routes) {
+        ctx.beginPath();
+        path(route);
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      ctx.lineDashOffset = 0;
+
+      // paper grain over the sphere
+      if (grainPattern) {
+        ctx.globalAlpha = 0.5;
+        ctx.fillStyle = grainPattern;
+        ctx.fillRect(cx - R, cy - R, R * 2, R * 2);
+        ctx.globalAlpha = 1;
+      }
+
+      ctx.restore();
+
+      // limb shading + rim
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.fillStyle = limb;
+      ctx.fill();
+      ctx.beginPath();
+      ctx.arc(cx, cy, R, 0, Math.PI * 2);
+      ctx.strokeStyle = hexToRgba(palette.ink800, 0.55);
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      /* ---------- pins ---------- */
+      const center: [number, number] = [-rot.lambda, -rot.phi];
+      const pulse = (Math.sin(now / 1100) + 1) / 2;
+      let activeScreen: { x: number; y: number } | null = null;
+
+      for (const pin of pinsRef.current) {
+        const dist = geoDistance([pin.lon, pin.lat], center);
+        if (dist > Math.PI / 2) continue;
+        const xy = projection([pin.lon, pin.lat]);
+        if (!xy) continue;
+
+        // fade pins out as they approach the limb
+        const edge = Math.min(1, (Math.PI / 2 - dist) / 0.28);
+        const isActive = pin.id === (hoverIdRef.current ?? focusIdRef.current);
+        const color = palette.moods[pin.mood] ?? palette.moods.tomato;
+
+        const halo = (isActive ? 11 : 7.5) + pulse * (isActive ? 7 : 4);
+        ctx.beginPath();
+        ctx.arc(xy[0], xy[1], halo, 0, Math.PI * 2);
+        ctx.fillStyle = hexToRgba(color, (isActive ? 0.26 : 0.15) * (1 - pulse * 0.75) * edge);
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(xy[0], xy[1], isActive ? 5.2 : 3.6, 0, Math.PI * 2);
+        ctx.fillStyle = hexToRgba(color, edge);
+        ctx.fill();
+        ctx.strokeStyle = hexToRgba(palette.paper50, edge);
+        ctx.lineWidth = 1.2;
+        ctx.stroke();
+
+        if (isActive) activeScreen = { x: xy[0], y: xy[1] };
+      }
+
+      /* ---------- polaroid follows its pin, without re-rendering React ---------- */
+      const card = polaroidRef.current;
+      if (card) {
+        if (activeScreen) {
+          const dx = activeScreen.x - cx, dy = activeScreen.y - cy;
+          const len = Math.hypot(dx, dy) || 1;
+          const outR = size / 2 + 40;
+          const ox = cx + (dx / len) * outR;
+          const oy = cy + (dy / len) * outR;
+          const leftSide = ox < cx;
+          card.style.left = `${ox}px`;
+          card.style.top = `${oy}px`;
+          card.style.transform = `translate(${leftSide ? "-100%" : "0"}, -50%) rotate(${leftSide ? -4 : 4}deg)`;
+          card.style.opacity = "1";
+        } else {
+          card.style.opacity = "0";
+        }
+      }
+
+      raf = requestAnimationFrame(draw);
+    };
+
+    raf = requestAnimationFrame(draw);
+    return () => cancelAnimationFrame(raf);
+  }, [size, R, cx, cy, speed, autoRotate, paused]);
+
+  /* ---- pointer: hover a memory, or spin the globe by hand ---- */
+  const pickPin = (clientX: number, clientY: number): string | null => {
+    const canvas = canvasRef.current;
+    if (!canvas) return null;
+    const rect = canvas.getBoundingClientRect();
+    const px = ((clientX - rect.left) / rect.width) * size;
+    const py = ((clientY - rect.top) / rect.height) * size;
+    const rot = rotRef.current;
+    const projection = geoOrthographic()
+      .translate([cx, cy]).scale(R).clipAngle(90)
+      .rotate([rot.lambda, rot.phi, -8]);
+    const center: [number, number] = [-rot.lambda, -rot.phi];
+
+    let best: { id: string; d: number } | null = null;
+    for (const pin of pinsRef.current) {
+      if (geoDistance([pin.lon, pin.lat], center) > Math.PI / 2) continue;
+      const xy = projection([pin.lon, pin.lat]);
+      if (!xy) continue;
+      const d = Math.hypot(xy[0] - px, xy[1] - py);
+      if (d < 16 && (!best || d < best.d)) best = { id: pin.id, d };
+    }
+    return best?.id ?? null;
+  };
+
+  const handlePointerDown = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const drag = dragRef.current;
+    drag.active = true;
+    drag.moved = false;
+    drag.lastX = e.clientX;
+    drag.lastY = e.clientY;
+    drag.vx = 0;
+    drag.vy = 0;
+    modeRef.current = "user";
+    e.currentTarget.setPointerCapture(e.pointerId);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLCanvasElement>) => {
+    const drag = dragRef.current;
+    if (drag.active) {
+      const dx = e.clientX - drag.lastX;
+      const dy = e.clientY - drag.lastY;
+      if (Math.abs(dx) > 1 || Math.abs(dy) > 1) drag.moved = true;
+      drag.lastX = e.clientX;
+      drag.lastY = e.clientY;
+
+      // degrees per pixel scales with the globe radius, so it tracks the cursor
+      const perPx = 90 / R;
+      const rot = rotRef.current;
+      rot.lambda += dx * perPx;
+      rot.phi = Math.max(-60, Math.min(60, rot.phi - dy * perPx));
+      drag.vx = dx * perPx * 0.06;
+      drag.vy = -dy * perPx * 0.06;
+      idleUntilRef.current = Date.now() + 2600;
+      return;
+    }
+    const id = pickPin(e.clientX, e.clientY);
+    setHoverId(prev => (prev === id ? prev : id));
+  };
+
+  const endDrag = () => {
+    const drag = dragRef.current;
+    if (!drag.active) return;
+    drag.active = false;
+    idleUntilRef.current = Date.now() + 2600;
+    // hand back to the cycle once the momentum has bled off
+    window.setTimeout(() => {
+      if (!dragRef.current.active) modeRef.current = "settling";
+    }, 2600);
+  };
+
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (dragRef.current.moved) return;
+    const id = pickPin(e.clientX, e.clientY);
+    if (!id) return;
+    modeRef.current = "settling";
+    idleUntilRef.current = Date.now() + 2600;
+    setFocusId(id);
+  };
+
+  const ticks = Array.from({ length: 72 }, (_, i) => {
     const a = (i / 72) * Math.PI * 2;
     const r1 = R + 6, r2 = R + (i % 6 === 0 ? 14 : 10);
-    return { x1: cx + Math.cos(a) * r1, y1: cy + Math.sin(a) * r1, x2: cx + Math.cos(a) * r2, y2: cy + Math.sin(a) * r2, major: i % 6 === 0 };
-  }), [R, cx, cy]);
-
-  const handleEnter = useCallback((id: string) => { setHover(id); userInteractRef.current = Date.now(); }, []);
-  const handleLeave = useCallback(() => setHover(null), []);
-
-  const focusPin = projected.find(p => p.id === focusId);
-  const activePin = hover ? projected.find(p => p.id === hover) : focusPin;
+    return {
+      x1: cx + Math.cos(a) * r1, y1: cy + Math.sin(a) * r1,
+      x2: cx + Math.cos(a) * r2, y2: cy + Math.sin(a) * r2,
+      major: i % 6 === 0,
+    };
+  });
 
   return (
-    <div style={{ width: size, height: size, position: "relative" }}>
-      <svg viewBox={`0 0 ${size} ${size}`} width={size} height={size} style={{ display: "block", overflow: "visible" }}>
-        <defs>
-          <radialGradient id="globeFill" cx="38%" cy="32%" r="75%">
-            <stop offset="0%"   stopColor="var(--paper-50)" />
-            <stop offset="60%"  stopColor="var(--paper-100)" />
-            <stop offset="100%" stopColor="var(--paper-300)" />
-          </radialGradient>
-          <radialGradient id="globeLimb" cx="50%" cy="50%" r="50%">
-            <stop offset="80%"  stopColor="rgba(0,0,0,0)" />
-            <stop offset="100%" stopColor="rgba(61,46,31,0.22)" />
-          </radialGradient>
-          <filter id="igGrain" x="-10%" y="-10%" width="120%" height="120%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="4" />
-            <feColorMatrix values="0 0 0 0 0.18  0 0 0 0 0.12  0 0 0 0 0.08  0 0 0 0.35 0" />
-            <feComposite in2="SourceGraphic" operator="in" />
-          </filter>
-          <filter id="igInky" x="-5%" y="-5%" width="110%" height="110%">
-            <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="2" seed="7" />
-            <feDisplacementMap in="SourceGraphic" scale="2.2" />
-          </filter>
-          <clipPath id="igClip"><circle cx={cx} cy={cy} r={R} /></clipPath>
-        </defs>
-
+    <div ref={wrapRef} style={{ width: size, height: size, position: "relative" }}>
+      {/* static compass ring — never repaints */}
+      <svg
+        viewBox={`0 0 ${size} ${size}`} width={size} height={size}
+        style={{ position: "absolute", inset: 0, display: "block", overflow: "visible", pointerEvents: "none" }}
+        aria-hidden
+      >
         <g opacity="0.6">
           {ticks.map((t, i) => (
-            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2} stroke="var(--ink-600)" strokeWidth={t.major ? 1.2 : 0.6} />
+            <line key={i} x1={t.x1} y1={t.y1} x2={t.x2} y2={t.y2}
+              stroke="var(--ink-600)" strokeWidth={t.major ? 1.2 : 0.6} />
           ))}
         </g>
         <g fontFamily="var(--font-mono)" fontSize="10" fill="var(--ink-600)" textAnchor="middle">
@@ -311,46 +607,27 @@ export default function InkGlobe({
           <text x={8} y={cy + 4} textAnchor="start">W</text>
           <text x={size - 8} y={cy + 4} textAnchor="end">E</text>
         </g>
-
-        <circle cx={cx} cy={cy} r={R} fill="url(#globeFill)" />
-
-        <g clipPath="url(#igClip)">
-          {parallels.map((d, i) => <path key={`p${i}`} d={d} fill="none" stroke="var(--sepia)" strokeOpacity="0.35" strokeWidth="0.6" />)}
-          {meridians.map((d, i) => <path key={`m${i}`} d={d} fill="none" stroke="var(--sepia)" strokeOpacity="0.35" strokeWidth="0.6" />)}
-          <g filter="url(#igInky)">
-            {continents.map((d, i) => (
-              <path key={`c${i}`} d={d} fill="var(--sepia-light)" fillOpacity="0.55" stroke="var(--ink-800)" strokeOpacity="0.7" strokeWidth="1.1" strokeLinejoin="round" />
-            ))}
-          </g>
-          <rect x={cx - R} y={cy - R} width={R * 2} height={R * 2} filter="url(#igGrain)" opacity="0.35" />
-          {projected.map(p => {
-            if (!p.visible) return null;
-            const big = hover === p.id || focusId === p.id;
-            const color = MOOD[p.mood] ?? "var(--accent-tomato)";
-            return (
-              <g key={p.id} transform={`translate(${p.x.toFixed(1)} ${p.y.toFixed(1)})`} style={{ cursor: "pointer" }}
-                onMouseEnter={() => handleEnter(p.id)} onMouseLeave={handleLeave}
-                onClick={() => { setFocusId(p.id); onFocus?.(p); }}>
-                <circle r={big ? 14 : 10} fill={color} opacity={big ? 0.22 : 0.14}>
-                  <animate attributeName="r" values={`${big?10:7};${big?18:12};${big?10:7}`} dur="2.2s" repeatCount="indefinite" />
-                  <animate attributeName="opacity" values={`${big?0.28:0.18};0.02;${big?0.28:0.18}`} dur="2.2s" repeatCount="indefinite" />
-                </circle>
-                <circle r={big ? 5.2 : 3.8} fill={color} stroke="var(--paper-50)" strokeWidth="1.2" />
-                <circle r="14" fill="transparent" />
-              </g>
-            );
-          })}
-        </g>
-
-        <circle cx={cx} cy={cy} r={R} fill="url(#globeLimb)" pointerEvents="none" />
-        <circle cx={cx} cy={cy} r={R} fill="none" stroke="var(--ink-800)" strokeOpacity="0.55" strokeWidth="1.2" />
       </svg>
 
-      {activePin && activePin.visible && <Polaroid pin={activePin} size={size} />}
+      <canvas
+        ref={canvasRef}
+        className="globe-canvas"
+        style={{ display: "block", position: "relative", touchAction: "none", cursor: hoverId ? "pointer" : "grab", opacity: ready ? 1 : 0 }}
+        onPointerDown={handlePointerDown}
+        onPointerMove={handlePointerMove}
+        onPointerUp={endDrag}
+        onPointerCancel={endDrag}
+        onPointerLeave={() => { endDrag(); setHoverId(null); }}
+        onClick={handleClick}
+        role="img"
+        aria-label="Globo com memórias guardadas pelo mundo"
+      />
+
+      <Polaroid pin={activePin} innerRef={polaroidRef} />
 
       <div className="globe-caption">
-        <span>lat {activePin ? activePin.lat.toFixed(2) : "—"}°</span>
-        <span>lon {activePin ? activePin.lon.toFixed(2) : "—"}°</span>
+        <span>lat {activePin.lat.toFixed(2)}°</span>
+        <span>lon {activePin.lon.toFixed(2)}°</span>
       </div>
     </div>
   );

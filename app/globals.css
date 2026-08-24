@@ -330,6 +330,22 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--paper-
   animation: polaroid-in 420ms var(--ease-bounce);
 }
 @keyframes polaroid-in { from { opacity: 0; transform: translate(var(--tx, 0), var(--ty, 0)) scale(0.9); } }
+/* the hero globe's card persists and follows its pin, so it fades instead of popping */
+.globe-polaroid {
+  position: absolute; left: 0; top: 0; width: 190px;
+  pointer-events: none; z-index: 4; opacity: 0;
+  animation: none;
+  transition: opacity var(--duration-slow) var(--ease-soft);
+  will-change: transform, opacity;
+}
+.globe-canvas { transition: opacity var(--duration-slow) var(--ease-soft); }
+.globe-canvas:active { cursor: grabbing; }
+.globe-hint {
+  margin-top: 10px; text-align: center;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-500);
+}
+
 .pt-tape {
   position: absolute; top: -10px; left: 50%; width: 72px; height: 18px;
   background: rgba(244, 196, 48, 0.6); mix-blend-mode: multiply;
@@ -495,6 +511,68 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--paper-
 .sf-cols a:hover { color: var(--ink-900); text-decoration: underline wavy; }
 .sf-bottom { display: flex; justify-content: space-between; font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.15em; color: var(--ink-500); text-transform: uppercase; padding-top: 24px; border-top: 1px dashed var(--paper-400); }
 
+/* --- Compartilhar --- */
+.share-sec { max-width: 1280px; margin: 100px auto; padding: 60px 48px; position: relative; }
+.share-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 32px; max-width: 980px; margin: 0 auto; }
+.share-card {
+  position: relative; background: var(--paper-50); border: 1px solid var(--paper-300);
+  border-radius: var(--radius-md); padding: 40px 34px 34px; box-shadow: var(--shadow-sm);
+  transition: transform var(--duration-slow) var(--ease-bounce), box-shadow var(--duration-slow) var(--ease-soft);
+}
+.share-card:nth-child(1) { transform: rotate(-0.7deg); }
+.share-card:nth-child(2) { transform: rotate(0.6deg); }
+.share-card:hover { transform: translateY(-5px) rotate(0deg) !important; box-shadow: var(--shadow-md); }
+.share-card .vc-tape { background: rgba(45,74,138,0.32); }
+.share-card:nth-child(2) .vc-tape { background: rgba(199,108,138,0.4); transform: translateX(-50%) rotate(3deg); }
+.share-card h3 { font-family: var(--font-display); font-size: 25px; color: var(--ink-900); margin: 0 0 12px; line-height: 1.15; }
+.share-card p { font-size: 15.5px; color: var(--ink-700); line-height: 1.65; margin: 0; }
+.share-stage { display: flex; align-items: center; justify-content: center; min-height: 132px; margin-bottom: 26px; }
+
+/* link do caderno público */
+.share-link {
+  display: inline-flex; align-items: center; gap: 12px;
+  background: var(--paper-100); border: 1.5px dashed var(--paper-400);
+  border-radius: var(--radius); padding: 12px 14px;
+  transform: rotate(-1.5deg); box-shadow: var(--shadow-xs);
+  transition: transform var(--duration-slow) var(--ease-bounce);
+}
+.share-card:hover .share-link { transform: rotate(0deg) scale(1.03); }
+.share-link .sl-url {
+  font-family: var(--font-mono); font-size: 13px; color: var(--ink-600); letter-spacing: 0.04em;
+}
+.share-link .sl-url strong { color: var(--ink-900); font-weight: 600; }
+.share-link .sl-copy {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--paper-50); background: var(--accent-ink);
+  padding: 5px 10px; border-radius: var(--radius-sm);
+}
+.share-link .sl-icon { font-size: 14px; line-height: 1; }
+
+/* polaroid saindo para o mundo */
+.share-polaroid {
+  position: relative; background: var(--paper-50); padding: 10px 10px 30px; width: 132px;
+  box-shadow: var(--shadow-polaroid); border: 1px solid rgba(61,46,31,0.08);
+  transform: rotate(-4deg);
+  transition: transform var(--duration-slow) var(--ease-bounce);
+}
+.share-card:hover .share-polaroid { transform: rotate(-1deg) translateY(-4px); }
+.share-polaroid .sp-photo { position: relative; width: 100%; aspect-ratio: 1; overflow: hidden; }
+.share-polaroid .sp-cap {
+  position: absolute; bottom: 8px; left: 8px; right: 8px; text-align: center;
+  font-family: var(--font-hand); font-size: 15px; color: var(--ink-700); line-height: 1;
+}
+.share-send {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--paper-50); background: var(--accent-moss);
+  padding: 6px 11px; border-radius: var(--radius-sm); box-shadow: var(--shadow-xs);
+  transform: rotate(3deg); white-space: nowrap;
+}
+.share-arrow { color: var(--ink-400); display: flex; align-items: center; }
+.share-note {
+  text-align: center; margin: 34px auto 0; max-width: 620px;
+  font-family: var(--font-hand); font-size: 21px; color: var(--accent-ink); transform: rotate(-0.6deg);
+}
+
 /* --- Poster / mapa impresso --- */
 .poster-sec { max-width: 1280px; margin: 100px auto; padding: 60px 48px; position: relative; }
 .poster-grid { display: grid; grid-template-columns: 560px 1fr; gap: 80px; align-items: center; }
@@ -607,6 +685,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   .memories-grid { grid-template-columns: repeat(2, 1fr); }
   .poster-grid { grid-template-columns: 1fr; gap: 56px; }
   .poster-frames { order: 2; }
+  .share-grid { grid-template-columns: 1fr; gap: 26px; }
   .sf-inner { grid-template-columns: 1fr; gap: 40px; }
 }
 @media (max-width: 640px) {
@@ -614,7 +693,9 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   .nav { display: none; }
   .hero { padding: 48px 20px 24px; }
   .values, .memories { padding: 40px 20px; margin: 40px auto; }
-  .poster-sec { padding: 40px 20px; margin: 40px auto; }
+  .poster-sec, .share-sec { padding: 40px 20px; margin: 40px auto; }
+  .share-link { padding: 10px 11px; gap: 8px; }
+  .share-link .sl-url { font-size: 11px; }
   .poster-frame.portrait { width: 180px; }
   .poster-frame.landscape { width: 210px; margin: 90px 0 0 -32px; }
   .poster-price { left: 0; }
