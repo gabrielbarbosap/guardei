@@ -8,6 +8,7 @@ import { auth, signInWithEmail, signInWithGoogle, signUpWithEmail } from "@/lib/
 import dynamic from "next/dynamic";
 import type { GlobePin } from "./components/InkGlobe";
 import { PINS } from "./components/InkGlobe";
+import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 
 const InkGlobe = dynamic(() => import("./components/InkGlobe"), { ssr: false });
 
@@ -106,6 +107,7 @@ function Header({ onLogin }: { onLogin: () => void }) {
         <nav className="nav">
           <a href="#como">Como funciona</a>
           <a href="#memorias">Memórias</a>
+          <a href="#poster">Pôster impresso</a>
         </nav>
         <div className="nav-cta">
           <button className="link-ghost" onClick={onLogin}>Entrar</button>
@@ -147,6 +149,9 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             <button className="btn-primary" onClick={onLogin}>Criar meu caderno</button>
             <button className="btn-ghost" onClick={onLogin}>ver uma demo <IconScribble name="arrow" /></button>
           </div>
+          <a className="hero-note" href="#poster">
+            <span className="hn-new">novo</span> suas memórias impressas num pôster, na parede →
+          </a>
           <div className="hero-meta">
             <span><strong>12.483</strong> memórias guardadas</span>
             <span className="sep">·</span>
@@ -188,11 +193,11 @@ const VALUES = [
 function ValueSection() {
   return (
     <section id="como" className="values">
-      <div className="section-head">
+      <div className="section-head" data-reveal>
         <div className="eyebrow">por que guardei</div>
         <h2>Um lugar onde a <em>saudade</em><br />não se perde.</h2>
       </div>
-      <div className="values-grid">
+      <div className="values-grid" data-reveal-children>
         {VALUES.map((v, i) => (
           <article className="value-card" key={v.title}>
             <div className="vc-tape" />
@@ -218,12 +223,12 @@ const MEMORIES = [
 function MemoryWall() {
   return (
     <section id="memorias" className="memories">
-      <div className="section-head">
+      <div className="section-head" data-reveal>
         <div className="eyebrow">cadernos reais · trechos compartilhados pelos autores</div>
         <h2>As pessoas estão<br />guardando coisas <em>pequenas</em>.</h2>
         <p className="sh-lead">Nada de momentos épicos. A padaria, o beco, a mão. Isso é o que a gente volta pra ler.</p>
       </div>
-      <div className="memories-grid">
+      <div className="memories-grid" data-reveal-children>
         {MEMORIES.map((m, i) => (
           <article key={m.author} className="memo-card" style={{ transform: `rotate(${m.rot}deg)` }}>
             {i % 2 === 0 ? <div className="memo-tape" /> : <div className="memo-tape alt" />}
@@ -246,10 +251,60 @@ function MemoryWall() {
   );
 }
 
+function PosterSection({ onLogin }: { onLogin: () => void }) {
+  return (
+    <section id="poster" className="poster-sec">
+      <div className="poster-grid">
+        <div className="poster-frames" data-reveal>
+          <figure className="poster-frame portrait">
+            <span className="pf-tape" />
+            <div className="pf-img">
+              <Image src="/photos/poster-retrato.png" alt="Pôster de mapa de memórias em retrato" fill style={{ objectFit: "cover" }} sizes="300px" />
+            </div>
+            <figcaption className="pf-cap">retrato · A2 / A5</figcaption>
+          </figure>
+          <figure className="poster-frame landscape">
+            <span className="pf-tape" />
+            <div className="pf-img">
+              <Image src="/photos/poster-paisagem.jpg" alt="Pôster de mapa de memórias em paisagem" fill style={{ objectFit: "cover" }} sizes="360px" />
+            </div>
+            <figcaption className="pf-cap">paisagem · A2 / A5</figcaption>
+          </figure>
+          <div className="poster-price">
+            <span>a partir de</span>
+            <strong>{formatPrice(POSTER_PRICES.a5_portrait)}</strong>
+          </div>
+        </div>
+
+        <div className="poster-copy" data-reveal-children>
+          <div className="eyebrow"><span className="dot" /> da tela para a parede</div>
+          <h2>Suas memórias viram<br />um <em>pôster</em> de verdade.</h2>
+          <p className="poster-lead">
+            O mapa que você monta aqui dentro não precisa ficar preso na tela.
+            A gente imprime suas viagens — com suas fotos reais em polaroids sobre o mapa —
+            e manda para a sua casa.
+          </p>
+          <ul className="poster-list">
+            <li><span className="check">✓</span> Suas fotos reais, viradas polaroids sobre o mapa das suas viagens</li>
+            <li><span className="check">✓</span> Você escolhe as memórias e compõe o layout do seu jeito</li>
+            <li><span className="check">✓</span> Impressão profissional em A2 ({formatPrice(POSTER_PRICES.a2_portrait)}) ou A5 ({formatPrice(POSTER_PRICES.a5_portrait)})</li>
+            <li><span className="check">✓</span> Retrato ou paisagem — entrega em todo o Brasil</li>
+          </ul>
+          <div className="cta-row">
+            <button className="btn-primary" onClick={onLogin}>Quero meu mapa impresso</button>
+            <button className="btn-ghost" onClick={onLogin}>começar guardando memórias <IconScribble name="arrow" /></button>
+          </div>
+          <div className="poster-fine">crie o caderno grátis · peça o pôster quando quiser · + frete</div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
 function FinalCTA({ onLogin }: { onLogin: () => void }) {
   return (
     <section id="signup" className="final-cta">
-      <div className="postcard">
+      <div className="postcard" data-reveal>
         <div className="pc-stamp">
           <div>GUARDEI</div><div className="big">★</div><div>2026</div>
         </div>
@@ -331,6 +386,29 @@ export default function Home() {
     };
   }, [router]);
 
+  useEffect(() => {
+    if (checking) return;
+    if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+    const els = document.querySelectorAll("[data-reveal], [data-reveal-children]");
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            entry.target.classList.add("is-visible");
+            io.unobserve(entry.target);
+          }
+        }
+      },
+      { threshold: 0.15, rootMargin: "0px 0px -40px 0px" },
+    );
+    els.forEach((el) => io.observe(el));
+    document.body.classList.add("reveal-ready");
+    return () => {
+      io.disconnect();
+      document.body.classList.remove("reveal-ready");
+    };
+  }, [checking]);
+
   if (checking) {
     return <main className="flex min-h-screen items-center justify-center" style={{ background: "var(--paper-100)" }} />;
   }
@@ -342,6 +420,7 @@ export default function Home() {
         <Hero onLogin={() => setShowAuth(true)} />
         <ValueSection />
         <MemoryWall />
+        <PosterSection onLogin={() => setShowAuth(true)} />
         <FinalCTA onLogin={() => setShowAuth(true)} />
         <SiteFooter />
       </div>
