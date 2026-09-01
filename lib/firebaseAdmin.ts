@@ -45,13 +45,20 @@ export type CallerResult =
   | { ok: true; caller: Caller }
   | { ok: false; reason: "unauthenticated" | "misconfigured" };
 
+const ADMIN_VARS = [
+  "FIREBASE_ADMIN_PROJECT_ID",
+  "FIREBASE_ADMIN_CLIENT_EMAIL",
+  "FIREBASE_ADMIN_PRIVATE_KEY",
+] as const;
+
+/** Quais credenciais faltam. Nomes de variável não são segredo; os valores sim. */
+export function missingAdminVars(): string[] {
+  return ADMIN_VARS.filter((v) => !process.env[v]?.trim());
+}
+
 /** Diz se as credenciais do Admin existem, sem tentar inicializar. */
 export function adminConfigured(): boolean {
-  return Boolean(
-    process.env.FIREBASE_ADMIN_PROJECT_ID &&
-    process.env.FIREBASE_ADMIN_CLIENT_EMAIL &&
-    process.env.FIREBASE_ADMIN_PRIVATE_KEY,
-  );
+  return missingAdminVars().length === 0;
 }
 
 /**
@@ -78,8 +85,15 @@ export async function verifyCaller(req: Request): Promise<CallerResult> {
 
 /** Resposta padrão para credencial ausente: 503 diferencia de token inválido. */
 export function misconfiguredResponse() {
+  const faltando = missingAdminVars();
+  console.error("[firebaseAdmin] variáveis ausentes:", faltando.join(", "));
   return Response.json(
-    { error: "Serviço indisponível: credenciais do servidor não configuradas." },
+    {
+      error: "Serviço indisponível: credenciais do servidor não configuradas.",
+      // só os nomes: saber que falta uma variável não expõe o valor dela,
+      // e sem isso descobrir qual exige acesso ao log do servidor
+      missing: faltando,
+    },
     { status: 503 },
   );
 }
