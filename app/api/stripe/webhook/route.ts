@@ -82,14 +82,35 @@ export async function POST(req: NextRequest) {
     // relê para que os e-mails mostrem os valores já reconciliados
     const fresh = (await orderRef.get()).data() as PosterOrder;
 
-    await sendAdminNotification(fresh, orderId, stripeSessionId, amountPaid, paymentIntentId);
-
     const customerEmail = session.customer_email
       ?? (fresh.contactType === "email" ? fresh.customerContact : null)
       ?? fresh.userEmail;
 
+    /* Os dois envios são independentes de propósito.
+       Enquanto a recusa da Resend passava calada, tanto fazia a ordem; agora
+       que ela vira exceção, deixar o aviso interno primeiro faria uma falha
+       nossa impedir a confirmação de quem pagou. */
+    let confirmacaoEnviada = true;
     if (customerEmail) {
-      await sendCustomerConfirmation(fresh, orderId, customerEmail, amountPaid);
+      try {
+        await sendCustomerConfirmation(fresh, orderId, customerEmail, amountPaid);
+      } catch (err) {
+        console.error("[stripe/webhook] confirmação do cliente falhou:", err);
+        confirmacaoEnviada = false;
+      }
+    }
+
+    try {
+      await sendAdminNotification(fresh, orderId, stripeSessionId, amountPaid, paymentIntentId);
+    } catch (err) {
+      // aviso interno: dá para reenviar à mão, não segura o resto
+      console.error("[stripe/webhook] aviso interno falhou:", err);
+    }
+
+    if (!confirmacaoEnviada) {
+      /* Sem marcar notifiedAt: o 500 faz o Stripe tentar de novo, e o pedido
+         já está pago, então a repetição só refaz o e-mail que faltou. */
+      return NextResponse.json({ error: "Falha ao notificar." }, { status: 500 });
     }
 
     await orderRef.update({ notifiedAt: Date.now() });
