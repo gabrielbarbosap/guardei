@@ -26,15 +26,29 @@ export async function POST(req: NextRequest) {
      proteger a privacidade de quem tem conta. */
   if (missingServerVars().length > 0) return misconfiguredResponse();
 
+  const site = process.env.NEXT_PUBLIC_BASE_URL ?? "https://guardei.art";
+
+  /* Duas falhas diferentes moram aqui e nao podem compartilhar resposta.
+     Conta inexistente e silencio proposital: dizer "esse e-mail nao existe"
+     entregaria a estranhos quem tem conta. Ja o envio que a Resend recusa e
+     defeito nosso, e responder "ok" para isso foi justamente o que escondeu
+     o problema em producao. */
+  let link: string;
   try {
-    const site = process.env.NEXT_PUBLIC_BASE_URL ?? "https://guardei.art";
-    const link = await getAdminAuth().generatePasswordResetLink(email, { url: `${site}/` });
+    link = await getAdminAuth().generatePasswordResetLink(email, { url: `${site}/` });
+  } catch (err) {
+    console.error("[auth/reset] conta nao encontrada ou Firebase recusou:", err);
+    return NextResponse.json({ ok: true });
+  }
+
+  try {
     await sendPasswordReset(email, link);
   } catch (err) {
-    /* Conta inexistente cai aqui. A resposta é a mesma dos casos de sucesso de
-       propósito: dizer "esse e-mail não existe" entregaria a estranhos quem tem
-       conta no site. O erro fica no log, não na resposta. */
-    console.error("[auth/reset]", err);
+    console.error("[auth/reset] falha no envio:", err);
+    return NextResponse.json(
+      { error: "Nao foi possivel enviar o e-mail agora." },
+      { status: 502 },
+    );
   }
 
   return NextResponse.json({ ok: true });

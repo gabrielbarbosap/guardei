@@ -4,6 +4,26 @@ import { FORMAT_DIMS } from "@/lib/posterMap";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
+type Envio = Parameters<typeof resend.emails.send>[0];
+
+/**
+ * Envia e transforma recusa em erro.
+ *
+ * O SDK do Resend nao lanca excecao quando a API recusa a mensagem: ele devolve
+ * { data, error }. Como as chamadas so aguardavam o send, chave invalida,
+ * dominio nao verificado ou remetente errado sumiam sem deixar rastro — o
+ * servidor seguia em frente achando que tinha enviado. Aqui a recusa vira
+ * excecao, que e o que as rotas ja sabem registrar.
+ */
+async function deliver(payload: Envio) {
+  const { data, error } = await resend.emails.send(payload);
+  if (error) {
+    console.error("[emails] Resend recusou:", error.name, error.message);
+    throw new Error(`Resend: ${error.name} — ${error.message}`);
+  }
+  return data;
+}
+
 const ADMIN_EMAIL = "gabriel@sistemap.com.br";
 const FROM = "Guardei.art <pedidos@guardei.art>";
 const SITE = process.env.NEXT_PUBLIC_BASE_URL ?? "https://guardei.art";
@@ -119,7 +139,7 @@ function shippingStep(order: PosterOrder): string {
 ───────────────────────────────────────────── */
 export async function sendWelcome(to: string, name?: string | null) {
   const primeiroNome = name?.trim().split(/\s+/)[0];
-  await resend.emails.send({
+  await deliver({
     from: FROM,
     to: [to],
     subject: "Seu caderno de memórias está pronto",
@@ -151,7 +171,7 @@ export async function sendWelcome(to: string, name?: string | null) {
    2. RECUPERAR SENHA
 ───────────────────────────────────────────── */
 export async function sendPasswordReset(to: string, link: string) {
-  await resend.emails.send({
+  await deliver({
     from: FROM,
     to: [to],
     subject: "Redefinir sua senha do guardei",
@@ -181,7 +201,7 @@ export async function sendPasswordReset(to: string, link: string) {
 export async function sendOrderCreated(order: PosterOrder, orderId: string, to: string) {
   const frete = order.shipping?.priceCents ?? 0;
   const total = order.shipping ? `${formatAmount(frete)} de frete` : "";
-  await resend.emails.send({
+  await deliver({
     from: FROM,
     to: [to],
     subject: `Seu pôster está reservado — pedido #${orderRef(orderId)}`,
@@ -231,7 +251,7 @@ export async function sendCustomerConfirmation(
   customerEmail: string,
   amountPaid: number,
 ) {
-  await resend.emails.send({
+  await deliver({
     from: FROM,
     to: [customerEmail],
     subject: "Seu pôster está confirmado! 🖼️",
@@ -288,7 +308,7 @@ export async function sendOrderShipped(
     ? `A estimativa é de ${order.shipping.deliveryDays} dia(s) útil(eis) a partir da postagem.`
     : "";
 
-  await resend.emails.send({
+  await deliver({
     from: FROM,
     to: [to],
     subject: `Seu pôster saiu para entrega 📦 — pedido #${orderRef(orderId)}`,
@@ -349,7 +369,7 @@ export async function sendAdminNotification(
       <td style="padding:10px 0;line-height:1.6">${valor}</td>
     </tr>`;
 
-  await resend.emails.send({
+  await deliver({
     from: FROM,
     to: [ADMIN_EMAIL],
     subject: `Pedido pago — ${order.customerName} — ${formatAmount(amountPaid)}`,
