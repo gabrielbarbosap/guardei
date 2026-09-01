@@ -1,12 +1,17 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAdminDb, verifyCaller } from "@/lib/firebaseAdmin";
+import { getAdminDb, misconfiguredResponse, verifyCaller } from "@/lib/firebaseAdmin";
 import { sendOrderCreated } from "@/lib/emails";
 import type { PosterOrder } from "@/types/poster";
 
 /** Aviso de "pedido registrado", disparado logo após salvar o pôster. */
 export async function POST(req: NextRequest) {
-  const caller = await verifyCaller(req);
-  if (!caller) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  const result = await verifyCaller(req);
+  if (!result.ok) {
+    return result.reason === "misconfigured"
+      ? misconfiguredResponse()
+      : NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+  const caller = result.caller;
 
   let orderId: string;
   try {

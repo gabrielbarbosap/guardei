@@ -1,11 +1,16 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAdminDb, verifyCaller } from "@/lib/firebaseAdmin";
+import { getAdminDb, misconfiguredResponse, verifyCaller } from "@/lib/firebaseAdmin";
 import { sendWelcome } from "@/lib/emails";
 
 /** Boas-vindas, uma única vez por conta. */
 export async function POST(req: NextRequest) {
-  const caller = await verifyCaller(req);
-  if (!caller) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  const result = await verifyCaller(req);
+  if (!result.ok) {
+    return result.reason === "misconfigured"
+      ? misconfiguredResponse()
+      : NextResponse.json({ error: "Não autenticado." }, { status: 401 });
+  }
+  const caller = result.caller;
   if (!caller.email) return NextResponse.json({ ok: true, skipped: "sem e-mail" });
 
   try {

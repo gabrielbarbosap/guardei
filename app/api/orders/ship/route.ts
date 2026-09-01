@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { getAdminDb, isAdmin, verifyCaller } from "@/lib/firebaseAdmin";
+import { getAdminDb, isAdmin, misconfiguredResponse, verifyCaller } from "@/lib/firebaseAdmin";
 import { sendOrderShipped } from "@/lib/emails";
 import type { PosterOrder } from "@/types/poster";
 
@@ -15,8 +15,9 @@ function defaultTrackingUrl(code: string) {
  * por um campo no corpo da requisição, que qualquer um poderia forjar.
  */
 export async function POST(req: NextRequest) {
-  const caller = await verifyCaller(req);
-  if (!isAdmin(caller)) {
+  const result = await verifyCaller(req);
+  if (!result.ok && result.reason === "misconfigured") return misconfiguredResponse();
+  if (!result.ok || !isAdmin(result.caller)) {
     return NextResponse.json({ error: "Sem permissão." }, { status: 403 });
   }
 
