@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { adminConfigured, getAdminAuth, misconfiguredResponse } from "@/lib/firebaseAdmin";
+import { getAdminAuth, misconfiguredResponse, missingServerVars } from "@/lib/firebaseAdmin";
 import { sendPasswordReset } from "@/lib/emails";
 
 /**
@@ -24,7 +24,7 @@ export async function POST(req: NextRequest) {
   /* Credencial ausente é problema nosso, não da pessoa: devolver "ok" aqui
      esconderia uma falha de configuração atrás do silêncio que existe para
      proteger a privacidade de quem tem conta. */
-  if (!adminConfigured()) return misconfiguredResponse();
+  if (missingServerVars().length > 0) return misconfiguredResponse();
 
   try {
     const site = process.env.NEXT_PUBLIC_BASE_URL ?? "https://guardei.art";

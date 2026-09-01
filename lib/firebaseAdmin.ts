@@ -51,9 +51,17 @@ const ADMIN_VARS = [
   "FIREBASE_ADMIN_PRIVATE_KEY",
 ] as const;
 
+/* Toda rota que verifica quem chama também manda e-mail. Sem a chave do Resend
+   o envio falhava calado, exatamente como acontecia com o Firebase antes. */
+const EMAIL_VARS = ["RESEND_API_KEY"] as const;
+
 /** Quais credenciais faltam. Nomes de variável não são segredo; os valores sim. */
 export function missingAdminVars(): string[] {
   return ADMIN_VARS.filter((v) => !process.env[v]?.trim());
+}
+
+export function missingServerVars(): string[] {
+  return [...ADMIN_VARS, ...EMAIL_VARS].filter((v) => !process.env[v]?.trim());
 }
 
 /** Diz se as credenciais do Admin existem, sem tentar inicializar. */
@@ -68,8 +76,8 @@ export function adminConfigured(): boolean {
  * mandaria o uid alheio. O token é assinado pelo Firebase e verificado aqui.
  */
 export async function verifyCaller(req: Request): Promise<CallerResult> {
-  if (!adminConfigured()) {
-    console.error("[firebaseAdmin] credenciais ausentes no ambiente");
+  if (missingServerVars().length > 0) {
+    console.error("[firebaseAdmin] credenciais ausentes:", missingServerVars().join(", "));
     return { ok: false, reason: "misconfigured" };
   }
   const header = req.headers.get("authorization") ?? "";
@@ -85,7 +93,7 @@ export async function verifyCaller(req: Request): Promise<CallerResult> {
 
 /** Resposta padrão para credencial ausente: 503 diferencia de token inválido. */
 export function misconfiguredResponse() {
-  const faltando = missingAdminVars();
+  const faltando = missingServerVars();
   console.error("[firebaseAdmin] variáveis ausentes:", faltando.join(", "));
   return Response.json(
     {
