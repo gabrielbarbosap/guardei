@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { createHash } from "node:crypto";
 import { missingServerVars } from "@/lib/firebaseAdmin";
 
 /**
@@ -20,6 +21,13 @@ export async function GET() {
     missing: missingServerVars(),
     // a chave pode existir e ser inválida; o prefixo mostra que veio inteira
     resendKeyPrefix: process.env.RESEND_API_KEY?.trim().slice(0, 3) ?? null,
+    /* Impressao digital da chave, nao a chave. Serve para dizer se o painel
+       guarda a mesma que funciona aqui: prefixo igual nao prova nada quando
+       a chave antiga e a nova comecam do mesmo jeito. */
+    resendKeyHash: createHash("sha256")
+      .update(process.env.RESEND_API_KEY?.trim() ?? "")
+      .digest("hex")
+      .slice(0, 12),
     resendFrom: process.env.EMAIL_FROM ?? null,
     /* Quantas linhas a chave do Firebase tem depois de desescapada. Uma so
        significa que os \n literais nao viraram quebra de linha e o cert vai

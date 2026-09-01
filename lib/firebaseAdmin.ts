@@ -9,12 +9,20 @@ function ensureApp(): admin.app.App {
 
   const projectId   = process.env.FIREBASE_ADMIN_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  /* O painel da Vercel guarda a chave como ela sai do JSON do Firebase: com
-     \n de dois caracteres, nao com quebra de linha de verdade. O padrao
-     aqui era /\n/g, que troca quebra real por quebra real e portanto nao
-     fazia nada: a chave chegava numa linha so, o cert falhava, e como todo
-     chamador engolia o erro isso virava "e-mail nao sai em producao". */
-  const privateKey  = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
+  /* Duas armadilhas do painel de deploy, nesta ordem.
+
+     As aspas: no .env elas delimitam o valor e o dotenv as remove, mas quem
+     copia de la para o painel leva as aspas junto e elas viram parte da chave.
+
+     O \n: e assim que a chave sai do JSON do Firebase. O dotenv expande, o
+     painel nao. O padrao aqui era /\n/g, que casa com quebra de linha real e
+     troca por quebra real — um no-op. Resultado: local funcionava, producao
+     recebia a chave numa linha so e o cert falhava, sem nada acusar. */
+  const privateKey  = process.env.FIREBASE_ADMIN_PRIVATE_KEY
+    ?.trim()
+    .replace(/^"|"$/g, "")
+    .replace(/^'|'$/g, "")
+    .replace(/\\n/g, "\n");
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error("Variáveis de ambiente do Firebase Admin ausentes.");
