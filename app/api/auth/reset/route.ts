@@ -27,18 +27,23 @@ export async function POST(req: NextRequest) {
   if (missingServerVars().length > 0) return misconfiguredResponse();
 
   const site = process.env.NEXT_PUBLIC_BASE_URL ?? "https://guardei.art";
-
-  /* Duas falhas diferentes moram aqui e nao podem compartilhar resposta.
-     Conta inexistente e silencio proposital: dizer "esse e-mail nao existe"
-     entregaria a estranhos quem tem conta. Ja o envio que a Resend recusa e
-     defeito nosso, e responder "ok" para isso foi justamente o que escondeu
-     o problema em producao. */
+  /* So a conta inexistente merece silencio: dizer que um e-mail nao tem conta
+     entregaria a estranhos quem esta cadastrado. Qualquer outra falha do
+     Firebase e defeito nosso, e responder ok para ela foi o que escondeu a
+     credencial quebrada em producao por dias. */
   let link: string;
   try {
-    link = await getAdminAuth().generatePasswordResetLink(email, { url: `${site}/` });
+    link = await getAdminAuth().generatePasswordResetLink(email, { url: site + "/" });
   } catch (err) {
-    console.error("[auth/reset] conta nao encontrada ou Firebase recusou:", err);
-    return NextResponse.json({ ok: true });
+    const code = (err as { code?: string }).code ?? "";
+    if (code === "auth/user-not-found" || code === "auth/email-not-found") {
+      return NextResponse.json({ ok: true });
+    }
+    console.error("[auth/reset] Firebase recusou:", code, err);
+    return NextResponse.json(
+      { error: "Nao foi possivel gerar o link agora.", code },
+      { status: 502 },
+    );
   }
 
   try {

@@ -9,8 +9,12 @@ function ensureApp(): admin.app.App {
 
   const projectId   = process.env.FIREBASE_ADMIN_PROJECT_ID;
   const clientEmail = process.env.FIREBASE_ADMIN_CLIENT_EMAIL;
-  // painéis de deploy costumam guardar a chave com \n literal
-  const privateKey  = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\n/g, "\n");
+  /* O painel da Vercel guarda a chave como ela sai do JSON do Firebase: com
+     \n de dois caracteres, nao com quebra de linha de verdade. O padrao
+     aqui era /\n/g, que troca quebra real por quebra real e portanto nao
+     fazia nada: a chave chegava numa linha so, o cert falhava, e como todo
+     chamador engolia o erro isso virava "e-mail nao sai em producao". */
+  const privateKey  = process.env.FIREBASE_ADMIN_PRIVATE_KEY?.replace(/\\n/g, "\n");
 
   if (!projectId || !clientEmail || !privateKey) {
     throw new Error("Variáveis de ambiente do Firebase Admin ausentes.");

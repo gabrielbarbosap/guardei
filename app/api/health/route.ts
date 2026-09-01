@@ -21,5 +21,11 @@ export async function GET() {
     // a chave pode existir e ser inválida; o prefixo mostra que veio inteira
     resendKeyPrefix: process.env.RESEND_API_KEY?.trim().slice(0, 3) ?? null,
     resendFrom: process.env.EMAIL_FROM ?? null,
+    /* Quantas linhas a chave do Firebase tem depois de desescapada. Uma so
+       significa que os \n literais nao viraram quebra de linha e o cert vai
+       falhar — foi exatamente o que aconteceu aqui, e nada acusava. */
+    adminKeyLines: (process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? "")
+      .replace(/\\n/g, "\n")
+      .split("\n").length,
   });
 }
