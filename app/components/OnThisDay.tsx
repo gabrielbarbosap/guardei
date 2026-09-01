@@ -21,23 +21,7 @@ export default function OnThisDay({ memory, yearsAgo, onDismiss }: Props) {
   }
 
   return (
-    <div
-      style={{
-        position: "fixed",
-        bottom: 24,
-        left: 24,
-        zIndex: 45,
-        maxWidth: 300,
-        width: "calc(100vw - 48px)",
-        background: "var(--paper-50)",
-        border: "1px solid var(--paper-300)",
-        borderRadius: "var(--radius-md)",
-        boxShadow:
-          "0 8px 32px rgba(42,31,20,0.18), 0 2px 8px rgba(42,31,20,0.10)",
-        overflow: "hidden",
-        pointerEvents: "all",
-      }}
-    >
+    <div className="on-this-day">
       {/* tape strip */}
       <div
         style={{

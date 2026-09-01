@@ -1,13 +1,14 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Check, Star, Minus, Plus } from "lucide-react";
+import { Check, Star, Minus, Plus, TriangleAlert } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
 import type { PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
 import { computePosterLayout, renderMapBackground } from "@/lib/posterCanvas";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
 import { PREVIEW_W, previewHeightFor } from "@/lib/posterPreview";
+import { POSTER_MAX_PHOTOS } from "@/lib/posterRules";
 
 type Props = {
   locations: LocationPhoto[];
@@ -396,6 +397,17 @@ export default function Step3Compose({
             <Plus size={15} strokeWidth={2} />
           </button>
           <button className="ct-done" onClick={() => setActiveId(null)}>ok</button>
+        </div>
+      )}
+
+      {selectedCount > POSTER_MAX_PHOTOS && (
+        <div className="compose-warn" role="status">
+          <TriangleAlert size={15} strokeWidth={1.8} />
+          <span>
+            <strong>{selectedCount} fotos selecionadas.</strong> Acima de {POSTER_MAX_PHOTOS} as
+            polaroids encolhem e começam a cobrir o mapa. Dá para seguir assim — o pôster só
+            fica mais bonito com até {POSTER_MAX_PHOTOS}.
+          </span>
         </div>
       )}
 

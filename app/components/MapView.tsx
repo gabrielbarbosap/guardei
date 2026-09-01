@@ -74,13 +74,76 @@ const farPointHintLayer: LayerProps = {
   },
 };
 
+/*
+ * Paises visitados em dourado.
+ *
+ * Sao duas camadas de proposito: um preenchimento discreto, que sozinho vira
+ * um bloco chapado, e um contorno mais forte que desenha a fronteira. E o
+ * contorno que da o ar de mapa iluminado em vez de pais pintado.
+ *
+ * Valores literais porque o Mapbox pinta fora do CSS e nao enxerga as
+ * variaveis do tema; equivalem a --accent-highlight e a uma borda mais fechada.
+ */
+/*
+ * O dourado do design system (--poster-gold), o mesmo do pôster e do CTA.
+ *
+ * A opacidade é alta de propósito. Sobre o mapa escuro, qualquer dourado
+ * translúcido soma o azul do fundo e cai para oliva — foi o que deixava o país
+ * esverdeado. Para o país sair exatamente nesta cor, o fundo precisa quase
+ * desaparecer, então o preenchimento vai a 0,92.
+ */
+const VISITED_GOLD = "#b8860b";
+const VISITED_GOLD_EDGE = "#e3b34a";
+
 const highlightedCountriesLayer = (countryCodes: string[]): LayerProps => ({
   id: "highlighted-countries",
   type: "fill",
+  slot: "middle",
   source: "country-boundaries",
   "source-layer": "country_boundaries",
   filter: ["in", ["get", "iso_3166_1"], ["literal", countryCodes]],
-  paint: { "fill-color": "#39ff14", "fill-opacity": 0.45 },
+  paint: {
+    "fill-color": VISITED_GOLD,
+    "fill-opacity": 0.92,
+    /* O estilo Standard ilumina as camadas conforme o lightPreset. Com "dusk"
+       a cena é escura e o dourado era multiplicado até virar marrom. Emissive 1
+       faz a camada se comportar como se emitisse a própria luz, saindo na cor
+       exata — é o mesmo motivo de a fronteira e o halo precisarem disso. */
+    "fill-emissive-strength": 1,
+  },
+});
+
+const highlightedCountriesOutline = (countryCodes: string[]): LayerProps => ({
+  id: "highlighted-countries-outline",
+  type: "line",
+  slot: "middle",
+  source: "country-boundaries",
+  "source-layer": "country_boundaries",
+  filter: ["in", ["get", "iso_3166_1"], ["literal", countryCodes]],
+  paint: {
+    "line-color": VISITED_GOLD_EDGE,
+    "line-opacity": 0.95,
+    "line-emissive-strength": 1,
+    // engrossa com o zoom para a fronteira nao sumir de longe nem pesar de perto
+    "line-width": ["interpolate", ["linear"], ["zoom"], 1, 1, 4, 2, 10, 3.2],
+  },
+});
+
+/** Halo desfocado sob o país: é ele que dá o brilho de ouro sem chapar o mapa. */
+const highlightedCountriesGlow = (countryCodes: string[]): LayerProps => ({
+  id: "highlighted-countries-glow",
+  type: "line",
+  slot: "middle",
+  source: "country-boundaries",
+  "source-layer": "country_boundaries",
+  filter: ["in", ["get", "iso_3166_1"], ["literal", countryCodes]],
+  paint: {
+    "line-color": VISITED_GOLD_EDGE,
+    "line-opacity": 0.32,
+    "line-emissive-strength": 1,
+    "line-blur": ["interpolate", ["linear"], ["zoom"], 1, 3, 6, 8],
+    "line-width": ["interpolate", ["linear"], ["zoom"], 1, 4, 6, 10, 10, 16],
+  },
 });
 
 export default function MapView({
@@ -183,7 +246,9 @@ export default function MapView({
       >
         {highlightedCountries.length > 0 && (
           <Source id="country-boundaries" type="vector" url="mapbox://mapbox.country-boundaries-v1">
+            <Layer {...highlightedCountriesGlow(highlightedCountries)} />
             <Layer {...highlightedCountriesLayer(highlightedCountries)} />
+            <Layer {...highlightedCountriesOutline(highlightedCountries)} />
           </Source>
         )}
 
@@ -421,7 +486,7 @@ export default function MapView({
             </p>
             <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/photos/logo.svg" alt="" style={{ height: 20, width: "auto", opacity: 0.5 }} />
+              <img src="/photos/logo.png" alt="" style={{ height: 20, width: "auto", opacity: 0.5 }} />
               <p style={{
                 margin: 0,
                 fontFamily: "var(--font-cinzel-decorative)",

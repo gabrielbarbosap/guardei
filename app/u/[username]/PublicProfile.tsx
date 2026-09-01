@@ -319,7 +319,7 @@ export default function PublicProfile({ username }: { username: string }) {
                 </p>
                 <div style={{ marginTop: 8, display: "flex", alignItems: "center", justifyContent: "center", gap: 6 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img src="/photos/logo.svg" alt="" style={{ height: 20, width: "auto", opacity: 0.5 }} />
+                  <img src="/photos/logo.png" alt="" style={{ height: 20, width: "auto", opacity: 0.5 }} />
                   <p style={{
                     margin: 0,
                     fontFamily: "var(--font-cinzel-decorative)",
@@ -338,7 +338,7 @@ export default function PublicProfile({ username }: { username: string }) {
         <div className="map-header-inner">
           <div className="map-brand-block">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/photos/logo.svg" alt="guardei" style={{ height: 36, width: "auto" }} />
+            <img src="/photos/logo.png" alt="guardei" style={{ height: 36, width: "auto" }} />
             <span className="brand" style={{ fontSize: 22 }}>guardei<span className="amp">,</span></span>
             <span className="profile-handle">@{username}</span>
           </div>

@@ -1,133 +1,256 @@
 "use client";
 
 import { useState } from "react";
+import { Truck, Loader2, Check } from "lucide-react";
+import type { PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
+import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
+import { formatCep, lookupCep } from "@/lib/cep";
 
 type Props = {
-  onSubmit: (customerName: string, customerContact: string, contactType: "email" | "whatsapp") => Promise<void>;
+  format: PosterFormat;
+  onSubmit: (
+    customerName: string,
+    customerContact: string,
+    contactType: "email" | "whatsapp",
+    address: ShippingAddress,
+    shipping: ShippingChoice,
+  ) => Promise<void>;
   onBack: () => void;
   submitting: boolean;
   submitStep?: string;
   submitError?: string;
 };
 
-export default function Step4Order({ onSubmit, onBack, submitting, submitStep, submitError }: Props) {
+export default function Step4Order({
+  format, onSubmit, onBack, submitting, submitStep, submitError,
+}: Props) {
   const [name, setName] = useState("");
   const [contactType, setContactType] = useState<"whatsapp" | "email">("whatsapp");
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
+
+  const [cep, setCep] = useState("");
+  const [street, setStreet] = useState("");
+  const [number, setNumber] = useState("");
+  const [complement, setComplement] = useState("");
+  const [district, setDistrict] = useState("");
+  const [city, setCity] = useState("");
+  const [uf, setUf] = useState("");
+
+  const [options, setOptions] = useState<ShippingChoice[] | null>(null);
+  const [chosenId, setChosenId] = useState<string | null>(null);
+  const [freightLoading, setFreightLoading] = useState(false);
+  const [freightError, setFreightError] = useState("");
+
+  const chosen = options?.find((o) => o.serviceId === chosenId) ?? null;
+  const posterPrice = POSTER_PRICES[format];
+
+  /** Ao completar o CEP: preenche o endereço e cota o frete de uma vez. */
+  async function handleCepChange(raw: string) {
+    const masked = formatCep(raw);
+    setCep(masked);
+    setFreightError("");
+    // qualquer mudança de CEP invalida a cotação anterior
+    setOptions(null);
+    setChosenId(null);
+
+    const digits = masked.replace(/\D/g, "");
+    if (digits.length !== 8) return;
+
+    setFreightLoading(true);
+    try {
+      const [addr, quoteRes] = await Promise.all([
+        lookupCep(digits),
+        fetch("/api/shipping/quote", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ format, cep: digits }),
+        }),
+      ]);
+
+      if (addr) {
+        setStreet(addr.street);
+        setDistrict(addr.district);
+        setCity(addr.city);
+        setUf(addr.state);
+      }
+
+      const data = (await quoteRes.json()) as { options?: ShippingChoice[]; error?: string };
+      if (!quoteRes.ok || !data.options?.length) {
+        setFreightError(data.error ?? "Não foi possível calcular o frete.");
+        return;
+      }
+      setOptions(data.options);
+      setChosenId(data.options[0].serviceId); // a mais barata vem primeiro
+    } catch {
+      setFreightError("Não foi possível calcular o frete agora.");
+    } finally {
+      setFreightLoading(false);
+    }
+  }
 
   function validate(): string {
     if (!name.trim()) return "Informe seu nome.";
     if (!contact.trim()) return `Informe seu ${contactType === "whatsapp" ? "WhatsApp" : "email"}.`;
     if (contactType === "email" && !contact.includes("@")) return "Email inválido.";
     if (contactType === "whatsapp" && contact.replace(/\D/g, "").length < 10) return "WhatsApp inválido.";
+    if (cep.replace(/\D/g, "").length !== 8) return "Informe o CEP de entrega.";
+    if (!street.trim()) return "Informe a rua.";
+    if (!number.trim()) return "Informe o número.";
+    if (!city.trim() || !uf.trim()) return "Informe cidade e estado.";
+    if (!chosen) return "Escolha uma opção de entrega.";
     return "";
   }
 
   async function handleSubmit() {
     const err = validate();
     if (err) { setError(err); return; }
+    if (!chosen) return;
     setError("");
-    await onSubmit(name.trim(), contact.trim(), contactType);
+    await onSubmit(
+      name.trim(),
+      contact.trim(),
+      contactType,
+      {
+        cep: cep.replace(/\D/g, ""),
+        street: street.trim(),
+        number: number.trim(),
+        // a chave só existe quando preenchida: o Firestore recusa undefined
+        ...(complement.trim() ? { complement: complement.trim() } : {}),
+        district: district.trim(),
+        city: city.trim(),
+        state: uf.trim().toUpperCase(),
+      },
+      chosen,
+    );
   }
 
-  const inputStyle = {
-    fontFamily: "var(--font-mono)",
-    fontSize: 13,
-    padding: "10px 14px",
-    border: "1px solid var(--paper-300)",
-    borderRadius: "var(--radius-sm)",
-    background: "var(--paper-50)",
-    color: "var(--ink-900)",
-    outline: "none",
-    width: "100%",
-    boxSizing: "border-box" as const,
-  };
-
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-      <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink-600)", margin: 0 }}>
-        Confirme seus dados. Após gerar o poster você será direcionado ao pagamento seguro.
+    <div className="order-form">
+      <p className="order-intro">
+        Confirme seus dados e o endereço de entrega. O frete é calculado pelo seu CEP.
       </p>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <label style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-500)" }}>
-          Seu nome
-        </label>
-        <input
-          type="text"
-          placeholder="Nome completo"
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-          style={inputStyle}
-        />
-      </div>
+      <label className="of-field">
+        <span>Seu nome</span>
+        <input type="text" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} />
+      </label>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
-        <label style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-500)" }}>
-          Como prefere ser contatado?
-        </label>
-        <div style={{ display: "flex", gap: 8 }}>
+      <div className="of-field">
+        <span>Como prefere ser contatado?</span>
+        <div className="of-toggle">
           {(["whatsapp", "email"] as const).map((t) => (
             <button
               key={t}
+              type="button"
+              className={`of-toggle-btn${contactType === t ? " is-active" : ""}`}
               onClick={() => setContactType(t)}
-              style={{
-                flex: 1,
-                padding: "8px",
-                fontFamily: "var(--font-mono)",
-                fontSize: 11,
-                letterSpacing: "0.1em",
-                textTransform: "uppercase",
-                border: `1.5px solid ${contactType === t ? "#b8860b" : "var(--paper-300)"}`,
-                borderRadius: "var(--radius-sm)",
-                background: contactType === t ? "rgba(184,134,11,0.08)" : "var(--paper-50)",
-                color: contactType === t ? "#b8860b" : "var(--ink-600)",
-                cursor: "pointer",
-              }}
             >
-              {t === "whatsapp" ? "📱 WhatsApp" : "✉️ Email"}
+              {t === "whatsapp" ? "WhatsApp" : "Email"}
             </button>
           ))}
         </div>
       </div>
 
-      <div style={{ display: "flex", flexDirection: "column", gap: 4 }}>
-        <label style={{ fontFamily: "var(--font-mono)", fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: "var(--ink-500)" }}>
-          {contactType === "whatsapp" ? "WhatsApp (com DDD)" : "Endereço de email"}
-        </label>
+      <label className="of-field">
+        <span>{contactType === "whatsapp" ? "WhatsApp (com DDD)" : "Endereço de email"}</span>
         <input
           type={contactType === "email" ? "email" : "tel"}
           placeholder={contactType === "whatsapp" ? "(81) 99999-9999" : "seu@email.com"}
           value={contact}
           onChange={(e) => setContact(e.target.value)}
-          style={inputStyle}
         />
+      </label>
+
+      <div className="of-divider">entrega</div>
+
+      <div className="of-row">
+        <label className="of-field of-cep">
+          <span>CEP</span>
+          <input
+            type="text"
+            inputMode="numeric"
+            placeholder="00000-000"
+            value={cep}
+            onChange={(e) => handleCepChange(e.target.value)}
+          />
+        </label>
+        <label className="of-field" style={{ flex: 1 }}>
+          <span>Cidade / UF</span>
+          <input type="text" value={city && uf ? `${city} / ${uf}` : ""} readOnly placeholder="vem do CEP" />
+        </label>
       </div>
 
-      {(error || submitError) && (
-        <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--danger)" }}>{error || submitError}</span>
+      <div className="of-row">
+        <label className="of-field" style={{ flex: 3 }}>
+          <span>Rua</span>
+          <input type="text" value={street} onChange={(e) => setStreet(e.target.value)} />
+        </label>
+        <label className="of-field" style={{ flex: 1 }}>
+          <span>Número</span>
+          <input type="text" inputMode="numeric" value={number} onChange={(e) => setNumber(e.target.value)} />
+        </label>
+      </div>
+
+      <div className="of-row">
+        <label className="of-field" style={{ flex: 1 }}>
+          <span>Bairro</span>
+          <input type="text" value={district} onChange={(e) => setDistrict(e.target.value)} />
+        </label>
+        <label className="of-field" style={{ flex: 1 }}>
+          <span>Complemento</span>
+          <input type="text" placeholder="opcional" value={complement} onChange={(e) => setComplement(e.target.value)} />
+        </label>
+      </div>
+
+      {freightLoading && (
+        <div className="of-freight-loading">
+          <Loader2 size={14} className="spin" /> calculando o frete…
+        </div>
+      )}
+      {freightError && <span className="of-error">{freightError}</span>}
+
+      {options && options.length > 0 && (
+        <div className="of-freight">
+          <span className="of-freight-label">Como prefere receber?</span>
+          {options.map((o) => (
+            <button
+              key={o.serviceId}
+              type="button"
+              className={`freight-option${chosenId === o.serviceId ? " is-active" : ""}`}
+              onClick={() => setChosenId(o.serviceId)}
+            >
+              <Truck size={15} strokeWidth={1.7} />
+              <span className="fo-name">
+                {o.carrier} {o.name}
+                {o.deliveryDays ? <em>{o.deliveryDays} dia{o.deliveryDays > 1 ? "s" : ""} úteis</em> : null}
+              </span>
+              <span className="fo-price">{formatPrice(o.priceCents)}</span>
+              {chosenId === o.serviceId && <Check size={14} strokeWidth={2.4} />}
+            </button>
+          ))}
+        </div>
       )}
 
-      <div style={{ padding: "12px 14px", background: "var(--paper-100)", borderRadius: "var(--radius-sm)", border: "1px dashed var(--paper-400)" }}>
-        <p style={{ fontFamily: "var(--font-body)", fontSize: 12, color: "var(--ink-600)", margin: 0, lineHeight: 1.6 }}>
-          🔒 Pagamento seguro via Stripe. Após o pagamento entraremos em contato pelo canal escolhido para combinar o endereço de entrega.
-        </p>
-      </div>
+      {chosen && (
+        <div className="of-total">
+          <div><span>Pôster</span><span>{formatPrice(posterPrice)}</span></div>
+          <div><span>Frete</span><span>{formatPrice(chosen.priceCents)}</span></div>
+          <div className="of-total-sum">
+            <span>Total</span><strong>{formatPrice(posterPrice + chosen.priceCents)}</strong>
+          </div>
+        </div>
+      )}
 
-      <div style={{ display: "flex", gap: 8 }}>
-        <button
-          onClick={onBack}
-          disabled={submitting}
-          style={{ flex: 1, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", padding: "10px", background: "none", color: "var(--ink-600)", border: "1px dashed var(--paper-400)", borderRadius: "var(--radius-sm)", cursor: "pointer" }}
-        >
-          ← voltar
-        </button>
-        <button
-          onClick={handleSubmit}
-          disabled={submitting}
-          style={{ flex: 2, fontFamily: "var(--font-mono)", fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", padding: "10px 18px", background: submitting ? "var(--paper-300)" : "var(--ink-900)", color: submitting ? "var(--ink-500)" : "var(--paper-50)", border: "none", borderRadius: "var(--radius-sm)", cursor: submitting ? "wait" : "pointer" }}
-        >
+      {(error || submitError) && <span className="of-error">{error || submitError}</span>}
+
+      <p className="of-note">
+        Pagamento seguro via Stripe. O pôster é enviado para o endereço acima.
+      </p>
+
+      <div className="of-actions">
+        <button className="compose-back" onClick={onBack} disabled={submitting}>← voltar</button>
+        <button className="compose-next" onClick={handleSubmit} disabled={submitting || !chosen}>
           {submitting ? (submitStep || "processando...") : "ir para pagamento →"}
         </button>
       </div>

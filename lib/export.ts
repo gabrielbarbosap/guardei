@@ -44,7 +44,7 @@ export async function exportPolaroid(location: LocationPhoto): Promise<void> {
 
   // preload logo (used in polaroid stamp + bottom branding)
   let logoImg: HTMLImageElement | null = null;
-  try { logoImg = await loadImage("/photos/logo.svg"); } catch { /* skip */ }
+  try { logoImg = await loadImage("/photos/logo.png"); } catch { /* skip */ }
 
   // ── 1. Map background ──────────────────────────────────────────────────
   const token = process.env.NEXT_PUBLIC_MAPBOX_TOKEN;

@@ -3,13 +3,14 @@
 import { useState } from "react";
 import type { User } from "firebase/auth";
 import type { LocationPhoto } from "@/types/location";
-import type { PosterFormat } from "@/types/poster";
+import type { PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
 import { savePosterOrder, setPosterOrderImageUrl } from "@/lib/firestore";
 import { renderPosterFromLayout, buildPosterParams } from "@/lib/posterCanvas";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
 import { layoutPolaroids } from "@/lib/posterLayout";
 import { PREVIEW_W, previewHeightFor } from "@/lib/posterPreview";
+import { notifyOrderCreated } from "@/lib/notify";
 import { storage } from "@/lib/storage";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import Step2Format from "./Step2Format";
@@ -65,6 +66,8 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
     customerName: string,
     customerContact: string,
     contactType: "email" | "whatsapp",
+    shippingAddress: ShippingAddress,
+    shipping: ShippingChoice,
   ) {
     setSubmitting(true);
     setSubmitError("");
@@ -89,9 +92,14 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
         customerName,
         customerContact,
         contactType,
+        shippingAddress,
+        shipping,
         status: "pending_payment",
         createdAt: Date.now(),
       });
+
+      // confirma o pedido por e-mail sem travar a geração da imagem
+      notifyOrderCreated(id);
 
       setSubmitStep("gerando imagem...");
       const dims = FORMAT_DIMS[format];
@@ -136,14 +144,26 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
       const res = await fetch("/api/stripe/create-checkout", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ orderId: id, format, customerEmail }),
+        body: JSON.stringify({
+          orderId: id,
+          format,
+          customerEmail,
+          customerName,
+          shippingAddress,
+          shippingServiceId: shipping.serviceId,
+          // o servidor recota e compara com este valor antes de cobrar
+          shippingPriceCents: shipping.priceCents,
+        }),
       });
-      if (!res.ok) throw new Error("Falha ao criar sessão de pagamento.");
+      if (!res.ok) {
+        const detail = await res.json().catch(() => null) as { error?: string } | null;
+        throw new Error(detail?.error ?? "Falha ao criar sessão de pagamento.");
+      }
       const { url } = await res.json() as { url: string };
       window.location.href = url;
     } catch (err) {
       console.error("poster order error:", err);
-      setSubmitError("Erro ao processar pedido. Tente novamente.");
+      setSubmitError(err instanceof Error && err.message ? err.message : "Erro ao processar pedido. Tente novamente.");
       setSubmitting(false);
       setSubmitStep("");
     }
@@ -223,6 +243,7 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
 
           {step === 3 && (
             <Step4Order
+              format={format}
               onSubmit={handleOrderSubmit}
               onBack={() => setStep(2)}
               submitting={submitting}

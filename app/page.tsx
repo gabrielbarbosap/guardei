@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth, signInWithEmail, signInWithGoogle, signUpWithEmail } from "@/lib/auth";
+import { requestPasswordReset } from "@/lib/notify";
 import dynamic from "next/dynamic";
 import type { GlobePin } from "./components/InkGlobe";
 import { PINS } from "./components/InkGlobe";
@@ -44,6 +45,7 @@ function AuthModal({ onClose }: { onClose: () => void }) {
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
 
   async function handleGoogle() {
     setError(""); setLoading(true);
@@ -55,6 +57,14 @@ function AuthModal({ onClose }: { onClose: () => void }) {
     try { await signInWithEmail(email, password); }
     catch { setError("Email ou senha inválidos."); setLoading(false); }
   }
+  async function handleReset() {
+    if (!email.includes("@")) { setError("Informe seu email para receber o link."); return; }
+    setError("");
+    await requestPasswordReset(email);
+    // resposta sempre igual: dizer se a conta existe entregaria quem tem cadastro
+    setResetSent(true);
+  }
+
   async function handleSignUp() {
     setError(""); setLoading(true);
     try { await signUpWithEmail(email, password); }
@@ -88,6 +98,13 @@ function AuthModal({ onClose }: { onClose: () => void }) {
             <button type="submit" className="btn-primary" disabled={loading}>Entrar</button>
             <button type="button" className="btn-ghost" onClick={handleSignUp} disabled={loading}>Criar conta</button>
           </div>
+          {resetSent ? (
+            <p className="auth-reset-ok">Se existir uma conta com esse email, o link de recuperação já está a caminho.</p>
+          ) : (
+            <button type="button" className="auth-reset-link" onClick={handleReset} disabled={loading}>
+              Esqueci minha senha
+            </button>
+          )}
         </form>
       </div>
     </div>
@@ -101,7 +118,7 @@ function Header({ onLogin }: { onLogin: () => void }) {
       <div className="site-header-inner">
         <div className="brand" style={{ display: "flex", alignItems: "center", gap: 8 }}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src="/photos/logo.svg" alt="" style={{ height: 40, width: "auto" }} />
+          <img src="/photos/logo.png" alt="" style={{ height: 40, width: "auto" }} />
           guardei<span className="amp">,</span>
         </div>
         <nav className="nav">
@@ -392,7 +409,7 @@ function SiteFooter() {
         <div className="sf-brand">
           <div className="brand" style={{ display: "flex", alignItems: "center", gap: 8 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img src="/photos/logo.svg" alt="" style={{ height: 36, width: "auto" }} />
+            <img src="/photos/logo.png" alt="" style={{ height: 36, width: "auto" }} />
             guardei<span className="amp">,</span>
           </div>
           <p className="mono">um caderno de viagens que nunca se perde.</p>

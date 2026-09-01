@@ -2,6 +2,7 @@ import {
   addDoc,
   collection,
   deleteDoc,
+  deleteField,
   doc,
   getDoc,
   getDocs,
@@ -16,6 +17,8 @@ import {
 import { app } from "./firebase";
 import type { LocationPhoto } from "@/types/location";
 import type { PosterOrder } from "@/types/poster";
+import { PROFILE_LIMITS, type UserProfile } from "@/types/user";
+import { stripUndefinedDeep } from "./stripUndefined";
 
 export const db = getFirestore(app);
 
@@ -119,7 +122,7 @@ export async function ensureUsername(
 // ── Poster orders ──────────────────────────────────────────────────────────────
 
 export async function savePosterOrder(order: Omit<PosterOrder, "id">): Promise<string> {
-  const ref = await addDoc(collection(db, "posterOrders"), order);
+  const ref = await addDoc(collection(db, "posterOrders"), stripUndefinedDeep(order));
   return ref.id;
 }
 
@@ -169,4 +172,37 @@ export async function getPublicLocationsByUsername(
     id: d.id,
     ...(d.data() as Omit<LocationPhoto, "id">),
   }));
+}
+
+// ── Perfil do usuário ──────────────────────────────────────────────────────────
+
+/** Lê o perfil; devolve null se o documento ainda não existe. */
+export async function getUserProfile(uid: string): Promise<UserProfile | null> {
+  const snap = await getDoc(doc(db, "users", uid));
+  if (!snap.exists()) return null;
+  return snap.data() as UserProfile;
+}
+
+/**
+ * Grava os campos editáveis do perfil.
+ *
+ * `username` e `createdAt` ficam de fora de propósito: o primeiro é o endereço
+ * público já compartilhado, o segundo é histórico. Campos vazios são removidos
+ * em vez de virarem string vazia, para o perfil público não exibir linhas em
+ * branco.
+ */
+export async function saveUserProfile(
+  uid: string,
+  fields: Pick<UserProfile, "displayName" | "bio" | "city" | "publicProfileEnabled">,
+): Promise<void> {
+  const payload: Record<string, unknown> = { updatedAt: Date.now() };
+  for (const key of ["displayName", "bio", "city"] as const) {
+    const value = fields[key]?.trim();
+    if (value) payload[key] = value.slice(0, PROFILE_LIMITS[key]);
+    else payload[key] = deleteField();
+  }
+  if (typeof fields.publicProfileEnabled === "boolean") {
+    payload.publicProfileEnabled = fields.publicProfileEnabled;
+  }
+  await setDoc(doc(db, "users", uid), payload, { merge: true });
 }

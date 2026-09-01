@@ -10,10 +10,12 @@ import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
  * Convite para o pôster impresso.
  *
  * Aparece por marcos de memórias guardadas em vez de toda sessão: quem dispensa
- * aos 3 pontos só volta a ver aos 10, depois aos 25. A dispensa fica no
- * localStorage, então não reaparece a cada refresh.
+ * no primeiro marco só volta a ver no seguinte. A dispensa fica no localStorage,
+ * então não reaparece a cada refresh.
  */
-const MILESTONES = [3, 10, 25] as const;
+/* Começa em 5, e não em 3, por dois motivos: abaixo disso não dá para montar
+   pôster, e aos 3 quem fala é o onboarding — dois convites na mesma tela. */
+const MILESTONES = [5, 12, 25] as const;
 const STORAGE_KEY = "guardei:poster-nudge-dismissed";
 
 const EMPTY: number[] = [];

@@ -1,13 +1,36 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { Suspense } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { Frame } from "lucide-react";
+
+type Summary = {
+  totalCents: number;
+  shippingCents: number;
+  posterCents: number;
+  shippingName: string | null;
+  orderRef: string | null;
+};
+
+const brl = (cents: number) =>
+  (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
 
 function SuccessContent() {
   const params = useSearchParams();
   const sessionId = params.get("session_id");
+  const [summary, setSummary] = useState<Summary | null>(null);
+
+  // resumo do que foi comprado, para a pessoa não ficar sem saber o que pagou
+  useEffect(() => {
+    if (!sessionId) return;
+    let active = true;
+    fetch("/api/stripe/session?session_id=" + encodeURIComponent(sessionId))
+      .then((r) => (r.ok ? r.json() : null))
+      .then((data) => { if (active && data) setSummary(data); })
+      .catch(() => {});
+    return () => { active = false; };
+  }, [sessionId]);
 
   return (
     <div
@@ -59,9 +82,22 @@ function SuccessContent() {
             maxWidth: 360,
           }}
         >
-          Recebemos seu pagamento com sucesso. Em breve entraremos em contato
-          para combinar o endereço de entrega do seu poster.
+          Recebemos seu pagamento. Seu pôster entra em produção e segue para o
+          endereço que você informou — avisamos assim que ele for postado.
         </p>
+
+        {summary && (
+          <div className="of-total" style={{ width: "100%", maxWidth: 360, textAlign: "left" }}>
+            <div><span>Pôster</span><span>{brl(summary.posterCents)}</span></div>
+            <div>
+              <span>{summary.shippingName ?? "Frete"}</span>
+              <span>{brl(summary.shippingCents)}</span>
+            </div>
+            <div className="of-total-sum">
+              <span>Total pago</span><strong>{brl(summary.totalCents)}</strong>
+            </div>
+          </div>
+        )}
 
         {sessionId && (
           <div
