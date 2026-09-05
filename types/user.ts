@@ -16,6 +16,13 @@ export type UserProfile = {
   city?: string;
   /** Desliga o mapa público sem apagar nada. */
   publicProfileEnabled?: boolean;
+  /**
+   * Quando a pessoa aceitou a politica de privacidade.
+   *
+   * Fica no Firestore, e nao no navegador: e registro de consentimento, tem
+   * valor legal e precisa sobreviver a troca de aparelho e a limpeza de cache.
+   */
+  privacyAcceptedAt?: number;
   /** Quando a conta apareceu pela primeira vez. */
   createdAt?: number;
   updatedAt?: number;

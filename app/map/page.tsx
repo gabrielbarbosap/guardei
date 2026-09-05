@@ -7,6 +7,7 @@ import { onAuthStateChanged, type User } from "firebase/auth";
 import MapView from "../components/MapView";
 import OnThisDay from "../components/OnThisDay";
 import UploadForm from "../components/UploadForm";
+import PrivacyGate from "../components/PrivacyGate";
 import MainNav from "../components/MainNav";
 import PosterNudge from "../components/PosterNudge";
 import OnboardingGuide, { useOnboardingVisible } from "../components/onboarding/OnboardingGuide";
@@ -15,7 +16,10 @@ import MapFilter from "../components/MapFilter";
 import { ALL_MEMORIES, applyDateFilter, memoryDateOf, type DateFilter } from "@/lib/memoryDate";
 import { auth } from "@/lib/auth";
 import { notifyWelcome } from "@/lib/notify";
-import { getLocations, deleteLocation, ensureUsername, setLocationVisibility } from "@/lib/firestore";
+import {
+  getLocations, deleteLocation, ensureUsername, setLocationVisibility,
+  getUserProfile, acceptPrivacyPolicy,
+} from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
 
 export default function MapPage() {
@@ -29,6 +33,9 @@ export default function MapPage() {
   const [username, setUsername] = useState<string>("");
   const [posterOpen, setPosterOpen] = useState(false);
   const [dateFilter, setDateFilter] = useState<DateFilter>(ALL_MEMORIES);
+  /* null enquanto o perfil não chegou: sem saber, não dá para decidir se pede
+     o aceite, e mostrar o formulário antes seria pular o consentimento. */
+  const [privacidadeAceita, setPrivacidadeAceita] = useState<boolean | null>(null);
 
   const visibleLocations = useMemo(
     () => applyDateFilter(locations, dateFilter),
@@ -107,6 +114,10 @@ export default function MapPage() {
       ensureUsername(nextUser.uid, nextUser.displayName, nextUser.email)
         .then(setUsername)
         .catch(console.error);
+      getUserProfile(nextUser.uid)
+        .then((perfil) => setPrivacidadeAceita(Boolean(perfil?.privacyAcceptedAt)))
+        // sem resposta a gente pede o aceite: errar pedindo é melhor que errar guardando
+        .catch(() => setPrivacidadeAceita(false));
       setLoading(false);
     });
     return () => unsubscribe();
@@ -164,7 +175,22 @@ export default function MapPage() {
         />
       )}
 
-      {selectedLocation && (
+      {/* O aceite vem antes do formulário, não depois: a pessoa está prestes a
+          mandar foto e texto pessoais, e consentimento colhido depois do envio
+          não é consentimento. */}
+      {selectedLocation && privacidadeAceita === false && (
+        <div className="upload-panel">
+          <PrivacyGate
+            onAccept={async () => {
+              await acceptPrivacyPolicy(user!.uid);
+              setPrivacidadeAceita(true);
+            }}
+            onCancel={() => setSelectedLocation(null)}
+          />
+        </div>
+      )}
+
+      {selectedLocation && privacidadeAceita === true && (
         <UploadForm
           userId={user!.uid}
           onUploaded={handleUploaded}

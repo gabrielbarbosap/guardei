@@ -192,6 +192,22 @@ export async function getPublicLocationsByUsername(
 // ── Perfil do usuário ──────────────────────────────────────────────────────────
 
 /** Lê o perfil; devolve null se o documento ainda não existe. */
+/**
+ * Registra o aceite da politica de privacidade.
+ *
+ * Grava a data, e nao um booleano: se a politica mudar, dá para saber qual
+ * versao a pessoa aceitou comparando com a data de revisao do texto.
+ */
+export async function acceptPrivacyPolicy(userId: string): Promise<number> {
+  const acceptedAt = Date.now();
+  await setDoc(
+    doc(db, "users", userId),
+    { privacyAcceptedAt: acceptedAt, updatedAt: acceptedAt },
+    { merge: true },
+  );
+  return acceptedAt;
+}
+
 export async function getUserProfile(uid: string): Promise<UserProfile | null> {
   const snap = await getDoc(doc(db, "users", uid));
   if (!snap.exists()) return null;

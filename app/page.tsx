@@ -440,7 +440,7 @@ function SiteFooter() {
           <div>
             <div className="sf-title">produto</div>
             <a href="#">Como funciona</a>
-            <a href="#">Privacidade</a>
+            <a href="/politica-de-privacidade">Privacidade</a>
             <a href="#">Exportar meu mapa</a>
           </div>
           <div>
