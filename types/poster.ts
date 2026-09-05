@@ -27,12 +27,16 @@ export type PosterFormat =
  * dos polaroids: assim a mesma conta de escala serve para os dois na hora de
  * gerar a arte final, e um poster A3 nao precisa de numero proprio.
  */
+import type { CaptionFontKey } from "@/lib/posterFonts";
+
 export type PosterCaption = {
   text: string;
   x: number;
   y: number;
   /** Corpo da fonte, tambem em unidades da previa. */
   size: number;
+  /** Chave da familia escolhida; ver CAPTION_FONTS. */
+  font: CaptionFontKey;
 };
 
 export type PosterOrderItem = {

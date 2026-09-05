@@ -1285,6 +1285,29 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   letter-spacing: 0.06em; flex-shrink: 0;
 }
 .ccf-count.is-full { color: var(--poster-gold); }
+/* Cada botao e escrito na propria fonte: o nome nao descreve tipografia,
+   a amostra sim. */
+.ccf-fonts { display: flex; gap: 6px; flex-wrap: wrap; }
+.ccf-font {
+  flex: 1; min-width: 84px;
+  padding: 9px 10px; cursor: pointer;
+  border: 1.5px solid var(--paper-300); border-radius: var(--radius-sm);
+  background: var(--paper-50); color: var(--ink-600);
+  font-size: 14px; line-height: 1.2;
+  transition: all var(--duration) var(--ease-soft);
+}
+.ccf-font:hover { border-color: var(--ink-400); }
+.ccf-font.is-active {
+  border-color: var(--poster-gold);
+  background: rgba(184,134,11,0.07);
+  color: var(--poster-gold);
+}
+.ccf-size { display: flex; align-items: center; gap: 10px; }
+.ccf-size-label {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--ink-400); flex-shrink: 0;
+}
+.ccf-size .ct-range { flex: 1; }
 .ccf-tip { font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.04em; }
 
 .compose-actions { display: flex; gap: 8px; margin-top: 4px; }

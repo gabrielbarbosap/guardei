@@ -26,8 +26,8 @@ export const ONBOARDING_MEMORIES_GOAL = 3;
 /**
  * Limite da frase livre do poster.
  *
- * Cinquenta caracteres cabem numa linha legivel a distancia de parede. Acima
- * disso a fonte teria de encolher tanto que a frase deixaria de funcionar como
- * titulo e viraria mais uma legenda.
+ * Vinte e cinco caracteres cabem numa linha em corpo grande, legivel a
+ * distancia de parede. Acima disso a fonte teria de encolher tanto que a frase
+ * deixaria de funcionar como titulo e viraria mais uma legenda.
  */
-export const POSTER_CAPTION_MAX = 50;
+export const POSTER_CAPTION_MAX = 25;

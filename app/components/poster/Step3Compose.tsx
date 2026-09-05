@@ -5,7 +5,8 @@ import { Check, Star, Minus, Plus, TriangleAlert } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
 import type { PosterCaption, PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
-import { computePosterLayout, renderMapBackground, fitCaptionSize, CAPTION_FONT, CAPTION_WIDTH_RATIO } from "@/lib/posterCanvas";
+import { computePosterLayout, renderMapBackground, fitCaptionSize, CAPTION_WIDTH_RATIO } from "@/lib/posterCanvas";
+import { CAPTION_FONTS, DEFAULT_CAPTION_FONT, captionFontCss, type CaptionFontKey } from "@/lib/posterFonts";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
 import { PREVIEW_W, previewHeightFor } from "@/lib/posterPreview";
 import { POSTER_MAX_PHOTOS, POSTER_CAPTION_MAX } from "@/lib/posterRules";
@@ -62,6 +63,9 @@ function rotatedExtents(
 
 /** Corpo inicial da frase, em unidades da previa. */
 const CAPTION_BASE_SIZE = Math.round(PREVIEW_W * 0.05);
+const CAPTION_MIN_SIZE = 12;
+/** Teto absoluto; o teto real depende do texto e e calculado por frase. */
+const CAPTION_MAX_SIZE = Math.round(PREVIEW_W * 0.13);
 
 const MIN_SIZE = 40;
 const MAX_SIZE = PREVIEW_W * 0.55;
@@ -105,6 +109,8 @@ export default function Step3Compose({
      no estado exigiria recalcula-lo em efeito a cada troca de formato. */
   const [captionText, setCaptionText] = useState("");
   const [captionPos, setCaptionPos] = useState<{ x: number; y: number } | null>(null);
+  const [captionSize, setCaptionSize] = useState(CAPTION_BASE_SIZE);
+  const [captionFont, setCaptionFont] = useState<CaptionFontKey>(DEFAULT_CAPTION_FONT);
   const captionRef = useRef<HTMLDivElement>(null);
   const captionGesture = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
 
@@ -122,18 +128,21 @@ export default function Step3Compose({
         });
 
   const textoFrase = captionText.trim();
-  /* O corpo e o mesmo que o desenho final vai usar: a previa precisa mostrar a
-     frase do tamanho em que ela sera impressa, senao a pessoa posiciona uma
-     coisa e recebe outra. */
-  const captionFontSize = textoFrase
-    ? fitCaptionSize(textoFrase, CAPTION_BASE_SIZE, PREVIEW_W * CAPTION_WIDTH_RATIO)
-    : CAPTION_BASE_SIZE;
+  /* Maior corpo em que esta frase ainda cabe na largura util. Vira o teto do
+     controle, em vez de um numero fixo: com um teto fixo a pessoa arrastaria o
+     cursor ate o fim sem ver nada mudar, porque o ajuste automatico cortaria o
+     excesso de qualquer jeito. */
+  const captionMaxSize = textoFrase
+    ? fitCaptionSize(textoFrase, CAPTION_MAX_SIZE, PREVIEW_W * CAPTION_WIDTH_RATIO, captionFont)
+    : CAPTION_MAX_SIZE;
+  const captionFontSize = Math.min(captionSize, captionMaxSize);
   const caption: PosterCaption | undefined = textoFrase
     ? {
         text: textoFrase,
         x: captionPos?.x ?? PREVIEW_W / 2,
         y: captionPos?.y ?? previewH * 0.9,
-        size: CAPTION_BASE_SIZE,
+        size: captionFontSize,
+        font: captionFont,
       }
     : undefined;
 
@@ -439,7 +448,7 @@ export default function Step3Compose({
                     left: caption.x,
                     top: caption.y,
                     fontSize: captionFontSize,
-                    fontFamily: CAPTION_FONT,
+                    fontFamily: captionFontCss(caption.font),
                   }}
                 >
                   {caption.text}
@@ -506,7 +515,37 @@ export default function Step3Compose({
             {captionText.length}/{POSTER_CAPTION_MAX}
           </span>
         </div>
-        {textoFrase && <span className="ccf-tip">arraste a frase na prévia para escolher o lugar</span>}
+        {textoFrase && (
+          <>
+            <div className="ccf-fonts" role="group" aria-label="Fonte da frase">
+              {CAPTION_FONTS.map((f) => (
+                <button
+                  key={f.key}
+                  type="button"
+                  className={`ccf-font${captionFont === f.key ? " is-active" : ""}`}
+                  onClick={() => setCaptionFont(f.key)}
+                  style={{ fontFamily: captionFontCss(f.key) }}
+                >
+                  {f.label}
+                </button>
+              ))}
+            </div>
+
+            <div className="ccf-size">
+              <span className="ccf-size-label">tamanho</span>
+              <input
+                type="range"
+                className="ct-range"
+                min={CAPTION_MIN_SIZE}
+                max={Math.max(CAPTION_MIN_SIZE + 1, Math.round(captionMaxSize))}
+                value={Math.round(captionFontSize)}
+                onChange={(e) => setCaptionSize(Number(e.target.value))}
+                aria-label="Tamanho da frase"
+              />
+            </div>
+            <span className="ccf-tip">arraste a frase na prévia para escolher o lugar</span>
+          </>
+        )}
       </div>
 
       <div className="compose-actions">

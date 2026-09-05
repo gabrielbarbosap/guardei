@@ -6,6 +6,7 @@ import {
   JetBrains_Mono,
   Cinzel_Decorative,
   Over_the_Rainbow,
+  Life_Savers,
 } from "next/font/google";
 import "./globals.css";
 import "mapbox-gl/dist/mapbox-gl.css";
@@ -42,6 +43,13 @@ const cinzelDecorative = Cinzel_Decorative({
   display: "swap",
 });
 
+const lifeSavers = Life_Savers({
+  variable: "--font-life-savers",
+  weight: ["400", "700", "800"],
+  subsets: ["latin"],
+  display: "swap",
+});
+
 const overTheRainbow = Over_the_Rainbow({
   variable: "--font-over-the-rainbow",
   weight: "400",
@@ -69,6 +77,7 @@ const fontVars = [
   jetbrainsMono.variable,
   cinzelDecorative.variable,
   overTheRainbow.variable,
+  lifeSavers.variable,
 ].join(" ");
 
 export default function RootLayout({

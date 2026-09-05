@@ -1,5 +1,6 @@
 import type { LocationPhoto } from "@/types/location";
 import type { PosterCaption } from "@/types/poster";
+import { captionFontFamily, DEFAULT_CAPTION_FONT, type CaptionFontKey } from "./posterFonts";
 import { buildMapBackgroundUrl, bboxToMapboxParams, computeApiDims, computePhotoBbox, getVisitedCountryCodes } from "./posterMap";
 import { layoutPolaroids, type PlacedPolaroid } from "./posterLayout";
 
@@ -412,8 +413,22 @@ async function renderPolaroids(
 }
 
 
-/** Fonte da frase livre. Georgia porque ja e a serifada usada nas legendas. */
-export const CAPTION_FONT = "Georgia, 'Times New Roman', serif";
+
+/**
+ * Garante que a fonte esteja carregada antes de desenhar.
+ *
+ * document.fonts.ready cobre o que a pagina ja pediu; uma fonte que so
+ * aparece dentro do canvas nunca foi pedida por elemento nenhum, entao o
+ * navegador nem comecou a baixar. Sem este load o desenho sai no fallback.
+ */
+async function ensureCaptionFont(size: number, font: CaptionFontKey): Promise<void> {
+  if (typeof document === "undefined" || !document.fonts) return;
+  try {
+    await document.fonts.load(`${Math.max(8, Math.round(size))}px ${captionFontFamily(font)}`);
+  } catch {
+    /* fonte indisponivel: o desenho segue no fallback, que ainda e legivel */
+  }
+}
 
 /** Fracao da largura do poster que a frase pode ocupar. */
 export const CAPTION_WIDTH_RATIO = 0.86;
@@ -423,16 +438,18 @@ export const CAPTION_WIDTH_RATIO = 0.86;
  *
  * Exportada porque a previa precisa chegar ao mesmo numero que o desenho final:
  * se so o canvas encolhesse, a pessoa posicionaria uma frase de um tamanho e
- * receberia impressa outra. Cinquenta caracteres num A5 sao o caso limite.
+ * receberia impressa outra. Vinte e cinco caracteres num A5 sao o caso limite.
  */
-export function fitCaptionSize(text: string, baseSize: number, maxWidth: number): number {
+export function fitCaptionSize(text: string, baseSize: number, maxWidth: number, font: CaptionFontKey = DEFAULT_CAPTION_FONT): number {
+  if (typeof document === "undefined") return baseSize;
   const ctx = document.createElement("canvas").getContext("2d");
   if (!ctx) return baseSize;
+  const familia = captionFontFamily(font);
   let corpo = baseSize;
-  ctx.font = `${corpo}px ${CAPTION_FONT}`;
+  ctx.font = `${corpo}px ${familia}`;
   while (ctx.measureText(text).width > maxWidth && corpo > 8) {
     corpo -= 1;
-    ctx.font = `${corpo}px ${CAPTION_FONT}`;
+    ctx.font = `${corpo}px ${familia}`;
   }
   return corpo;
 }
@@ -442,8 +459,8 @@ function drawCaption(ctx: CanvasRenderingContext2D, caption: PosterCaption, canv
   const texto = caption.text.trim();
   if (!texto) return;
 
-  const corpo = fitCaptionSize(texto, caption.size, canvasW * CAPTION_WIDTH_RATIO);
-  ctx.font = `${corpo}px ${CAPTION_FONT}`;
+  const corpo = fitCaptionSize(texto, caption.size, canvasW * CAPTION_WIDTH_RATIO, caption.font);
+  ctx.font = `${corpo}px ${captionFontFamily(caption.font)}`;
 
   ctx.save();
   ctx.textAlign = "center";
@@ -476,7 +493,10 @@ export async function renderPosterFromLayout(
   const ctx = canvas.getContext("2d")!;
 
   // depois dos polaroids: a frase e titulo do poster, nao pode ficar por baixo
-  if (caption) drawCaption(ctx, caption, W);
+  if (caption) {
+    await ensureCaptionFont(caption.size, caption.font);
+    drawCaption(ctx, caption, W);
+  }
   ctx.fillStyle = "rgba(250,246,236,0.42)";
   ctx.font = `${Math.round(11 * SCALE)}px 'Courier New', monospace`;
   ctx.textAlign = "center";
