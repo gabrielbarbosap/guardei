@@ -1613,17 +1613,12 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
 .of-field input[readonly] { background: var(--paper-100); color: var(--ink-600); }
 .of-row { display: flex; gap: 10px; }
 .of-cep { flex: 0 0 130px; }
-.of-toggle { display: flex; gap: 8px; }
-.of-toggle-btn {
-  flex: 1; padding: 10px; cursor: pointer;
-  font-family: var(--font-mono); font-size: 11px;
-  letter-spacing: 0.1em; text-transform: uppercase;
-  border: 1.5px solid var(--paper-300); border-radius: var(--radius-sm);
-  background: var(--paper-50); color: var(--ink-600);
-  transition: all var(--duration) var(--ease-soft);
-}
-.of-toggle-btn.is-active {
-  border-color: var(--poster-gold); background: rgba(184,134,11,0.08); color: var(--poster-gold);
+/* Ajuda sob o campo: diz para que serve o dado antes de a pessoa hesitar em
+   dar. Em campo de e-mail isso reduz mais abandono do que qualquer rótulo. */
+.of-ajuda {
+  display: block; margin-top: 6px; font-style: normal;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em;
+  color: var(--ink-400);
 }
 .of-divider {
   margin-top: 4px; padding-top: 12px; border-top: 1px dashed var(--paper-400);

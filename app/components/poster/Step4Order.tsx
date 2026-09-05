@@ -26,7 +26,6 @@ export default function Step4Order({
   format, onSubmit, onBack, submitting, submitStep, submitError,
 }: Props) {
   const [name, setName] = useState("");
-  const [contactType, setContactType] = useState<"whatsapp" | "email">("whatsapp");
   const [contact, setContact] = useState("");
   const [error, setError] = useState("");
 
@@ -88,9 +87,8 @@ export default function Step4Order({
 
   function validate(): string {
     if (!name.trim()) return "Informe seu nome.";
-    if (!contact.trim()) return `Informe seu ${contactType === "whatsapp" ? "WhatsApp" : "email"}.`;
-    if (contactType === "email" && !contact.includes("@")) return "Email inválido.";
-    if (contactType === "whatsapp" && contact.replace(/\D/g, "").length < 10) return "WhatsApp inválido.";
+    if (!contact.trim()) return "Informe seu e-mail.";
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact.trim())) return "E-mail inválido.";
     if (cep.replace(/\D/g, "").length !== 8) return "Informe o CEP de entrega.";
     if (!street.trim()) return "Informe a rua.";
     if (!number.trim()) return "Informe o número.";
@@ -105,7 +103,8 @@ export default function Step4Order({
     await onSubmit(
       name.trim(),
       contact.trim(),
-      contactType,
+      // sempre e-mail: é por onde a confirmação e o rastreio saem
+      "email",
       {
         cep: cep.replace(/\D/g, ""),
         street: street.trim(),
@@ -130,30 +129,17 @@ export default function Step4Order({
         <input type="text" placeholder="Nome completo" value={name} onChange={(e) => setName(e.target.value)} />
       </label>
 
-      <div className="of-field">
-        <span>Como prefere ser contatado?</span>
-        <div className="of-toggle">
-          {(["whatsapp", "email"] as const).map((t) => (
-            <button
-              key={t}
-              type="button"
-              className={`of-toggle-btn${contactType === t ? " is-active" : ""}`}
-              onClick={() => setContactType(t)}
-            >
-              {t === "whatsapp" ? "WhatsApp" : "Email"}
-            </button>
-          ))}
-        </div>
-      </div>
-
       <label className="of-field">
-        <span>{contactType === "whatsapp" ? "WhatsApp (com DDD)" : "Endereço de email"}</span>
+        <span>Seu e-mail</span>
         <input
-          type={contactType === "email" ? "email" : "tel"}
-          placeholder={contactType === "whatsapp" ? "(81) 99999-9999" : "seu@email.com"}
+          type="email"
+          inputMode="email"
+          autoComplete="email"
+          placeholder="seu@email.com"
           value={contact}
           onChange={(e) => setContact(e.target.value)}
         />
+        <em className="of-ajuda">é para lá que vão a confirmação e o código de rastreio</em>
       </label>
 
       <div className="of-divider">entrega</div>
