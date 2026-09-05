@@ -1020,6 +1020,61 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.14em;
   text-transform: uppercase; color: var(--ink-500);
 }
+/* Lembrete de que o pôster está disponível.
+   Fica enquanto houver memórias suficientes, então é uma tira baixa e não um
+   cartão: ele divide a tela com o mapa o tempo todo, e cartão que fica vira
+   estorvo. Fechar esconde só até o próximo acesso. */
+.poster-ready {
+  position: fixed; right: 20px; bottom: 20px; z-index: 45;
+  display: flex; align-items: center; gap: 11px;
+  max-width: min(360px, calc(100vw - 40px));
+  padding: 11px 14px 11px 13px;
+  background: var(--paper-50);
+  border: 1px solid var(--paper-300); border-left: 3px solid var(--poster-gold);
+  border-radius: var(--radius-sm);
+  box-shadow: var(--shadow-md);
+  animation: pr-in 420ms var(--ease-soft) both;
+}
+@keyframes pr-in { from { opacity: 0; transform: translateY(14px); } }
+.pr-icon {
+  flex-shrink: 0; width: 30px; height: 30px; border-radius: 50%;
+  display: grid; place-items: center;
+  background: rgba(184,134,11,0.12); color: var(--poster-gold);
+}
+.pr-body { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.pr-body strong {
+  font-family: var(--font-body); font-size: 13.5px; font-weight: 600;
+  color: var(--ink-900); line-height: 1.25;
+}
+.pr-body span {
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.03em;
+  color: var(--ink-500); line-height: 1.4;
+}
+.pr-cta {
+  flex-shrink: 0; display: inline-flex; align-items: center; gap: 5px;
+  min-height: 36px; padding: 0 13px; cursor: pointer;
+  border: none; border-radius: var(--radius-sm);
+  background: var(--poster-gold); color: var(--paper-50);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+  text-transform: uppercase;
+  transition: filter var(--duration) var(--ease-soft);
+}
+.pr-cta:hover { filter: brightness(1.07); }
+.poster-ready-close {
+  position: absolute; top: -8px; right: -8px;
+  width: 22px; height: 22px; border-radius: 50%; cursor: pointer;
+  display: grid; place-items: center;
+  background: var(--paper-50); border: 1px solid var(--paper-300);
+  color: var(--ink-400); box-shadow: var(--shadow-xs);
+}
+.poster-ready-close:hover { color: var(--ink-900); }
+@media (max-width: 640px) {
+  .poster-ready { right: 12px; left: 12px; bottom: 12px; max-width: none; }
+  .pr-body span { font-size: 9.5px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .poster-ready { animation: none; }
+}
 @media (max-width: 640px) {
   .poster-nudge { right: 12px; left: 12px; bottom: 12px; width: auto; }
 }
@@ -2025,6 +2080,7 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   /* nada ancorado embaixo pode ficar debaixo da barra */
   .ob-collect,
   .poster-nudge,
+  .poster-ready,
   .on-this-day { bottom: calc(var(--tabbar-h) + 12px); }
   .on-this-day { left: 12px; right: 12px; width: auto; max-width: none; }
   .map-error-toast { bottom: calc(var(--tabbar-h) + 16px); }

@@ -59,14 +59,19 @@ const keyFor = (userId: string) => STORAGE_PREFIX + userId;
 type State = {
   started: boolean;
   concluded: boolean;
-  dismissed: boolean;
-  /** Dispensa só desta carga da página — nunca vai para o localStorage. */
+  /**
+   * Dispensa só desta carga da página — nunca vai para o localStorage.
+   *
+   * Existia também um "dismissed" persistido, e ele criava um bug cruel: com o
+   * mapa vazio o guia ignorava esse flag e aparecia; ao salvar a primeira foto
+   * o ramo trocava, o flag entrava em cena e as perguntas sumiam justamente
+   * quando começavam a servir para alguma coisa.
+   */
   sessionDismissed: boolean;
 };
 const EMPTY: State = {
   started: false,
   concluded: false,
-  dismissed: false,
   sessionDismissed: false,
 };
 
@@ -81,7 +86,6 @@ function read(storageKey: string): State {
     return {
       started: Boolean(parsed.started),
       concluded: Boolean(parsed.concluded),
-      dismissed: Boolean(parsed.dismissed),
       sessionDismissed: false,
     };
   } catch {
@@ -113,10 +117,10 @@ function patch(storageKey: string, next: Partial<State>) {
   cache.set(storageKey, value);
   try {
     // sessionDismissed fica de fora: existe só enquanto a página está aberta
-    const { started, concluded, dismissed } = value;
+    const { started, concluded } = value;
     window.localStorage.setItem(
       storageKey,
-      JSON.stringify({ started, concluded, dismissed }),
+      JSON.stringify({ started, concluded }),
     );
   } catch {
     /* modo privado: vale só para esta sessão */
@@ -137,19 +141,19 @@ function subscribe(onChange: () => void) {
 /**
  * Diz se o guia está ocupando a tela.
  *
- * Existe para o convite do pôster poder se calar enquanto o onboarding fala —
- * os dois disparam a partir das mesmas memórias e apareceriam juntos para quem
- * já tem 5+ e abre o app num navegador novo.
+ * Existe para o convite do pôster poder se calar enquanto o onboarding fala:
+ * os dois nascem das mesmas memórias e apareceriam empilhados na mesma tela.
+ *
+ * Não depende mais da contagem — quem decide é só o estado do guia.
  */
-export function useOnboardingVisible(userId: string, count: number): boolean {
+export function useOnboardingVisible(userId: string): boolean {
   const storageKey = keyFor(userId);
   const state = useSyncExternalStore(
     subscribe,
     () => snapshotFor(storageKey),
     getServerSnapshot,
   );
-  if (count === 0) return !state.sessionDismissed;
-  return !(state.dismissed || state.concluded);
+  return !(state.sessionDismissed || state.concluded);
 }
 
 type Props = {
@@ -174,17 +178,14 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
   const reached = count >= ONBOARDING_MEMORIES_GOAL;
   const canPoster = count >= POSTER_MIN_PHOTOS;
 
-  /* Sem nenhuma foto o guia volta a cada acesso: não há o que fazer no mapa sem
-     memória guardada, e esconder o caminho não ajuda ninguém. A dispensa segue
-     funcionando, mas só até recarregar a página. */
-  const closed = noPhotos
-    ? state.sessionDismissed
-    : state.dismissed || state.concluded;
+  /* Só concluir encerra o guia de vez. Dispensar vale para esta carga da
+     página e nada mais — quem fecha está dizendo "agora não", não "nunca mais",
+     e o guia é o caminho para o pôster. */
+  const closed = state.sessionDismissed || state.concluded;
 
   if (closed || hidden) return null;
 
-  const dismiss = () =>
-    patch(storageKey, noPhotos ? { sessionDismissed: true } : { dismissed: true });
+  const dismiss = () => patch(storageKey, { sessionDismissed: true });
   const conclude = () => patch(storageKey, { concluded: true });
 
   /* ── 1. Boas-vindas ── */

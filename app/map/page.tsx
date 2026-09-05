@@ -36,7 +36,7 @@ export default function MapPage() {
   );
 
   // o convite do pôster se cala enquanto o guia de primeiros passos está na tela
-  const onboardingVisible = useOnboardingVisible(user?.uid ?? "", locations.length);
+  const onboardingVisible = useOnboardingVisible(user?.uid ?? "");
 
   const onThisDayMemory = useMemo(() => {
     const now = new Date();

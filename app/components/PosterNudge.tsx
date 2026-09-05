@@ -2,7 +2,7 @@
 
 import { useSyncExternalStore } from "react";
 import Image from "next/image";
-import { X, ArrowRight, Sparkles } from "lucide-react";
+import { X, ArrowRight, Sparkles, Frame } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
 import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 import { POSTER_MIN_PHOTOS, POSTER_MAX_PHOTOS } from "@/lib/posterRules";
@@ -10,80 +10,82 @@ import { POSTER_MIN_PHOTOS, POSTER_MAX_PHOTOS } from "@/lib/posterRules";
 /**
  * Convite para o pôster impresso.
  *
- * Aparece por marcos de memórias guardadas em vez de toda sessão: quem dispensa
- * no primeiro marco só volta a ver no seguinte. A dispensa fica no localStorage,
- * então não reaparece a cada refresh.
+ * Duas formas, uma vez cada coisa. Na primeira vez que a pessoa cruza o mínimo
+ * de memórias, um modal: chegar ali custou esforço e é o instante em que passa
+ * a ser verdade que dá para imprimir. Depois disso, um lembrete de canto que
+ * fica — enquanto houver memórias suficientes, o caminho para o pôster continua
+ * à vista.
+ *
+ * A versão anterior tinha marcos (5, 12, 25) e sumia de vez ao ser dispensada.
+ * Quem dispensasse uma vez não via mais nada até a décima segunda memória, e
+ * quem dispensasse os três marcos nunca mais via nada — justamente a pessoa
+ * mais próxima de comprar.
  */
-/* Começa em 5, e não em 3, por dois motivos: abaixo disso não dá para montar
-   pôster, e aos 3 quem fala é o onboarding — dois convites na mesma tela. */
-const MILESTONES = [5, 12, 25] as const;
-const STORAGE_KEY = "guardei:poster-nudge-dismissed";
 
-const EMPTY: number[] = [];
+const MODAL_KEY = "guardei:poster-modal-visto";
 
-/* Store externo em cima do localStorage, com uma fonte de verdade em memória.
-   Guardar o valor aqui resolve duas coisas: useSyncExternalStore compara
-   snapshots por identidade (devolver um array novo a cada leitura entraria em
-   loop de render), e se a escrita falhar — modo privado, storage cheio — o card
-   ainda some nesta sessão em vez de ficar preso na tela. */
-let current: number[] | null = null; // null = ainda não lido do storage
+type Estado = {
+  /** O modal de estreia já foi mostrado. Persiste: ele é de uma vez só. */
+  modalVisto: boolean;
+  /** Dispensa do lembrete de canto — só desta carga da página. */
+  cantoOculto: boolean;
+};
+
+/* Fonte de verdade em memória: useSyncExternalStore compara snapshots por
+   identidade, e devolver um objeto novo a cada leitura entraria em loop. */
+let atual: Estado | null = null;
 const listeners = new Set<() => void>();
 
-function readStorage(): number[] {
+function ler(): Estado {
+  let modalVisto = false;
   try {
-    const raw = window.localStorage.getItem(STORAGE_KEY);
-    if (!raw) return EMPTY;
-    const parsed: unknown = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed.filter((n): n is number => typeof n === "number") : EMPTY;
+    modalVisto = window.localStorage.getItem(MODAL_KEY) === "1";
   } catch {
-    return EMPTY;
+    /* modo privado: o modal aparece de novo, o que é melhor que não aparecer */
   }
+  return { modalVisto, cantoOculto: false };
 }
 
-function emit() {
-  for (const notify of listeners) notify();
+function snapshot(): Estado {
+  if (atual === null) atual = ler();
+  return atual;
 }
 
-function getSnapshot(): number[] {
-  if (current === null) current = readStorage();
-  return current;
+function snapshotServidor(): Estado {
+  return { modalVisto: false, cantoOculto: false };
 }
 
-function getServerSnapshot(): number[] {
-  return EMPTY;
+function emitir() {
+  for (const avisar of listeners) avisar();
 }
 
-/** Outra aba dispensou: recarrega e avisa. */
-function handleStorageEvent() {
-  current = readStorage();
-  emit();
-}
-
-function dismissMilestone(milestone: number) {
-  const next = [...getSnapshot(), milestone];
-  current = next;
+function marcarModalVisto() {
+  atual = { ...snapshot(), modalVisto: true };
   try {
-    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+    window.localStorage.setItem(MODAL_KEY, "1");
   } catch {
-    /* sem persistência: vale só para esta sessão */
+    /* sem persistência vale só para esta sessão */
   }
-  emit();
+  emitir();
+}
+
+function ocultarCanto() {
+  atual = { ...snapshot(), cantoOculto: true };
+  emitir();
+}
+
+function aoMudarStorage() {
+  atual = ler();
+  emitir();
 }
 
 function subscribe(onChange: () => void): () => void {
   listeners.add(onChange);
-  window.addEventListener("storage", handleStorageEvent);
+  window.addEventListener("storage", aoMudarStorage);
   return () => {
     listeners.delete(onChange);
-    window.removeEventListener("storage", handleStorageEvent);
+    window.removeEventListener("storage", aoMudarStorage);
   };
-}
-
-/** Maior marco já alcançado pela pessoa — null se ainda não chegou no primeiro. */
-function reachedMilestone(count: number): number | null {
-  let reached: number | null = null;
-  for (const m of MILESTONES) if (count >= m) reached = m;
-  return reached;
 }
 
 type Props = {
@@ -92,19 +94,12 @@ type Props = {
 };
 
 export default function PosterNudge({ locations, onOpenPoster }: Props) {
-  const dismissed = useSyncExternalStore(subscribe, getSnapshot, getServerSnapshot);
+  const estado = useSyncExternalStore(subscribe, snapshot, snapshotServidor);
 
-  const milestone = reachedMilestone(locations.length);
-
-  if (milestone === null || dismissed.includes(milestone)) return null;
-
-  function dismiss() {
-    if (milestone !== null) dismissMilestone(milestone);
-  }
+  const count = locations.length;
+  if (count < POSTER_MIN_PHOTOS) return null;
 
   const shots = locations.slice(0, 3);
-  const count = locations.length;
-  const primeiraVez = milestone === MILESTONES[0];
 
   const pilha = (
     <div className="nudge-stack" aria-hidden>
@@ -125,13 +120,13 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
     </div>
   );
 
-  /* ── Primeira vez: o pôster acabou de ficar possível ── */
-  if (primeiraVez) {
+  /* ── Estreia: o pôster acabou de ficar possível ── */
+  if (!estado.modalVisto) {
     return (
       <div className="ob-stage">
         <section className="ob-card pn-modal" role="dialog" aria-label="Seu pôster está liberado">
           <span className="ob-tape" />
-          <button className="ob-close" onClick={dismiss} aria-label="Fechar">
+          <button className="ob-close" onClick={marcarModalVisto} aria-label="Fechar">
             <X size={15} strokeWidth={1.8} />
           </button>
 
@@ -154,43 +149,48 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
             onde ele vai ficar pendurado.
           </p>
 
-          <button className="ob-cta ob-cta-gold" onClick={onOpenPoster}>
+          <button
+            className="ob-cta ob-cta-gold"
+            onClick={() => { marcarModalVisto(); onOpenPoster(); }}
+          >
             Ver o meu pôster <ArrowRight size={15} strokeWidth={1.8} />
           </button>
           <div className="pn-modal-price">
             a partir de {formatPrice(POSTER_PRICES.a4_portrait)} · frete grátis para todo o Brasil
           </div>
-          <button className="ob-later" onClick={dismiss}>agora não</button>
+          <button className="ob-later" onClick={marcarModalVisto}>agora não</button>
         </section>
       </div>
     );
   }
 
-  /* ── Marcos seguintes: lembrete de canto ── */
+  /* ── Depois: lembrete que fica ──
+     Volta a cada acesso de propósito. Fechar aqui é "não agora", não "nunca
+     mais": enquanto houver memórias suficientes, o pôster continua disponível e
+     esconder isso para sempre seria esconder o produto de quem mais o quer. */
+  if (estado.cantoOculto) return null;
+
   return (
-    <aside className="poster-nudge" aria-label="Transforme suas memórias em pôster">
-      <div className="poster-nudge-tape" />
-      <button className="poster-nudge-close" onClick={dismiss} aria-label="Dispensar">
-        <X size={15} strokeWidth={1.8} />
+    <aside className="poster-ready" aria-label="Seu pôster está pronto para montar">
+      <button className="poster-ready-close" onClick={ocultarCanto} aria-label="Fechar por agora">
+        <X size={13} strokeWidth={2} />
       </button>
 
-      <div className="poster-nudge-eyebrow">da tela para a parede</div>
+      <span className="pr-icon" aria-hidden>
+        <Frame size={16} strokeWidth={1.8} />
+      </span>
 
-      {pilha}
-
-      <h3>Seu mapa cresceu de novo.</h3>
-      <p>
-        Já são <strong>{count} memórias</strong>. Dá para imprimir tudo isso num mapa
-        com suas fotos de verdade — e pendurar onde você passa todo dia.
-      </p>
-
-      <button className="poster-nudge-cta" onClick={onOpenPoster}>
-        Ver como fica
-        <ArrowRight size={14} strokeWidth={1.8} />
-      </button>
-      <div className="poster-nudge-price">
-        a partir de {formatPrice(POSTER_PRICES.a4_portrait)} · frete grátis
+      <div className="pr-body">
+        <strong>Seu pôster está pronto para montar</strong>
+        <span>
+          {count} memórias guardadas · a partir de {formatPrice(POSTER_PRICES.a4_portrait)} com
+          frete grátis
+        </span>
       </div>
+
+      <button className="pr-cta" onClick={onOpenPoster}>
+        montar <ArrowRight size={13} strokeWidth={2} />
+      </button>
     </aside>
   );
 }
