@@ -54,14 +54,14 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
 
           {/* Retrato */}
           <button
-            onClick={() => setLightbox("/photos/poster-retrato.png")}
+            onClick={() => setLightbox("/photos/quadro-detalhe.jpg")}
             style={{ padding: 0, border: "none", background: "none", cursor: "zoom-in", borderRadius: 8, overflow: "hidden", position: "relative", aspectRatio: "2/3", boxShadow: "0 8px 32px rgba(0,0,0,0.18)", transition: "transform 0.2s ease" }}
             onMouseEnter={e => (e.currentTarget.style.transform = "scale(1.02)")}
             onMouseLeave={e => (e.currentTarget.style.transform = "scale(1)")}
           >
-            <Image src="/photos/poster-retrato.png" alt="Exemplo retrato" fill style={{ objectFit: "cover" }} />
+            <Image src="/photos/quadro-detalhe.jpg" alt="Quadro emoldurado do mapa de memórias, de perto" fill style={{ objectFit: "cover" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>retrato · A3 ou A4</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>o quadro que chega na sua casa</div>
             </div>
           </button>
 
@@ -74,7 +74,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
           >
             <Image src="/photos/poster-paisagem.jpg" alt="Exemplo paisagem" fill style={{ objectFit: "cover" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>paisagem · A3 ou A4</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>também em paisagem</div>
             </div>
           </button>
         </div>

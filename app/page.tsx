@@ -338,9 +338,9 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
           <figure className="poster-frame portrait">
             <span className="pf-tape" />
             <div className="pf-img">
-              <Image src="/photos/poster-retrato.png" alt="Pôster de mapa de memórias em retrato" fill style={{ objectFit: "cover" }} sizes="300px" />
+              <Image src="/photos/quadro-parede.jpg" alt="Quadro do mapa de memórias pendurado na parede de uma sala" fill style={{ objectFit: "cover" }} sizes="300px" />
             </div>
-            <figcaption className="pf-cap">retrato · A3 ou A4</figcaption>
+            <figcaption className="pf-cap">emoldurado · na sua parede</figcaption>
           </figure>
           <figure className="poster-frame landscape">
             <span className="pf-tape" />
