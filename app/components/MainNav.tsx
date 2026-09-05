@@ -18,7 +18,7 @@ type Props = {
   username?: string;
   memoriesCount: number;
   /**
-   * Quando presente, o pôster abre o assistente na própria tela.
+   * Quando presente, o quadro de memórias abre o assistente na própria tela.
    * Sem ela (fora do mapa), o item leva para o mapa já abrindo o assistente.
    */
   onOpenPoster?: () => void;
@@ -53,7 +53,7 @@ export default function MainNav({ username, memoriesCount, onOpenPoster }: Props
   const posterLabel = (
     <>
       <Frame size={14} strokeWidth={1.7} />
-      <span className="btn-label">pôster</span>
+      <span className="btn-label">quadro</span>
       {memoriesCount > 0 && <span className="cta-count">{memoriesCount}</span>}
     </>
   );
@@ -76,8 +76,8 @@ export default function MainNav({ username, memoriesCount, onOpenPoster }: Props
           disabled={noMemories}
           title={
             noMemories
-              ? "Guarde uma memória primeiro para montar seu pôster"
-              : "Monte um pôster com suas memórias"
+              ? "Guarde uma memória primeiro para montar seu quadro"
+              : "Monte um quadro com as suas memórias"
           }
         >
           {posterLabel}
@@ -87,7 +87,7 @@ export default function MainNav({ username, memoriesCount, onOpenPoster }: Props
         <Link
           className={`map-cta-poster${noMemories ? " is-muted" : ""}`}
           href={noMemories ? "/map" : "/map?poster=1"}
-          title="Monte um pôster com suas memórias"
+          title="Monte um quadro com as suas memórias"
         >
           {posterLabel}
         </Link>

@@ -1,5 +1,5 @@
 /**
- * Espaço de coordenadas da prévia do pôster.
+ * Espaço de coordenadas da prévia do quadro de memórias.
  *
  * O layout é montado nestas unidades lógicas e depois reescalado para a
  * resolução final na hora de gerar a imagem. A prévia pode ser exibida menor
@@ -11,7 +11,7 @@
  */
 export const PREVIEW_W = 560;
 
-/** Altura da prévia para um formato, mantendo a proporção física do pôster. */
+/** Altura da prévia para um formato, mantendo a proporção física do quadro de memórias. */
 export function previewHeightFor(dimsW: number, dimsH: number): number {
   return Math.round(PREVIEW_W * (dimsH / dimsW));
 }

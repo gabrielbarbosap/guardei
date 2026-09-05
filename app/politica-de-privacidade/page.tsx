@@ -63,9 +63,9 @@ export default function PoliticaDePrivacidade() {
 
         <h3>Dos seus pedidos</h3>
         <p>
-          Se você pedir um pôster impresso: nome, e-mail ou WhatsApp de contato,
+          Se você pedir um quadro de memórias impresso: nome, e-mail ou WhatsApp de contato,
           endereço completo de entrega e os dados do pedido. A arte final do
-          pôster também fica guardada, porque é o arquivo que vai para a gráfica.
+          quadro de memórias também fica guardada, porque é o arquivo que vai para a gráfica.
         </p>
 
         <p className="legal-nota">
@@ -78,7 +78,7 @@ export default function PoliticaDePrivacidade() {
         <ul>
           <li>Para manter sua conta e mostrar o seu mapa só para você.</li>
           <li>Para publicar o que você escolheu tornar público, e nada além disso.</li>
-          <li>Para produzir e entregar o pôster que você comprou.</li>
+          <li>Para produzir e entregar o quadro de memórias que você comprou.</li>
           <li>Para enviar e-mails sobre a sua conta e os seus pedidos.</li>
           <li>Para cumprir obrigações legais, como guarda de registros fiscais.</li>
         </ul>

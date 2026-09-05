@@ -41,7 +41,7 @@ function cardHeightFor(size: number, description: string): number {
  *
  * O card gira em torno do topo ou da base (não do centro), então a extensão é
  * assimétrica: um dos lados avança mais que o outro conforme o sinal do ângulo.
- * Medir pelos quatro cantos evita que um canto fique de fora do pôster — no
+ * Medir pelos quatro cantos evita que um canto fique de fora do quadro de memórias — no
  * papel isso sai cortado.
  */
 function rotatedExtents(
@@ -71,7 +71,7 @@ const MIN_SIZE = 40;
 const MAX_SIZE = PREVIEW_W * 0.55;
 /** Movimento (em px de tela) abaixo do qual o gesto conta como toque, não arrasto. */
 const TAP_SLOP = 5;
-/** Respiro na borda do pôster, absorvendo arredondamento de sub-pixel. */
+/** Respiro na borda do quadro de memórias, absorvendo arredondamento de sub-pixel. */
 const EDGE_MARGIN = 6;
 
 export default function Step3Compose({
@@ -225,11 +225,11 @@ export default function Step3Compose({
       g.mode === "resize"
         ? { size: clamp(g.origin.size + dx, MIN_SIZE, MAX_SIZE) }
         : {
-            /* Mantém o card inteiro dentro do pôster. O limite considera a
+            /* Mantém o card inteiro dentro do quadro de memórias. O limite considera a
                metade da largura porque o card é desenhado centrado em cardX —
                travar só o centro deixaria metade dele para fora, e no papel
                isso sai cortado. Na vertical o card já vira para cima ou para
-               baixo conforme a posição, então basta manter a âncora no pôster. */
+               baixo conforme a posição, então basta manter a âncora no quadro de memórias. */
             cardX: clamp(g.origin.cardX + dx, span.left + EDGE_MARGIN, PREVIEW_W - span.right - EDGE_MARGIN),
             cardY: nextCardY,
           };
@@ -492,7 +492,7 @@ export default function Step3Compose({
           <TriangleAlert size={15} strokeWidth={1.8} />
           <span>
             <strong>{selectedCount} fotos selecionadas.</strong> Acima de {POSTER_MAX_PHOTOS} as
-            polaroids encolhem e começam a cobrir o mapa. Dá para seguir assim — o pôster só
+            polaroids encolhem e começam a cobrir o mapa. Dá para seguir assim — o quadro só
             fica mais bonito com até {POSTER_MAX_PHOTOS}.
           </span>
         </div>
@@ -500,7 +500,7 @@ export default function Step3Compose({
 
       <div className="compose-caption-field">
         <label htmlFor="poster-frase">
-          frase no pôster <em>(opcional)</em>
+          frase no quadro <em>(opcional)</em>
         </label>
         <div className="ccf-row">
           <input

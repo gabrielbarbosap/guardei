@@ -96,7 +96,7 @@ export default function PedidosPage() {
         {orders.length === 0 && !erro && (
           <section className="profile-card">
             <p className="profile-note">
-              Você ainda não comprou nenhum pôster. Quando comprar, o pedido e o
+              Você ainda não comprou nenhum quadro de memórias. Quando comprar, o pedido e o
               código de rastreio aparecem aqui.
             </p>
           </section>

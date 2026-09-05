@@ -55,7 +55,7 @@ export async function POST(req: NextRequest) {
       console.error("[create-checkout] cotação interna falhou (venda segue):", err);
     }
 
-    /* ── Preço do pôster ──
+    /* ── Preço do quadro de memórias ──
        POSTER_PRICES é o que a tela mostra e STRIPE_PRICE_IDS é o que cobra: se
        os dois divergirem, a pessoa veria um total e pagaria outro. */
     const priceId = STRIPE_PRICE_IDS[format];

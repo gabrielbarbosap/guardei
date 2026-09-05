@@ -20,7 +20,7 @@ export const STATUS_LABEL: Record<PosterOrder["status"], string> = {
 export const STATUS_HINT: Record<PosterOrder["status"], string> = {
   pending_payment: "o pagamento não foi concluído — nada foi cobrado",
   paid: "recebemos o pagamento; a impressão começa em até 2 dias úteis",
-  processing: "seu pôster está sendo impresso",
+  processing: "seu quadro de memórias está sendo impresso",
   shipped: "a caminho do seu endereço",
   done: "entregue",
 };

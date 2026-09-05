@@ -125,7 +125,7 @@ function Header({ onLogin }: { onLogin: () => void }) {
           <a href="#como">Como funciona</a>
           <a href="#memorias">Memórias</a>
           <a href="#compartilhar">Compartilhar</a>
-          <a href="#poster">Pôster impresso</a>
+          <a href="#poster">Quadro de memórias</a>
         </nav>
         <div className="nav-cta">
           <button className="link-ghost" onClick={onLogin}>Entrar</button>
@@ -175,7 +175,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             <span className="sep">·</span>
             <span><strong>grátis</strong> para começar</span>
             <span className="sep">·</span>
-            <span><strong>frete grátis</strong> no pôster</span>
+            <span><strong>frete grátis</strong> no quadro</span>
           </div>
         </div>
 
@@ -344,7 +344,7 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
           <figure className="poster-frame landscape">
             <span className="pf-tape" />
             <div className="pf-img">
-              <Image src="/photos/poster-paisagem.jpg" alt="Pôster de mapa de memórias em paisagem" fill style={{ objectFit: "cover" }} sizes="360px" />
+              <Image src="/photos/poster-paisagem.jpg" alt="Quadro de memórias em paisagem, com fotos sobre o mapa" fill style={{ objectFit: "cover" }} sizes="360px" />
             </div>
             <figcaption className="pf-cap">paisagem · A3 ou A4</figcaption>
           </figure>
@@ -356,7 +356,7 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
 
         <div className="poster-copy" data-reveal-children>
           <div className="eyebrow"><span className="dot" /> da tela para a parede</div>
-          <h2>Suas memórias viram<br />um <em>pôster</em> de verdade.</h2>
+          <h2>Suas memórias viram<br />um <em>quadro</em> de verdade.</h2>
           <p className="poster-lead">
             Daqui a um mês você passa por essa parede com pressa, olha de canto de olho
             — e para. O mapa que você monta aqui sai da tela: as suas fotos, em polaroids
@@ -395,7 +395,7 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
               </div>
             </li>
           </ol>
-          <div className="poster-fine">crie o mapa grátis · peça o pôster quando quiser · frete grátis para todo o Brasil</div>
+          <div className="poster-fine">crie o mapa grátis · peça o quadro quando quiser · frete grátis para todo o Brasil</div>
         </div>
       </div>
     </section>

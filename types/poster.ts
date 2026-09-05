@@ -88,7 +88,7 @@ export type PosterOrder = {
   paidAt?: number;
   /** Quando os e-mails de confirmação saíram; trava o reenvio do webhook. */
   notifiedAt?: number;
-  /** Quando o pôster foi postado, e por onde acompanhar. */
+  /** Quando o quadro de memórias foi postado, e por onde acompanhar. */
   shippedAt?: number;
   trackingCode?: string;
   trackingUrl?: string;

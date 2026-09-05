@@ -42,7 +42,7 @@ export default function MapPage() {
     [locations, dateFilter],
   );
 
-  // o convite do pôster se cala enquanto o guia de primeiros passos está na tela
+  // o convite do quadro de memórias se cala enquanto o guia de primeiros passos está na tela
   const onboardingVisible = useOnboardingVisible(user?.uid ?? "");
 
   const onThisDayMemory = useMemo(() => {
@@ -207,7 +207,7 @@ export default function MapPage() {
         />
       )}
 
-      {/* Guia de primeiros passos: leva da primeira memória até o pôster. */}
+      {/* Guia de primeiros passos: leva da primeira memória até o quadro de memórias. */}
       {user && (
         <OnboardingGuide
           userId={user.uid}

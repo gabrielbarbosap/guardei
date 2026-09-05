@@ -168,7 +168,7 @@ export async function sendWelcome(to: string, name?: string | null) {
         ${steps([
           "Toque em qualquer lugar do mapa para marcar onde uma memória aconteceu.",
           "Escolha a foto, escreva uma linha e diga quando foi.",
-          "Com algumas memórias guardadas, elas podem virar um pôster impresso.",
+          "Com algumas memórias guardadas, elas podem virar um quadro de memórias impresso.",
         ])}
         <div style="margin-top:24px;text-align:center">${button(`${SITE}/map`, "Abrir meu mapa")}</div>
         ${helpBox()}
@@ -213,14 +213,14 @@ export async function sendOrderCreated(order: PosterOrder, orderId: string, to: 
   await deliver({
     from: FROM,
     to: [to],
-    subject: `Seu pôster está reservado — pedido #${orderRef(orderId)}`,
+    subject: `Seu quadro de memórias está reservado — pedido #${orderRef(orderId)}`,
     html: layout({
       emoji: "🖼️",
       title: "Pedido registrado",
       subtitle: `Guardei.art · pedido #${orderRef(orderId)}`,
       body: `
         <p style="margin:0 0 20px;font-size:15px;line-height:1.65">
-          Olá, <strong>${order.customerName}</strong>! Guardamos a arte do seu pôster.
+          Olá, <strong>${order.customerName}</strong>! Guardamos a arte do seu quadro de memórias.
           Ele entra em produção assim que o pagamento for confirmado.
         </p>
 
@@ -263,7 +263,7 @@ export async function sendCustomerConfirmation(
   await deliver({
     from: FROM,
     to: [customerEmail],
-    subject: "Seu pôster está confirmado! 🖼️",
+    subject: "Seu quadro de memórias está confirmado! 🖼️",
     html: layout({
       emoji: "🖼️",
       title: "Pedido confirmado!",
@@ -271,7 +271,7 @@ export async function sendCustomerConfirmation(
       body: `
         <p style="margin:0 0 20px;font-size:15px;line-height:1.65">
           Olá, <strong>${order.customerName}</strong>! Recebemos seu pagamento com sucesso.
-          Seu pôster já está na fila de produção.
+          Seu quadro de memórias já está na fila de produção.
         </p>
 
         <div style="background:#fff;border:1px solid #e8ddd0;border-radius:6px;padding:16px 20px;margin-bottom:20px">
@@ -291,7 +291,7 @@ export async function sendCustomerConfirmation(
           O que acontece agora?
         </h3>
         ${steps([
-          "Seu pôster está sendo preparado com seus lugares favoritos.",
+          "Seu quadro de memórias está sendo preparado com seus lugares favoritos.",
           shippingStep(order),
           "Avisamos assim que ele for postado, com o código de rastreio.",
         ])}
@@ -320,14 +320,14 @@ export async function sendOrderShipped(
   await deliver({
     from: FROM,
     to: [to],
-    subject: `Seu pôster saiu para entrega 📦 — pedido #${orderRef(orderId)}`,
+    subject: `Seu quadro de memórias saiu para entrega 📦 — pedido #${orderRef(orderId)}`,
     html: layout({
       emoji: "📦",
-      title: "Seu pôster está a caminho",
+      title: "Seu quadro de memórias está a caminho",
       subtitle: `Guardei.art · pedido #${orderRef(orderId)}`,
       body: `
         <p style="margin:0 0 20px;font-size:15px;line-height:1.65">
-          Olá, <strong>${order.customerName}</strong>! Seu pôster foi postado e está indo
+          Olá, <strong>${order.customerName}</strong>! Seu quadro de memórias foi postado e está indo
           para ${destino}. ${prazo}
         </p>
 

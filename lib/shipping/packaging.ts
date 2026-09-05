@@ -9,7 +9,7 @@ import type { PackageSpec } from "./types";
  * medida a menos não vira surpresa no checkout — vira prejuízo direto seu,
  * porque a transportadora repesa o pacote na postagem e cobra a diferença.
  *
- * O pôster sai emoldurado, então o que viaja é o quadro montado, não o papel:
+ * O quadro de memórias sai emoldurado, então o que viaja é o quadro montado, não o papel:
  *   A3 impresso 29,7 x 42,0 cm -> quadro ~33 x 45 cm
  *   A4 impresso 21,0 x 29,7 cm -> quadro ~24 x 33 cm
  */

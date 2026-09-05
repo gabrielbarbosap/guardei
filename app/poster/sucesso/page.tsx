@@ -82,13 +82,13 @@ function SuccessContent() {
             maxWidth: 360,
           }}
         >
-          Recebemos seu pagamento. Seu pôster entra em produção e segue para o
+          Recebemos seu pagamento. Seu quadro de memórias entra em produção e segue para o
           endereço que você informou — avisamos assim que ele for postado.
         </p>
 
         {summary && (
           <div className="of-total" style={{ width: "100%", maxWidth: 360, textAlign: "left" }}>
-            <div><span>Pôster</span><span>{brl(summary.posterCents)}</span></div>
+            <div><span>Quadro de memórias</span><span>{brl(summary.posterCents)}</span></div>
             <div>
               <span>{summary.shippingName ?? "Frete"}</span>
               <span>{brl(summary.shippingCents)}</span>

@@ -1,5 +1,5 @@
 /**
- * Regras de composição do pôster.
+ * Regras de composição do quadro de memórias.
  *
  * Ficam aqui, e não dentro de um componente, porque valem para o onboarding
  * (que promete a faixa) e para o compositor (que avisa quando ela é ultrapassada).
@@ -18,8 +18,8 @@ export const POSTER_MAX_PHOTOS = 22;
 /**
  * Quantas memórias o onboarding pede antes de soltar a pessoa.
  *
- * É menor que o mínimo do pôster de propósito: o guia serve para tirar do zero,
- * não para completar o pôster. No fim ele avisa que faltam mais algumas.
+ * É menor que o mínimo do quadro de memórias de propósito: o guia serve para tirar do zero,
+ * não para completar o quadro de memórias. No fim ele avisa que faltam mais algumas.
  */
 export const ONBOARDING_MEMORIES_GOAL = 3;
 

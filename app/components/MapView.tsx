@@ -87,7 +87,7 @@ const farPointHintLayer: LayerProps = {
  * variaveis do tema; equivalem a --accent-highlight e a uma borda mais fechada.
  */
 /*
- * O dourado do design system (--poster-gold), o mesmo do pôster e do CTA.
+ * O dourado do design system (--poster-gold), o mesmo do quadro de memórias e do CTA.
  *
  * A opacidade é alta de propósito. Sobre o mapa escuro, qualquer dourado
  * translúcido soma o azul do fundo e cai para oliva — foi o que deixava o país

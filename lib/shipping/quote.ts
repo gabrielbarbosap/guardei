@@ -53,7 +53,7 @@ export async function quoteFreight(
     originCep,
     destinationCep,
     packageSpec,
-    // segura o valor do produto: extravio devolve o preço do pôster
+    // segura o valor do produto: extravio devolve o preço do quadro de memórias
     declaredValueCents: POSTER_PRICES[format],
   });
 

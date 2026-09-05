@@ -141,7 +141,7 @@ function subscribe(onChange: () => void) {
 /**
  * Diz se o guia está ocupando a tela.
  *
- * Existe para o convite do pôster poder se calar enquanto o onboarding fala:
+ * Existe para o convite do quadro de memórias poder se calar enquanto o onboarding fala:
  * os dois nascem das mesmas memórias e apareceriam empilhados na mesma tela.
  *
  * Não depende mais da contagem — quem decide é só o estado do guia.
@@ -180,7 +180,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
 
   /* Só concluir encerra o guia de vez. Dispensar vale para esta carga da
      página e nada mais — quem fecha está dizendo "agora não", não "nunca mais",
-     e o guia é o caminho para o pôster. */
+     e o guia é o caminho para o quadro de memórias. */
   const closed = state.sessionDismissed || state.concluded;
 
   if (closed || hidden) return null;
@@ -204,7 +204,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
           <h2 className="ob-title">Todo mapa<br />começa vazio.</h2>
           <p className="ob-text">
             Comece marcando {ONBOARDING_MEMORIES_GOAL} lugares que significam alguma
-            coisa para você. Depois é só ir somando — até virarem um pôster de papel.
+            coisa para você. Depois é só ir somando — até virarem um quadro de parede.
           </p>
 
           <div className="ob-dots" aria-hidden>
@@ -234,7 +234,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
           </div>
 
           <div className="ob-eyebrow ob-eyebrow-gold">
-            {canPoster ? "pronto para o pôster" : "seu mapa nasceu"}
+            {canPoster ? "pronto para o seu quadro" : "seu mapa nasceu"}
           </div>
           <h2 className="ob-title">
             {count} memórias<br />guardadas.
@@ -243,7 +243,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
           {canPoster ? (
             <p className="ob-text">
               Você chegou lá. O que estava solto no celular virou história — e agora
-              vira papel: o seu pôster, impresso com as suas fotos de verdade,
+              vira papel: o seu quadro de memórias, impresso com as suas fotos de verdade,
               montado com <strong>{POSTER_MIN_PHOTOS} a {POSTER_MAX_PHOTOS} memórias</strong>,
               para a parede que você olha todo dia.
             </p>
@@ -255,7 +255,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
                   ? "só mais 1 memória"
                   : `só mais ${POSTER_MIN_PHOTOS - count} memórias`}
               </strong>{" "}
-              para o seu mapa virar pôster — impresso com as suas fotos de verdade,
+              para o seu mapa virar um quadro — impresso com as suas fotos de verdade,
               para a parede que você olha todo dia.
             </p>
           )}
@@ -272,7 +272,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
                 className="ob-cta ob-cta-gold"
                 onClick={() => { conclude(); onOpenPoster(); }}
               >
-                Criar meu pôster <ArrowRight size={15} strokeWidth={1.8} />
+                Criar meu quadro <ArrowRight size={15} strokeWidth={1.8} />
               </button>
               <button className="ob-later" onClick={conclude}>agora não</button>
             </>

@@ -8,12 +8,12 @@ import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 import { POSTER_MIN_PHOTOS, POSTER_MAX_PHOTOS } from "@/lib/posterRules";
 
 /**
- * Convite para o pôster impresso.
+ * Convite para o quadro de memórias impresso.
  *
  * Duas formas, uma vez cada coisa. Na primeira vez que a pessoa cruza o mínimo
  * de memórias, um modal: chegar ali custou esforço e é o instante em que passa
  * a ser verdade que dá para imprimir. Depois disso, um lembrete de canto que
- * fica — enquanto houver memórias suficientes, o caminho para o pôster continua
+ * fica — enquanto houver memórias suficientes, o caminho para o quadro de memórias continua
  * à vista.
  *
  * A versão anterior tinha marcos (5, 12, 25) e sumia de vez ao ser dispensada.
@@ -120,11 +120,11 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
     </div>
   );
 
-  /* ── Estreia: o pôster acabou de ficar possível ── */
+  /* ── Estreia: o quadro de memórias acabou de ficar possível ── */
   if (!estado.modalVisto) {
     return (
       <div className="ob-stage">
-        <section className="ob-card pn-modal" role="dialog" aria-label="Seu pôster está liberado">
+        <section className="ob-card pn-modal" role="dialog" aria-label="Seu quadro de memórias está liberado">
           <span className="ob-tape" />
           <button className="ob-close" onClick={marcarModalVisto} aria-label="Fechar">
             <X size={15} strokeWidth={1.8} />
@@ -135,9 +135,9 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
             <Sparkles size={26} strokeWidth={1.5} />
           </div>
 
-          <div className="ob-eyebrow ob-eyebrow-gold">seu pôster está liberado</div>
+          <div className="ob-eyebrow ob-eyebrow-gold">seu quadro de memórias está liberado</div>
           <h2 className="ob-title">
-            {count} memórias.<br />Já dá um pôster.
+            {count} memórias.<br />Já dá um quadro.
           </h2>
 
           {pilha}
@@ -153,7 +153,7 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
             className="ob-cta ob-cta-gold"
             onClick={() => { marcarModalVisto(); onOpenPoster(); }}
           >
-            Ver o meu pôster <ArrowRight size={15} strokeWidth={1.8} />
+            Ver o meu quadro <ArrowRight size={15} strokeWidth={1.8} />
           </button>
           <div className="pn-modal-price">
             a partir de {formatPrice(POSTER_PRICES.a4_portrait)} · frete grátis para todo o Brasil
@@ -166,12 +166,12 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
 
   /* ── Depois: lembrete que fica ──
      Volta a cada acesso de propósito. Fechar aqui é "não agora", não "nunca
-     mais": enquanto houver memórias suficientes, o pôster continua disponível e
+     mais": enquanto houver memórias suficientes, o quadro de memórias continua disponível e
      esconder isso para sempre seria esconder o produto de quem mais o quer. */
   if (estado.cantoOculto) return null;
 
   return (
-    <aside className="poster-ready" aria-label="Seu pôster está pronto para montar">
+    <aside className="poster-ready" aria-label="Seu quadro de memórias está pronto para montar">
       <button className="poster-ready-close" onClick={ocultarCanto} aria-label="Fechar por agora">
         <X size={13} strokeWidth={2} />
       </button>
@@ -181,7 +181,7 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
       </span>
 
       <div className="pr-body">
-        <strong>Seu pôster está pronto para montar</strong>
+        <strong>Seu quadro de memórias está pronto</strong>
         <span>
           {count} memórias guardadas · a partir de {formatPrice(POSTER_PRICES.a4_portrait)} com
           frete grátis

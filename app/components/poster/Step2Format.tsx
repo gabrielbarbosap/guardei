@@ -126,7 +126,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
           Agora você vai fazer o seu ✨
         </div>
         <p style={{ fontFamily: "var(--font-body)", fontSize: 13, color: "var(--ink-500)", margin: "6px 0 0" }}>
-          Escolha o tamanho e a orientação do poster.
+          Escolha o tamanho e a orientação do seu quadro.
         </p>
       </div>
 

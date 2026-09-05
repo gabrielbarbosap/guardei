@@ -3,7 +3,7 @@ import { getAdminDb, misconfiguredResponse, verifyCaller } from "@/lib/firebaseA
 import { sendOrderCreated } from "@/lib/emails";
 import type { PosterOrder } from "@/types/poster";
 
-/** Aviso de "pedido registrado", disparado logo após salvar o pôster. */
+/** Aviso de "pedido registrado", disparado logo após salvar o quadro de memórias. */
 export async function POST(req: NextRequest) {
   const result = await verifyCaller(req);
   if (!result.ok) {
