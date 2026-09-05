@@ -46,6 +46,13 @@ const PROMPTS = [
  * qualquer outra conta que entrasse no mesmo navegador — uma conta recém-criada
  * não via nada.
  */
+/** Deslocamento estável por pessoa — mesma conta, mesma sequência. */
+function promptOffset(userId: string): number {
+  let h = 0;
+  for (let i = 0; i < userId.length; i++) h = (h * 31 + userId.charCodeAt(i)) >>> 0;
+  return h % PROMPTS.length;
+}
+
 const STORAGE_PREFIX = "guardei:onboarding:";
 const keyFor = (userId: string) => STORAGE_PREFIX + userId;
 
@@ -241,10 +248,14 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
             </p>
           ) : (
             <p className="ob-text">
-              Você começou. Daqui para frente é só somar: ao chegar em{" "}
-              <strong>{POSTER_MIN_PHOTOS} a {POSTER_MAX_PHOTOS} memórias</strong>, elas viram
-              o seu pôster — impresso com as suas fotos de verdade, para a parede
-              que você olha todo dia.
+              Você começou. Faltam{" "}
+              <strong>
+                {POSTER_MIN_PHOTOS - count === 1
+                  ? "só mais 1 memória"
+                  : `só mais ${POSTER_MIN_PHOTOS - count} memórias`}
+              </strong>{" "}
+              para o seu mapa virar pôster — impresso com as suas fotos de verdade,
+              para a parede que você olha todo dia.
             </p>
           )}
 
@@ -275,7 +286,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
   }
 
   /* ── 2. Coleta ── */
-  const prompt = PROMPTS[Math.min(count, PROMPTS.length - 1)];
+  const prompt = PROMPTS[(promptOffset(userId) + count) % PROMPTS.length];
   const left = ONBOARDING_MEMORIES_GOAL - count;
 
   return (
@@ -300,7 +311,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
         <MapPin size={13} strokeWidth={1.7} />
         {count === 0
           ? "toque no mapa para marcar o lugar"
-          : `${left === 1 ? "falta 1 memória" : `faltam ${left} memórias`} para começar`}
+          : `${left === 1 ? "falta 1 memória" : `faltam ${left} memórias`} para o seu mapa nascer`}
       </div>
     </aside>
   );

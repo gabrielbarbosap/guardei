@@ -1848,6 +1848,38 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   animation: ob-shine 1900ms var(--ease-soft) 620ms both;
 }
 @keyframes ob-shine { from { left: -55%; } to { left: 115%; } }
+/* Convite do pôster, versão modal.
+   Só na primeira vez que ele fica possível: chegar em cinco memórias custou
+   esforço e o momento pede o mesmo peso da conquista do onboarding. Herda
+   .ob-card de propósito — é a mesma família visual, não um card novo. */
+.pn-modal { text-align: center; }
+.pn-modal .nudge-stack {
+  /* a pilha nasceu para o card de canto, mais estreito; aqui ela respira */
+  margin: 6px 0 20px;
+}
+.pn-modal-price {
+  margin-top: 12px;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+  color: var(--ink-500);
+}
+.pn-modal-price::first-line { color: var(--ink-500); }
+/* Tela baixa (iPhone SE e afins).
+   Sem isto o botão principal cai abaixo da dobra: o cartão tem 663px de
+   layout e a tela, 568. O modal rola, mas botão que exige rolagem para ser
+   visto é botão que não é clicado. */
+@media (max-height: 700px) {
+  .pn-modal .ob-seal { width: 48px; height: 48px; margin-bottom: 10px; }
+  .pn-modal .ob-title { font-size: 25px; margin-bottom: 10px; }
+  .pn-modal .nudge-stack { height: 70px; margin: 2px 0 12px; }
+  .pn-modal .nudge-shot { width: 56px; }
+  .pn-modal .ob-text { font-size: 13px; line-height: 1.5; margin-bottom: 14px; }
+  .pn-modal-price { margin-top: 8px; }
+}
+@media (max-width: 480px) {
+  .pn-modal .nudge-stack { height: 82px; }
+  .pn-modal .nudge-shot { width: 60px; }
+  .pn-modal-price { font-size: 10px; }
+}
 .ob-later {
   margin-top: 10px; background: none; border: none; cursor: pointer;
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.16em;
