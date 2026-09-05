@@ -22,3 +22,12 @@ export const POSTER_MAX_PHOTOS = 22;
  * não para completar o pôster. No fim ele avisa que faltam mais algumas.
  */
 export const ONBOARDING_MEMORIES_GOAL = 3;
+
+/**
+ * Limite da frase livre do poster.
+ *
+ * Cinquenta caracteres cabem numa linha legivel a distancia de parede. Acima
+ * disso a fonte teria de encolher tanto que a frase deixaria de funcionar como
+ * titulo e viraria mais uma legenda.
+ */
+export const POSTER_CAPTION_MAX = 50;

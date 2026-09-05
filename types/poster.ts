@@ -20,6 +20,21 @@ export type PosterFormat =
   | "a5_landscape"
   | "test";
 
+/**
+ * Frase opcional escrita por quem monta o poster.
+ *
+ * As coordenadas ficam em unidades da previa (PREVIEW_W), as mesmas do layout
+ * dos polaroids: assim a mesma conta de escala serve para os dois na hora de
+ * gerar a arte final, e um poster A3 nao precisa de numero proprio.
+ */
+export type PosterCaption = {
+  text: string;
+  x: number;
+  y: number;
+  /** Corpo da fonte, tambem em unidades da previa. */
+  size: number;
+};
+
 export type PosterOrderItem = {
   locationId: string;
   lat: number;
@@ -56,6 +71,8 @@ export type PosterOrder = {
   format: PosterFormat;
   items: PosterOrderItem[];
   featuredLocationId: string;
+  /** Ausente quando a pessoa nao escreveu nada — a frase e opcional. */
+  caption?: PosterCaption;
   customerName: string;
   customerContact: string;
   contactType: "email" | "whatsapp";

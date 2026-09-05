@@ -3,12 +3,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Star, Minus, Plus, TriangleAlert } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
-import type { PosterFormat } from "@/types/poster";
+import type { PosterCaption, PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
-import { computePosterLayout, renderMapBackground } from "@/lib/posterCanvas";
+import { computePosterLayout, renderMapBackground, fitCaptionSize, CAPTION_FONT, CAPTION_WIDTH_RATIO } from "@/lib/posterCanvas";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
 import { PREVIEW_W, previewHeightFor } from "@/lib/posterPreview";
-import { POSTER_MAX_PHOTOS } from "@/lib/posterRules";
+import { POSTER_MAX_PHOTOS, POSTER_CAPTION_MAX } from "@/lib/posterRules";
 
 type Props = {
   locations: LocationPhoto[];
@@ -17,7 +17,7 @@ type Props = {
   featuredId: string;
   onToggle: (id: string) => void;
   onSetFeatured: (id: string) => void;
-  onNext: (layout: PlacedPolaroid[]) => void;
+  onNext: (layout: PlacedPolaroid[], caption?: PosterCaption) => void;
   onBack: () => void;
 };
 
@@ -60,6 +60,9 @@ function rotatedExtents(
   return { left: -Math.min(...xs), right: Math.max(...xs) };
 }
 
+/** Corpo inicial da frase, em unidades da previa. */
+const CAPTION_BASE_SIZE = Math.round(PREVIEW_W * 0.05);
+
 const MIN_SIZE = 40;
 const MAX_SIZE = PREVIEW_W * 0.55;
 /** Movimento (em px de tela) abaixo do qual o gesto conta como toque, não arrasto. */
@@ -97,6 +100,14 @@ export default function Step3Compose({
      sem jogar fora o que a pessoa já posicionou. */
   const [overrides, setOverrides] = useState<Record<string, CardOverride>>({});
 
+  /* Frase livre. A posicao so existe depois que a pessoa arrasta: enquanto for
+     nula vale o lugar padrao, calculado a partir do formato. Guardar o padrao
+     no estado exigiria recalcula-lo em efeito a cada troca de formato. */
+  const [captionText, setCaptionText] = useState("");
+  const [captionPos, setCaptionPos] = useState<{ x: number; y: number } | null>(null);
+  const captionRef = useRef<HTMLDivElement>(null);
+  const captionGesture = useRef<{ startX: number; startY: number; origX: number; origY: number } | null>(null);
+
   const dims = FORMAT_DIMS[format];
   const previewH = previewHeightFor(dims.w, dims.h);
   const selected = locations.filter((l) => selectedIds.has(l.id));
@@ -109,6 +120,22 @@ export default function Step3Compose({
           const o = overrides[p.location.id];
           return o ? { ...p, ...o } : p;
         });
+
+  const textoFrase = captionText.trim();
+  /* O corpo e o mesmo que o desenho final vai usar: a previa precisa mostrar a
+     frase do tamanho em que ela sera impressa, senao a pessoa posiciona uma
+     coisa e recebe outra. */
+  const captionFontSize = textoFrase
+    ? fitCaptionSize(textoFrase, CAPTION_BASE_SIZE, PREVIEW_W * CAPTION_WIDTH_RATIO)
+    : CAPTION_BASE_SIZE;
+  const caption: PosterCaption | undefined = textoFrase
+    ? {
+        text: textoFrase,
+        x: captionPos?.x ?? PREVIEW_W / 2,
+        y: captionPos?.y ?? previewH * 0.9,
+        size: CAPTION_BASE_SIZE,
+      }
+    : undefined;
 
   /* A prévia é exibida na largura que couber; o layout segue em unidades
      lógicas de PREVIEW_W e só o desenho é escalado. */
@@ -202,6 +229,39 @@ export default function Step3Compose({
 
   function endGesture() {
     gesture.current = null;
+  }
+
+  /* Gesto proprio, e nao o dos cards: aquele opera sobre um PlacedPolaroid e
+     grava em overrides por id de foto. Encaixar a frase ali pediria um id falso
+     e um ramo em cada funcao. */
+  function beginCaptionDrag(e: React.PointerEvent) {
+    if (!caption) return;
+    e.preventDefault();
+    e.stopPropagation();
+    captionGesture.current = {
+      startX: e.clientX, startY: e.clientY, origX: caption.x, origY: caption.y,
+    };
+    try { e.currentTarget.setPointerCapture(e.pointerId); } catch { /* sem captura ainda arrasta sob o dedo */ }
+    setActiveId(null);
+  }
+
+  function moveCaption(e: React.PointerEvent) {
+    const g = captionGesture.current;
+    if (!g) return;
+    const dx = (e.clientX - g.startX) / scale;
+    const dy = (e.clientY - g.startY) / scale;
+    /* A frase e desenhada centrada no ponto, entao o limite desconta metade dela
+       de cada lado — travar so o centro deixaria as pontas fora do papel. */
+    const meiaL = (captionRef.current?.offsetWidth ?? 0) / 2;
+    const meiaA = (captionRef.current?.offsetHeight ?? 0) / 2;
+    setCaptionPos({
+      x: clamp(g.origX + dx, meiaL + EDGE_MARGIN, PREVIEW_W - meiaL - EDGE_MARGIN),
+      y: clamp(g.origY + dy, meiaA + EDGE_MARGIN, previewH - meiaA - EDGE_MARGIN),
+    });
+  }
+
+  function endCaptionDrag() {
+    captionGesture.current = null;
   }
 
   const activeCard = layout.find((p) => p.location.id === activeId) ?? null;
@@ -367,6 +427,24 @@ export default function Step3Compose({
                   </div>
                 );
               })}
+              {caption && (
+                <div
+                  ref={captionRef}
+                  className="compose-caption"
+                  onPointerDown={beginCaptionDrag}
+                  onPointerMove={moveCaption}
+                  onPointerUp={endCaptionDrag}
+                  onPointerCancel={endCaptionDrag}
+                  style={{
+                    left: caption.x,
+                    top: caption.y,
+                    fontSize: captionFontSize,
+                    fontFamily: CAPTION_FONT,
+                  }}
+                >
+                  {caption.text}
+                </div>
+              )}
             </div>
           </div>
 
@@ -411,11 +489,31 @@ export default function Step3Compose({
         </div>
       )}
 
+      <div className="compose-caption-field">
+        <label htmlFor="poster-frase">
+          frase no pôster <em>(opcional)</em>
+        </label>
+        <div className="ccf-row">
+          <input
+            id="poster-frase"
+            type="text"
+            maxLength={POSTER_CAPTION_MAX}
+            value={captionText}
+            onChange={(e) => setCaptionText(e.target.value)}
+            placeholder="ex.: os lugares que nos formaram"
+          />
+          <span className={`ccf-count${captionText.length === POSTER_CAPTION_MAX ? " is-full" : ""}`}>
+            {captionText.length}/{POSTER_CAPTION_MAX}
+          </span>
+        </div>
+        {textoFrase && <span className="ccf-tip">arraste a frase na prévia para escolher o lugar</span>}
+      </div>
+
       <div className="compose-actions">
         <button className="compose-back" onClick={onBack}>← voltar</button>
         <button
           className="compose-next"
-          onClick={() => onNext(layout)}
+          onClick={() => onNext(layout, caption)}
           disabled={selectedCount === 0}
         >
           próximo →

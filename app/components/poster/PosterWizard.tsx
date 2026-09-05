@@ -3,13 +3,13 @@
 import { useState } from "react";
 import type { User } from "firebase/auth";
 import type { LocationPhoto } from "@/types/location";
-import type { PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
-import { FORMAT_DIMS } from "@/lib/posterMap";
+import type { PosterCaption, PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
 import { savePosterOrder, setPosterOrderImageUrl } from "@/lib/firestore";
 import { renderPosterFromLayout, buildPosterParams } from "@/lib/posterCanvas";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
 import { layoutPolaroids } from "@/lib/posterLayout";
 import { PREVIEW_W, previewHeightFor } from "@/lib/posterPreview";
+import { bestExportDims, PRINT_JPEG_QUALITY } from "@/lib/posterQuality";
 import { notifyOrderCreated } from "@/lib/notify";
 import { storage } from "@/lib/storage";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
@@ -33,6 +33,9 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(locations.map((l) => l.id)));
   const [featuredId, setFeaturedId] = useState<string>(locations[0]?.id ?? "");
   const [userLayout, setUserLayout] = useState<PlacedPolaroid[] | null>(null);
+  /* Guardada em unidades da previa; a escala para a arte final acontece na hora
+     de desenhar, junto com a do layout. */
+  const [caption, setCaption] = useState<PosterCaption | undefined>(undefined);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState("");
   const [submitStep, setSubmitStep] = useState("");
@@ -57,8 +60,9 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
     if (selectedIds.has(id)) setFeaturedId(id);
   }
 
-  function handleComposeNext(layout: PlacedPolaroid[]) {
+  function handleComposeNext(layout: PlacedPolaroid[], frase?: PosterCaption) {
     setUserLayout(layout);
+    setCaption(frase);
     setStep(3);
   }
 
@@ -89,6 +93,8 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
         format,
         items,
         featuredLocationId: featuredId,
+        // ausente quando ninguem escreveu nada; stripUndefinedDeep tira a chave
+        caption,
         customerName,
         customerContact,
         contactType,
@@ -101,18 +107,29 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
       // confirma o pedido por e-mail sem travar a geração da imagem
       notifyOrderCreated(id);
 
-      setSubmitStep("gerando imagem...");
-      const dims = FORMAT_DIMS[format];
+      /* A maior resolucao que este aparelho aguenta, de 300 DPI para baixo.
+         FORMAT_DIMS descreve o poster a 150 DPI, metade do padrao de grafica. */
+      const dims = bestExportDims(format);
+      setSubmitStep(`gerando imagem em ${dims.dpi} DPI...`);
       const canvas = document.createElement("canvas");
       canvas.width = dims.w;
       canvas.height = dims.h;
 
+      /* Um fator so para o layout e para a frase: as duas coisas foram
+         posicionadas na mesma previa e precisam continuar alinhadas. */
+      const previewH = previewHeightFor(dims.w, dims.h);
+      const scaleX = dims.w / PREVIEW_W;
+      const scaleY = dims.h / previewH;
+      const fraseFinal: PosterCaption | undefined = caption && {
+        ...caption,
+        x: caption.x * scaleX,
+        y: caption.y * scaleY,
+        size: caption.size * scaleX,
+      };
+
       // Escala o layout da prévia para resolução final
       let fullLayout: PlacedPolaroid[];
       if (userLayout && userLayout.length > 0) {
-        const previewH = previewHeightFor(dims.w, dims.h);
-        const scaleX = dims.w / PREVIEW_W;
-        const scaleY = dims.h / previewH;
         fullLayout = userLayout.map((p) => ({
           ...p,
           pinX: p.pinX * scaleX,
@@ -127,11 +144,11 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
         fullLayout = layoutPolaroids(selected, featuredId, centerLon, centerLat, zoom, dims.w, dims.h, apiW, apiH);
       }
 
-      await renderPosterFromLayout(canvas, fullLayout, selected);
+      await renderPosterFromLayout(canvas, fullLayout, selected, fraseFinal);
 
       setSubmitStep("salvando imagem...");
       const blob = await new Promise<Blob>((resolve, reject) => {
-        canvas.toBlob((b) => b ? resolve(b) : reject(new Error("canvas vazio")), "image/jpeg", 0.92);
+        canvas.toBlob((b) => b ? resolve(b) : reject(new Error("canvas vazio")), "image/jpeg", PRINT_JPEG_QUALITY);
       });
       const storageRef = ref(storage, `posterOrders/${id}/poster.jpg`);
       await uploadBytes(storageRef, blob, { contentType: "image/jpeg" });

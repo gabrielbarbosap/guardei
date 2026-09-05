@@ -1,4 +1,5 @@
 import type { LocationPhoto } from "@/types/location";
+import type { PosterCaption } from "@/types/poster";
 import { buildMapBackgroundUrl, bboxToMapboxParams, computeApiDims, computePhotoBbox, getVisitedCountryCodes } from "./posterMap";
 import { layoutPolaroids, type PlacedPolaroid } from "./posterLayout";
 
@@ -104,7 +105,7 @@ export async function renderMapBackground(
   // Tenta renderizar com Mapbox GL (oceano escuro + países dourados)
   let rendered = false;
   try {
-    await renderWithGL(canvas, centerLon, centerLat, zoom, apiW, apiH, visitedCodes, token);
+    await renderWithGL(canvas, centerLon, centerLat, zoom, apiW, apiH, visitedCodes, token, glScaleFor(W, apiW, apiH));
     rendered = true;
   } catch (err) {
     console.warn("[poster] GL render falhou, usando static API:", err);
@@ -130,6 +131,30 @@ export async function renderMapBackground(
   ctx.fillRect(0, 0, W, H);
 }
 
+/**
+ * Quantas vezes o mapa e desenhado maior que o quadro de referencia.
+ *
+ * O GL renderizava sempre no tamanho do enquadramento (no maximo 1280 px) e o
+ * resultado era esticado ate o poster — quase 4x num A3 a 300 DPI, o que
+ * transforma o mapa em borrao justamente na peca que vai para a grafica.
+ *
+ * O teto de 4096 por lado e conservador de proposito: o buffer do WebGL mora na
+ * GPU, e um celular que nao consegue alocar devolve contexto perdido em vez de
+ * erro — cairia no fallback silenciosamente.
+ */
+const GL_MAX_SIDE = 4096;
+
+function glScaleFor(targetW: number, apiW: number, apiH: number): number {
+  /* O container e medido em pixels de CSS, mas o buffer que o GL aloca e ele
+     vezes o devicePixelRatio. Numa tela retina isso dobra sozinho: ignorar o
+     fator pediria o dobro do necessario e estouraria o teto da GPU. */
+  const dpr = typeof window === "undefined" ? 1 : Math.max(1, window.devicePixelRatio || 1);
+  const desejada = targetW / (apiW * dpr);
+  const teto = GL_MAX_SIDE / (Math.max(apiW, apiH) * dpr);
+  // abaixo de 1 nao faz sentido: seria desenhar menor do que ja se desenhava
+  return Math.max(1, Math.min(desejada, teto));
+}
+
 async function renderWithGL(
   targetCanvas: HTMLCanvasElement,
   lon: number,
@@ -139,17 +164,25 @@ async function renderWithGL(
   apiH: number,
   visitedCodes: string[],
   token: string,
+  renderScale = 1,
 ): Promise<void> {
   const mapboxgl = (await import("mapbox-gl")).default;
   (mapboxgl as unknown as { accessToken: string }).accessToken = token;
+
+  /* Mais pixels com o mesmo zoom mostraria mais mapa, nao mais detalhe. Cada
+     nivel de zoom dobra a densidade, entao a compensacao e log2 da escala: o
+     enquadramento fica identico e so a resolucao sobe. */
+  const glW = Math.round(apiW * renderScale);
+  const glH = Math.round(apiH * renderScale);
+  const glZoom = zoom + Math.log2(renderScale);
 
   const container = document.createElement("div");
   Object.assign(container.style, {
     position: "fixed",
     left: "-99999px",
     top: "0",
-    width: `${apiW}px`,
-    height: `${apiH}px`,
+    width: `${glW}px`,
+    height: `${glH}px`,
     visibility: "hidden",
   });
   document.body.appendChild(container);
@@ -160,7 +193,7 @@ async function renderWithGL(
       container,
       style: "mapbox://styles/mapbox/dark-v11",
       center: [lon, lat],
-      zoom,
+      zoom: glZoom,
       pitch: 0,
       bearing: 0,
       preserveDrawingBuffer: true,
@@ -378,11 +411,60 @@ async function renderPolaroids(
   }
 }
 
+
+/** Fonte da frase livre. Georgia porque ja e a serifada usada nas legendas. */
+export const CAPTION_FONT = "Georgia, 'Times New Roman', serif";
+
+/** Fracao da largura do poster que a frase pode ocupar. */
+export const CAPTION_WIDTH_RATIO = 0.86;
+
+/**
+ * Corpo que faz a frase caber na largura util.
+ *
+ * Exportada porque a previa precisa chegar ao mesmo numero que o desenho final:
+ * se so o canvas encolhesse, a pessoa posicionaria uma frase de um tamanho e
+ * receberia impressa outra. Cinquenta caracteres num A5 sao o caso limite.
+ */
+export function fitCaptionSize(text: string, baseSize: number, maxWidth: number): number {
+  const ctx = document.createElement("canvas").getContext("2d");
+  if (!ctx) return baseSize;
+  let corpo = baseSize;
+  ctx.font = `${corpo}px ${CAPTION_FONT}`;
+  while (ctx.measureText(text).width > maxWidth && corpo > 8) {
+    corpo -= 1;
+    ctx.font = `${corpo}px ${CAPTION_FONT}`;
+  }
+  return corpo;
+}
+
+/** Desenha a frase que a pessoa escreveu, ja no lugar que ela escolheu. */
+function drawCaption(ctx: CanvasRenderingContext2D, caption: PosterCaption, canvasW: number) {
+  const texto = caption.text.trim();
+  if (!texto) return;
+
+  const corpo = fitCaptionSize(texto, caption.size, canvasW * CAPTION_WIDTH_RATIO);
+  ctx.font = `${corpo}px ${CAPTION_FONT}`;
+
+  ctx.save();
+  ctx.textAlign = "center";
+  ctx.textBaseline = "middle";
+  /* Sombra escura por baixo: a frase pode cair sobre oceano ou sobre pais
+     dourado, e sem ela o texto some justamente no fundo claro. */
+  ctx.shadowColor = "rgba(0,0,0,0.75)";
+  ctx.shadowBlur = corpo * 0.35;
+  ctx.shadowOffsetY = corpo * 0.05;
+  ctx.fillStyle = "#faf6ec";
+  ctx.fillText(texto, caption.x, caption.y);
+  ctx.restore();
+}
+
 // Renderiza poster completo a partir de um layout já computado (com posições ajustadas pelo usuário)
 export async function renderPosterFromLayout(
   canvas: HTMLCanvasElement,
   placed: PlacedPolaroid[],
   locations: LocationPhoto[],
+  /** Ja em coordenadas do canvas final, escalada junto com o layout. */
+  caption?: PosterCaption,
 ): Promise<void> {
   await document.fonts.ready;
   await renderMapBackground(canvas, locations);
@@ -392,6 +474,9 @@ export async function renderPosterFromLayout(
   const H = canvas.height;
   const SCALE = W / 1600;
   const ctx = canvas.getContext("2d")!;
+
+  // depois dos polaroids: a frase e titulo do poster, nao pode ficar por baixo
+  if (caption) drawCaption(ctx, caption, W);
   ctx.fillStyle = "rgba(250,246,236,0.42)";
   ctx.font = `${Math.round(11 * SCALE)}px 'Courier New', monospace`;
   ctx.textAlign = "center";

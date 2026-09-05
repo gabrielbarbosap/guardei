@@ -1245,6 +1245,48 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   border: none; border-radius: var(--radius-sm); padding: 10px 14px; cursor: pointer;
 }
 
+/* ── frase livre do pôster ── */
+/* Centrada no ponto porque o canvas desenha com textAlign center e baseline
+   middle: qualquer outro alinhamento faria a prévia mentir sobre o lugar. */
+.compose-caption {
+  position: absolute;
+  transform: translate(-50%, -50%);
+  white-space: nowrap;
+  color: #faf6ec;
+  text-shadow: 0 2px 8px rgba(0,0,0,0.75);
+  cursor: grab;
+  user-select: none;
+  touch-action: none;
+  padding: 2px 6px;
+  border: 1px dashed transparent;
+  border-radius: 3px;
+  z-index: 25;
+}
+.compose-caption:hover,
+.compose-caption:active { border-color: rgba(244,196,48,0.7); cursor: grabbing; }
+
+.compose-caption-field { display: flex; flex-direction: column; gap: 6px; margin-top: 10px; }
+.compose-caption-field label {
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ink-400);
+}
+.compose-caption-field label em { font-style: normal; opacity: 0.7; }
+.ccf-row { display: flex; align-items: center; gap: 8px; }
+.ccf-row input {
+  flex: 1; min-width: 0;
+  padding: 10px 12px;
+  border: 1px solid var(--paper-300); border-radius: var(--radius-sm);
+  background: var(--paper-50); color: var(--ink-800);
+  font-family: var(--font-body); font-size: 14px;
+}
+.ccf-row input:focus { outline: none; border-color: var(--poster-gold); }
+.ccf-count {
+  font-family: var(--font-mono); font-size: 10px; color: var(--ink-400);
+  letter-spacing: 0.06em; flex-shrink: 0;
+}
+.ccf-count.is-full { color: var(--poster-gold); }
+.ccf-tip { font-family: var(--font-mono); font-size: 10px; color: var(--ink-400); letter-spacing: 0.04em; }
+
 .compose-actions { display: flex; gap: 8px; margin-top: 4px; }
 .compose-back, .compose-next {
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.1em;
