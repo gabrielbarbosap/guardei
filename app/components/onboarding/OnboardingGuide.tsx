@@ -191,7 +191,7 @@ export default function OnboardingGuide({ userId, locations, onOpenPoster, hidde
           </button>
 
           <div className="ob-eyebrow">
-            <Sparkles size={12} strokeWidth={1.8} /> seu caderno começa agora
+            <Sparkles size={12} strokeWidth={1.8} /> seu mapa começa agora
           </div>
           <h2 className="ob-title">Todo mapa<br />começa vazio.</h2>
           <p className="ob-text">

@@ -218,7 +218,7 @@ export default function PerfilPage() {
             <span>Sobre você</span>
             <input
               type="text" value={bio} maxLength={PROFILE_LIMITS.bio}
-              onChange={(e) => setBio(e.target.value)} placeholder="uma linha que aparece no seu caderno público"
+              onChange={(e) => setBio(e.target.value)} placeholder="uma linha que aparece no seu mapa público"
             />
             <small className="field-counter">{bio.length}/{PROFILE_LIMITS.bio}</small>
           </label>
@@ -240,7 +240,7 @@ export default function PerfilPage() {
               <span className="pt-knob" />
             </span>
             <span className="pt-text">
-              <strong>Caderno público ligado</strong>
+              <strong>Mapa público ligado</strong>
               <small>
                 Quem tiver o link vê as memórias que você marcou como públicas.
                 Desligar esconde a página inteira sem apagar nada.

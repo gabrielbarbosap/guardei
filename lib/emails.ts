@@ -145,14 +145,14 @@ export async function sendWelcome(to: string, name?: string | null) {
   await deliver({
     from: FROM,
     to: [to],
-    subject: "Seu caderno de memórias está pronto",
+    subject: "Seu mapa de memórias está pronto",
     html: layout({
       emoji: "📍",
       title: "Bem-vindo ao guardei",
-      subtitle: "um caderno de memórias. só seu.",
+      subtitle: "um mapa de memórias. só seu.",
       body: `
         <p style="margin:0 0 20px;font-size:15px;line-height:1.65">
-          ${primeiroNome ? `Olá, <strong>${primeiroNome}</strong>! ` : ""}Seu caderno está criado e vazio —
+          ${primeiroNome ? `Olá, <strong>${primeiroNome}</strong>! ` : ""}Seu mapa está criado e vazio —
           do jeito que todo mapa começa.
         </p>
         <h3 style="margin:0 0 12px;font-size:13px;text-transform:uppercase;letter-spacing:0.1em;color:#888">

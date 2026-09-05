@@ -1,7 +1,7 @@
 import type { LocationPhoto } from "@/types/location";
 import { memoryDateOf } from "./memoryDate";
 
-/** Resumo do caderno de uma pessoa, derivado das memórias — nada é contado à parte. */
+/** Resumo do mapa de uma pessoa, derivado das memórias — nada é contado à parte. */
 export type ProfileStats = {
   memories: number;
   countries: number;
@@ -9,7 +9,7 @@ export type ProfileStats = {
   /** Data da memória mais antiga e da mais recente (null se não houver nenhuma). */
   firstAt: number | null;
   lastAt: number | null;
-  /** Quantos anos distintos aparecem no caderno. */
+  /** Quantos anos distintos aparecem no mapa. */
   yearsCovered: number;
   /** Memórias por ano, do mais antigo para o mais recente. */
   byYear: { year: number; count: number }[];

@@ -16,6 +16,9 @@ import type { PosterOrder } from "@/types/poster";
  * arquivo de impressao, e sai da resposta aqui, onde o cliente nao alcanca.
  */
 
+/** Estados que representam uma compra concluida. */
+const PAGOS: PosterOrder["status"][] = ["paid", "processing", "shipped", "done"];
+
 /** O que o comprador pode ver do proprio pedido. */
 function paraCliente(order: PosterOrder & { id: string }) {
   // desestruturar e descartar deixa explicito o que fica de fora
@@ -39,9 +42,16 @@ export async function GET(req: NextRequest) {
       .get();
 
     const orders = snap.docs
-      .map((d) => paraCliente({ id: d.id, ...(d.data() as PosterOrder) }))
-      /* Ordenar aqui evita o indice composto que userId + createdAt exigiria,
-         e ninguem tem pedidos em quantidade que justifique um. */
+      .map((d) => ({ id: d.id, ...(d.data() as PosterOrder) }))
+      /* Só o que foi pago: um pedido em pending_payment é um checkout que a
+         pessoa abandonou ou que falhou, e mostrá-lo numa lista de compras
+         sugeriria uma cobrança que nunca aconteceu.
+
+         O filtro e a ordenação ficam aqui, e não na consulta, porque combinar
+         userId com status ou createdAt exigiria índice composto no Firestore —
+         que falharia só em produção, na primeira pessoa a abrir a tela. */
+      .filter((o) => PAGOS.includes(o.status))
+      .map(paraCliente)
       .sort((a, b) => b.createdAt - a.createdAt);
 
     return NextResponse.json({ orders });

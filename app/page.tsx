@@ -76,7 +76,7 @@ function AuthModal({ onClose }: { onClose: () => void }) {
       <div className="auth-modal" onClick={e => e.stopPropagation()}>
         <button className="auth-modal-close" onClick={onClose} aria-label="Fechar">✕</button>
         <h2>Bem-vindo</h2>
-        <p className="subtitle">Entre ou crie seu caderno de memórias.</p>
+        <p className="subtitle">Entre ou crie seu mapa de memórias.</p>
 
         <button className="google-btn" onClick={handleGoogle} disabled={loading}>
           <GoogleLogo /> Continuar com Google
@@ -131,7 +131,7 @@ function Header({ onLogin }: { onLogin: () => void }) {
           <button className="link-ghost" onClick={onLogin}>Entrar</button>
           <button className="btn-stamp" onClick={onLogin}>
             <IconScribble name="arrow" color="var(--paper-50)" />
-            Criar caderno
+            Criar mapa
           </button>
         </div>
       </div>
@@ -155,7 +155,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
 
       <div className="hero-grid">
         <div className="hero-copy">
-          <div className="eyebrow"><span className="dot" /> um caderno de memórias. só seu.</div>
+          <div className="eyebrow"><span className="dot" /> um mapa de memórias. só seu.</div>
           <h1 className="hero-headline">
             Sua vida é feita<br />de <em>momentos</em>.<br />Guarde os que<br />valem <span className="hl">lembrar</span>.
           </h1>
@@ -164,7 +164,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             Guardei é onde você devolve cada lembrança ao lugar onde ela aconteceu.
           </p>
           <div className="cta-row">
-            <button className="btn-primary" onClick={onLogin}>Criar meu caderno</button>
+            <button className="btn-primary" onClick={onLogin}>Criar meu mapa</button>
             <button className="btn-ghost" onClick={onLogin}>ver uma demo <IconScribble name="arrow" /></button>
           </div>
           <a className="hero-note" href="#poster">
@@ -206,7 +206,7 @@ const VALUES = [
   { icon: "camera", title: "Guarde sem pensar",      body: "Uma foto, três linhas, o nome da rua. Depois você se diverte organizando — ou nunca mais precisa." },
   { icon: "map",    title: "Sua vida num mapa",      body: "Cada lembrança tem um lugar. Quando você se afasta, vê o mundo todo feito de você." },
   { icon: "book",   title: "Volta quando quiser",    body: "Um dia qualquer, você sente falta daquela manhã. Está tudo aqui, do jeito que você deixou." },
-  { icon: "heart",  title: "Compartilha, se quiser", body: "Alguns cadernos só seus. Outros, você abre para quem estava lá com você — nunca para o resto do mundo." },
+  { icon: "heart",  title: "Compartilha, se quiser", body: "Alguns mapas só seus. Outros, você abre para quem estava lá com você — nunca para o resto do mundo." },
 ] as const;
 
 function ValueSection() {
@@ -234,7 +234,7 @@ function ValueSection() {
 const MEMORIES = [
   { author: "Marina · 31", place: "Porto, Portugal", photo: "/photos/two-little-brothers-standing-with-skateboard-near-guardrail-against-background-seacoast-sunset.jpg", body: "Guardei o som da padaria da esquina. Achei que ia esquecer em uma semana. Era ontem.", rot: -2, mood: "tomato" },
   { author: "Tomás · 27",  place: "Salvador",        photo: "/photos/blonde-woman-hat-white-dress-smiles-looks-boyfriend-holds-pink-camera.jpg",                          body: "Meu avô morreu em março. Ainda entro na pasta \"Itapuã 98\" só pra ouvir a voz dele.", rot: 3,  mood: "ink" },
-  { author: "Yuki · 29",   place: "Quioto",          photo: "/photos/young-sportswoman-drinking-nature.jpg",                                                               body: "Vim sozinha e escrevi todo dia. Voltei com um caderno. Caderno virou livro.", rot: -3, mood: "rose" },
+  { author: "Yuki · 29",   place: "Quioto",          photo: "/photos/young-sportswoman-drinking-nature.jpg",                                                               body: "Vim sozinha e marquei todo dia. Voltei com um mapa cheio. O mapa virou livro.", rot: -3, mood: "rose" },
   { author: "Pedro · 34",  place: "Chapada",         photo: "/photos/evening-summer-sun-makes-halo-around-beautiful-wedding-couple.jpg",                                   body: "A gente esquece o nome das trilhas. Aqui tá tudo escrito — e ainda cheira a eucalipto.", rot: 2,  mood: "moss" },
   { author: "Ana · 26",    place: "São Paulo",       photo: "/photos/girls-hugging-graduation.jpg",                                                                        body: "Doze anos depois, a gente se formou junto. Essa foto vale mais que o diploma.", rot: -1, mood: "highlight" },
 ];
@@ -243,7 +243,7 @@ function MemoryWall() {
   return (
     <section id="memorias" className="memories">
       <div className="section-head" data-reveal>
-        <div className="eyebrow">cadernos reais · trechos compartilhados pelos autores</div>
+        <div className="eyebrow">mapas reais · trechos compartilhados pelos autores</div>
         <h2>As pessoas estão<br />guardando coisas <em>pequenas</em>.</h2>
         <p className="sh-lead">Nada de momentos épicos. A padaria, o beco, a mão. Isso é o que a gente volta pra ler.</p>
       </div>
@@ -277,7 +277,7 @@ function ShareSection() {
         <div className="eyebrow">para dividir com quem estava lá</div>
         <h2>Um link. Só as memórias<br />que <em>você escolher</em>.</h2>
         <p className="sh-lead">
-          Seu caderno é privado por padrão. Quando quiser, você abre uma memória — ou o caderno inteiro — para quem importa.
+          Seu mapa é privado por padrão. Quando quiser, você abre uma memória — ou o mapa inteiro — para quem importa.
         </p>
       </div>
 
@@ -291,7 +291,7 @@ function ShareSection() {
               <span className="sl-copy">copiar</span>
             </div>
           </div>
-          <h3>Seu caderno tem endereço</h3>
+          <h3>Seu mapa tem endereço</h3>
           <p>
             Cada pessoa ganha um link só seu. Manda para a família, para quem viajou junto,
             coloca na bio — e eles veem seu mapa com as memórias que você deixou públicas.
@@ -320,7 +320,7 @@ function ShareSection() {
           <p>
             Achou a memória certa para mandar num grupo? Ela sai daqui já montada como
             uma polaroid, com a sua legenda escrita à mão — pronta para o WhatsApp,
-            sem precisar do caderno inteiro.
+            sem precisar do mapa inteiro.
           </p>
         </article>
       </div>
@@ -373,7 +373,7 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
             <button className="btn-primary" onClick={onLogin}>Quero meu mapa impresso</button>
             <button className="btn-ghost" onClick={onLogin}>começar guardando memórias <IconScribble name="arrow" /></button>
           </div>
-          <div className="poster-fine">crie o caderno grátis · peça o pôster quando quiser · + frete</div>
+          <div className="poster-fine">crie o mapa grátis · peça o pôster quando quiser · + frete</div>
         </div>
       </div>
     </section>
@@ -390,9 +390,9 @@ function FinalCTA({ onLogin }: { onLogin: () => void }) {
         <div className="pc-body">
           <div className="eyebrow">um último bilhete</div>
           <h2>Você não vai se<br />lembrar de <em>hoje</em>.<br />A menos que guarde.</h2>
-          <p>Abra um caderno agora. Escreve três linhas. A gente cuida do resto — o lugar no mapa, a data, o cheiro dessa quinta-feira.</p>
+          <p>Comece seu mapa agora. Escreve três linhas. A gente cuida do resto — o lugar, a data, o cheiro dessa quinta-feira.</p>
           <div className="cta-row">
-            <button className="btn-primary" onClick={onLogin}>Criar meu caderno</button>
+            <button className="btn-primary" onClick={onLogin}>Criar meu mapa</button>
           </div>
           <div className="pc-fine">grátis · sem cartão · privado por padrão</div>
         </div>
@@ -412,14 +412,14 @@ function SiteFooter() {
             <img src="/photos/logo.png" alt="" style={{ height: 36, width: "auto" }} />
             guardei<span className="amp">,</span>
           </div>
-          <p className="mono">um caderno de viagens que nunca se perde.</p>
+          <p className="mono">um mapa de viagens que nunca se perde.</p>
         </div>
         <div className="sf-cols">
           <div>
             <div className="sf-title">produto</div>
             <a href="#">Como funciona</a>
             <a href="#">Privacidade</a>
-            <a href="#">Exportar meu caderno</a>
+            <a href="#">Exportar meu mapa</a>
           </div>
           <div>
             <div className="sf-title">empresa</div>

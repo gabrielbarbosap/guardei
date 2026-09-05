@@ -58,12 +58,12 @@ const overTheRainbow = Over_the_Rainbow({
 });
 
 export const metadata: Metadata = {
-  title: "guardei — um caderno de memórias",
+  title: "guardei — um mapa de memórias",
   description: "Guarde suas memórias no mapa. Cada lugar, cada momento.",
   // o Next serve app/icon.png e app/apple-icon.png por convenção; o ícone
   // aparece também no compartilhamento de link
   openGraph: {
-    title: "guardei — um caderno de memórias",
+    title: "guardei — um mapa de memórias",
     description: "Guarde suas memórias no mapa. Cada lugar, cada momento.",
     images: ["/photos/logo.png"],
     type: "website",

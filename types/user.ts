@@ -2,19 +2,19 @@
  * Perfil da pessoa, guardado em users/{uid}.
  *
  * O `username` nasce automático no primeiro acesso e não é editável: ele já
- * pode ter sido compartilhado como link do caderno público, e trocá-lo quebraria
+ * pode ter sido compartilhado como link do mapa público, e trocá-lo quebraria
  * o endereço na mão de quem recebeu.
  */
 export type UserProfile = {
-  /** Gerado no primeiro acesso; é o endereço do caderno público. */
+  /** Gerado no primeiro acesso; é o endereço do mapa público. */
   username: string;
-  /** Nome exibido no caderno público. Começa com o nome da conta. */
+  /** Nome exibido no mapa público. Começa com o nome da conta. */
   displayName?: string;
-  /** Uma linha sobre a pessoa, mostrada no caderno público. */
+  /** Uma linha sobre a pessoa, mostrada no mapa público. */
   bio?: string;
   /** Onde mora hoje — dá contexto ao mapa de quem visita. */
   city?: string;
-  /** Desliga o caderno público sem apagar nada. */
+  /** Desliga o mapa público sem apagar nada. */
   publicProfileEnabled?: boolean;
   /** Quando a conta apareceu pela primeira vez. */
   createdAt?: number;
