@@ -1,9 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { Package, Check, Loader2 } from "lucide-react";
+import { Package, Check, Loader2, ArrowLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import type { PosterOrder } from "@/types/poster";
 import { FORMAT_DIMS, LEGACY_FORMAT_LABELS } from "@/lib/posterMap";
@@ -95,6 +96,11 @@ export default function AdminPedidos() {
   return (
     <main className="profile-page">
       <div className="profile-body">
+        <Link href="/map" className="voltar-home">
+          <ArrowLeft size={14} strokeWidth={1.8} />
+          voltar para o mapa
+        </Link>
+
         <h1 className="admin-title">Pedidos</h1>
         {erro && <span className="of-error">{erro}</span>}
 

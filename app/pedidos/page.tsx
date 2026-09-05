@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { Truck, ExternalLink } from "lucide-react";
+import Link from "next/link";
+import { Truck, ExternalLink, ArrowLeft } from "lucide-react";
 import MainNav from "@/app/components/MainNav";
 import { auth } from "@/lib/auth";
 import { ensureUsername, getLocations } from "@/lib/firestore";
@@ -82,6 +83,13 @@ export default function PedidosPage() {
       </header>
 
       <div className="profile-body">
+        {/* A barra de navegacao ja leva ao mapa, mas no celular ela fica no
+            rodape: sem uma saida no topo a tela parece um beco. */}
+        <Link href="/map" className="voltar-home">
+          <ArrowLeft size={14} strokeWidth={1.8} />
+          voltar para o mapa
+        </Link>
+
         <h1 className="admin-title">Minhas compras</h1>
         {erro && <span className="of-error">{erro}</span>}
 

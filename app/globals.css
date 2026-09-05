@@ -2120,6 +2120,16 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
 /* ================================================
    PAINEL DE PEDIDOS (admin)
    ================================================ */
+/* saida no topo: no celular a navegacao mora no rodape e a tela
+   de lista, sem isto, vira um beco */
+.voltar-home {
+  display: inline-flex; align-items: center; gap: 7px;
+  margin-bottom: 14px;
+  color: var(--ink-500); text-decoration: none;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;
+  transition: color var(--duration) var(--ease-soft);
+}
+.voltar-home:hover { color: var(--poster-gold); }
 .admin-title {
   font-family: var(--font-display); font-size: 28px; color: var(--ink-900);
   margin: 0 0 4px;
