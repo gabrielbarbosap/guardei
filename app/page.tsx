@@ -168,14 +168,14 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             <button className="btn-ghost" onClick={onLogin}>ver uma demo <IconScribble name="arrow" /></button>
           </div>
           <a className="hero-note" href="#poster">
-            <span className="hn-new">novo</span> o seu mapa impresso e emoldurado, na sua parede →
+            <span className="hn-new">novo</span> seu mapa emoldurado na parede · {formatPrice(POSTER_PRICES.a4_portrait)}, frete grátis →
           </a>
           <div className="hero-meta">
-            <span><strong>12.483</strong> memórias guardadas</span>
-            <span className="sep">·</span>
-            <span><strong>94</strong> países visitados</span>
-            <span className="sep">·</span>
             <span><strong>privado</strong> por padrão</span>
+            <span className="sep">·</span>
+            <span><strong>grátis</strong> para começar</span>
+            <span className="sep">·</span>
+            <span><strong>frete grátis</strong> no pôster</span>
           </div>
         </div>
 
@@ -232,24 +232,24 @@ function ValueSection() {
 }
 
 const MEMORIES = [
-  { author: "Marina · 31", place: "Porto, Portugal", photo: "/photos/two-little-brothers-standing-with-skateboard-near-guardrail-against-background-seacoast-sunset.jpg", body: "Guardei o som da padaria da esquina. Achei que ia esquecer em uma semana. Era ontem.", rot: -2, mood: "tomato" },
-  { author: "Tomás · 27",  place: "Salvador",        photo: "/photos/blonde-woman-hat-white-dress-smiles-looks-boyfriend-holds-pink-camera.jpg",                          body: "Meu avô morreu em março. Ainda entro na pasta \"Itapuã 98\" só pra ouvir a voz dele.", rot: 3,  mood: "ink" },
-  { author: "Yuki · 29",   place: "Quioto",          photo: "/photos/young-sportswoman-drinking-nature.jpg",                                                               body: "Vim sozinha e marquei todo dia. Voltei com um mapa cheio. O mapa virou pôster.", rot: -3, mood: "rose" },
-  { author: "Pedro · 34",  place: "Chapada",         photo: "/photos/evening-summer-sun-makes-halo-around-beautiful-wedding-couple.jpg",                                   body: "A gente esquece o nome das trilhas. Aqui tá tudo escrito — e ainda cheira a eucalipto.", rot: 2,  mood: "moss" },
-  { author: "Ana · 26",    place: "São Paulo",       photo: "/photos/girls-hugging-graduation.jpg",                                                                        body: "Doze anos depois, a gente se formou junto. Essa foto vale mais que o diploma.", rot: -1, mood: "highlight" },
+  { id: "padaria",  place: "uma esquina qualquer", photo: "/photos/two-little-brothers-standing-with-skateboard-near-guardrail-against-background-seacoast-sunset.jpg", body: "O cheiro da padaria às seis da manhã, que você jurou que ia esquecer numa semana.", rot: -2, mood: "tomato" },
+  { id: "voz",      place: "a casa da praia",      photo: "/photos/blonde-woman-hat-white-dress-smiles-looks-boyfriend-holds-pink-camera.jpg",                          body: "A tarde em que ele contou aquela história pela última vez — e você não sabia que era a última.", rot: 3,  mood: "ink" },
+  { id: "sozinha",  place: "do outro lado do mundo", photo: "/photos/young-sportswoman-drinking-nature.jpg",                                                             body: "Uma viagem sozinha, marcada um dia de cada vez, até o mapa ficar cheio.", rot: -3, mood: "rose" },
+  { id: "trilha",   place: "a serra de sempre",    photo: "/photos/evening-summer-sun-makes-halo-around-beautiful-wedding-couple.jpg",                                   body: "O nome daquela trilha que ninguém nunca lembra, e o cheiro de eucalipto junto.", rot: 2,  mood: "moss" },
+  { id: "formatura", place: "onde tudo começou",   photo: "/photos/girls-hugging-graduation.jpg",                                                                        body: "Doze anos de amizade que couberam numa foto tirada às pressas.", rot: -1, mood: "highlight" },
 ];
 
 function MemoryWall() {
   return (
     <section id="memorias" className="memories">
       <div className="section-head" data-reveal>
-        <div className="eyebrow">mapas reais · trechos compartilhados pelos autores</div>
-        <h2>As pessoas estão<br />guardando coisas <em>pequenas</em>.</h2>
-        <p className="sh-lead">Nada de momentos épicos. A padaria, o beco, a mão. Isso é o que a gente volta pra ler.</p>
+        <div className="eyebrow">o que cabe num mapa</div>
+        <h2>O que vale guardar<br />quase sempre é <em>pequeno</em>.</h2>
+        <p className="sh-lead">Nada de momentos épicos. A padaria, o beco, a mão. É isso que a gente volta pra ler.</p>
       </div>
       <div className="memories-grid" data-reveal-children>
         {MEMORIES.map((m, i) => (
-          <article key={m.author} className="memo-card" style={{ transform: `rotate(${m.rot}deg)` }}>
+          <article key={m.id} className="memo-card" style={{ transform: `rotate(${m.rot}deg)` }}>
             {i % 2 === 0 ? <div className="memo-tape" /> : <div className="memo-tape alt" />}
             <div className="memo-photo">
               <Image src={m.photo} alt={m.place} fill style={{ objectFit: "cover" }} sizes="320px" />
@@ -259,7 +259,6 @@ function MemoryWall() {
             <blockquote>
               <p>&ldquo;{m.body}&rdquo;</p>
               <footer>
-                <span className="memo-author">{m.author}</span>
                 <span className="memo-place">{m.place}</span>
               </footer>
             </blockquote>
@@ -378,7 +377,7 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
               <span className="ps-n">1</span>
               <div>
                 <strong>Você monta</strong>
-                escolhe as memórias, arrasta cada polaroid e escreve a frase.
+                a partir de 5 memórias: arrasta cada polaroid e escreve a frase.
               </div>
             </li>
             <li>

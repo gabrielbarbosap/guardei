@@ -467,7 +467,6 @@ code { font-family: var(--font-mono); font-size: 0.9em; background: var(--paper-
 .memo-card blockquote { margin: 0; padding: 0 6px; }
 .memo-card blockquote p { font-family: var(--font-body); font-size: 15px; line-height: 1.6; color: var(--ink-800); font-style: italic; margin: 0 0 14px; }
 .memo-card blockquote footer { display: flex; justify-content: space-between; align-items: baseline; padding-top: 10px; border-top: 1px dashed var(--paper-400); }
-.memo-author { font-family: var(--font-display); font-size: 16px; color: var(--ink-900); }
 .memo-place { font-size: 10px; letter-spacing: 0.15em; color: var(--ink-500); text-transform: uppercase; font-family: var(--font-mono); }
 
 /* --- Final CTA / Postcard --- */
