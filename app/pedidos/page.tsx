@@ -3,10 +3,10 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged } from "firebase/auth";
-import { Package, Truck, ExternalLink } from "lucide-react";
+import { Truck, ExternalLink } from "lucide-react";
 import MainNav from "@/app/components/MainNav";
 import { auth } from "@/lib/auth";
-import { getUserPosterOrders, ensureUsername, getLocations } from "@/lib/firestore";
+import { ensureUsername, getLocations } from "@/lib/firestore";
 import { FORMAT_DIMS, LEGACY_FORMAT_LABELS } from "@/lib/posterMap";
 import { formatPrice } from "@/lib/posterPricing";
 import { STATUS_LABEL, STATUS_HINT, orderRef } from "@/lib/posterStatus";
@@ -40,12 +40,18 @@ export default function PedidosPage() {
     const unsubscribe = onAuthStateChanged(auth, async (nextUser) => {
       if (!nextUser) { router.replace("/"); return; }
       try {
-        const [lista, nome, locs] = await Promise.all([
-          getUserPosterOrders(nextUser.uid),
+        /* Os pedidos vem do servidor, e nao do Firestore do navegador: a regra
+           que faria a consulta do admin funcionar no cliente teria de liberar
+           pedido alheio, e junto vazaria endereco e telefone de quem comprou. */
+        const token = await nextUser.getIdToken();
+        const [res, nome, locs] = await Promise.all([
+          fetch("/api/orders/list", { headers: { Authorization: `Bearer ${token}` } }),
           ensureUsername(nextUser.uid, nextUser.displayName, nextUser.email),
           getLocations(nextUser.uid),
         ]);
-        setOrders(lista);
+        const data = await res.json() as { orders?: PosterOrder[]; error?: string };
+        if (!res.ok) throw new Error(data.error ?? "falha ao carregar");
+        setOrders(data.orders ?? []);
         setUsername(nome);
         setMemorias(locs.length);
       } catch (err) {
@@ -134,11 +140,6 @@ export default function PedidosPage() {
               </div>
             )}
 
-            {o.posterImageUrl && (
-              <a href={o.posterImageUrl} target="_blank" rel="noopener noreferrer" className="pedido-arte">
-                <Package size={13} strokeWidth={1.8} /> ver a arte enviada para impressão
-              </a>
-            )}
           </section>
         ))}
       </div>

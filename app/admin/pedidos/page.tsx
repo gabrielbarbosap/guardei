@@ -3,15 +3,13 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import { collection, getDocs, orderBy, query, where } from "firebase/firestore";
 import { Package, Check, Loader2 } from "lucide-react";
 import { auth } from "@/lib/auth";
-import { db } from "@/lib/firestore";
 import type { PosterOrder } from "@/types/poster";
 import { FORMAT_DIMS, LEGACY_FORMAT_LABELS } from "@/lib/posterMap";
 import { STATUS_LABEL, orderRef } from "@/lib/posterStatus";
 
-const ADMIN_EMAILS = ["gabriel@sistemap.com.br"];
+import { ADMIN_EMAILS } from "@/lib/adminEmails";
 
 const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -35,14 +33,18 @@ export default function AdminPedidos() {
         return;
       }
       try {
-        // pedidos sem pagamento não interessam aqui: só o que precisa despachar
-        const q = query(
-          collection(db, "posterOrders"),
-          where("status", "in", ["paid", "processing", "shipped", "done"]),
-          orderBy("createdAt", "desc"),
-        );
-        const snap = await getDocs(q);
-        setOrders(snap.docs.map((d) => ({ id: d.id, ...(d.data() as PosterOrder) })));
+        /* Vem do servidor. Consultar o Firestore daqui dava "missing or
+           insufficient permissions", e nao havia regra correta a escrever: sem
+           custom claim o Firestore nao distingue o administrador de qualquer
+           usuario logado, entao a regra que fizesse esta tela funcionar
+           liberaria os dados dos compradores para todo mundo. */
+        const token = await nextUser.getIdToken();
+        const res = await fetch("/api/admin/orders", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json() as { orders?: (PosterOrder & { id: string })[]; error?: string };
+        if (!res.ok) throw new Error(data.error ?? "falha ao carregar");
+        setOrders(data.orders ?? []);
       } catch (err) {
         console.error("[admin/pedidos]", err);
         setErro("Não foi possível carregar os pedidos.");
