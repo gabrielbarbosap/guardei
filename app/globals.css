@@ -30,6 +30,10 @@
   --accent-ink:       #2d4a8a;
   --accent-highlight: #f4c430;
   --accent-moss:      #6b8e4e;
+  /* O moss puro dá 3,27:1 sobre o papel — abaixo dos 4,5:1 que texto normal
+     exige. Este tom mais fechado dá 5,78:1 e continua lendo como verde. O
+     original segue valendo para borda e fundo, onde 3:1 basta. */
+  --accent-moss-ink:  #4a6436;
   --accent-rose:      #c76c8a;
   /* dourado do produto impresso — já usado no wizard e nos emails do pedido */
   --poster-gold:      #b8860b;
@@ -1590,6 +1594,80 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   color: var(--ink-900);
 }
 .of-total-sum strong { font-family: var(--font-display); font-size: 19px; color: var(--poster-gold); }
+/* ── frete grátis ── */
+/* O verde é o único ponto de cor fora da paleta de papel na tela de pedido.
+   É deliberado: o olho vai primeiro para o que a pessoa ganhou. */
+.of-freegift {
+  display: flex; align-items: center; gap: 12px;
+  padding: 13px 15px; margin-top: 4px;
+  border: 1.5px solid rgba(107,142,78,0.45);
+  border-radius: var(--radius-sm);
+  background: rgba(107,142,78,0.09);
+  color: var(--accent-moss-ink);
+}
+.of-freegift svg { flex-shrink: 0; }
+.of-freegift div { display: flex; flex-direction: column; gap: 3px; }
+.of-freegift strong {
+  font-family: var(--font-display); font-size: 15px; letter-spacing: -0.01em;
+  color: var(--accent-moss-ink);
+}
+.of-freegift span {
+  font-family: var(--font-body); font-size: 12px; line-height: 1.45;
+  color: var(--ink-500);
+}
+.of-total-free span { display: inline-flex; align-items: center; gap: 6px; }
+.of-total-free em {
+  font-style: normal; font-weight: 700; letter-spacing: 0.06em;
+  text-transform: uppercase; font-size: 11px; color: var(--accent-moss-ink);
+}
+.of-total-perk {
+  display: flex; align-items: center; gap: 6px;
+  padding-top: 8px; margin-top: 2px;
+  border-top: 1px dashed var(--paper-400);
+  font-size: 10px; letter-spacing: 0.06em; color: var(--ink-400);
+}
+.pedido-frete-gratis {
+  color: var(--accent-moss-ink); font-weight: 600;
+}
+
+/* ── escolha de formato ── */
+.fmt-included {
+  list-style: none; margin: 0 0 4px; padding: 12px 15px;
+  display: flex; flex-direction: column; gap: 7px;
+  border: 1px dashed var(--paper-400); border-radius: var(--radius-sm);
+  background: var(--paper-100);
+}
+.fmt-included li {
+  position: relative; padding-left: 20px;
+  font-family: var(--font-body); font-size: 13px; color: var(--ink-600);
+}
+.fmt-included li::before {
+  content: "✓"; position: absolute; left: 0; top: -1px;
+  color: var(--accent-moss-ink); font-weight: 700;
+}
+.fmt-included strong { color: var(--accent-moss-ink); }
+.fmt-group-head {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 8px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.18em;
+  text-transform: uppercase; color: var(--ink-400);
+}
+.fmt-badge {
+  padding: 3px 8px; border-radius: 999px;
+  background: rgba(184,134,11,0.14); color: var(--poster-gold);
+  letter-spacing: 0.1em; font-size: 8px;
+}
+.fmt-freeship {
+  margin-top: 3px;
+  font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.08em;
+  color: var(--accent-moss-ink); font-weight: 700;
+}
+.fmt-ship-banner {
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+  margin-top: 14px; padding: 9px 16px;
+  border: 1px solid rgba(107,142,78,0.4); border-radius: 999px;
+  background: rgba(107,142,78,0.08); color: var(--accent-moss-ink);
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+}
 .of-error { font-family: var(--font-mono); font-size: 11px; color: var(--danger); }
 .of-note {
   font-family: var(--font-body); font-size: 12px; color: var(--ink-600);

@@ -26,9 +26,6 @@ export const FORMAT_DIMS: Record<PosterFormat, { w: number; h: number; label: st
   // A4 — 21 × 29,7 cm (150 DPI)
   a4_portrait:  { w: 1240, h: 1754, label: "A4 Retrato",  physical: "21 × 29,7 cm", size: "A4" },
   a4_landscape: { w: 1754, h: 1240, label: "A4 Paisagem", physical: "29,7 × 21 cm", size: "A4" },
-  // A5 — 14,8 × 21 cm (150 DPI)
-  a5_portrait:  { w:  874, h: 1240, label: "A5 Retrato",  physical: "14,8 × 21 cm", size: "A5" },
-  a5_landscape: { w: 1240, h:  874, label: "A5 Paisagem", physical: "21 × 14,8 cm", size: "A5" },
   // Produto interno — visível apenas para gabriel@sistemap.com.br
   test:         { w:  874, h: 1240, label: "Teste Interno", physical: "teste", size: "TEST" },
 };
@@ -43,6 +40,8 @@ export const FORMAT_DIMS: Record<PosterFormat, { w: number; h: number; label: st
 export const LEGACY_FORMAT_LABELS: Record<string, string> = {
   a2_portrait: "A2 Retrato (descontinuado)",
   a2_landscape: "A2 Paisagem (descontinuado)",
+  a5_portrait: "A5 Retrato (descontinuado)",
+  a5_landscape: "A5 Paisagem (descontinuado)",
 };
 
 function latToMercatorY(lat: number): number {

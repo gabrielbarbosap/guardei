@@ -2,25 +2,24 @@ import type { PosterFormat } from "@/types/poster";
 import type { PackageSpec } from "./types";
 
 /**
- * Embalagem de cada formato: caixa rígida, pôster plano.
+ * Embalagem de cada formato: caixa plana com o quadro emoldurado dentro.
  *
- * ATENÇÃO — estes números definem o frete cobrado. Confira com a embalagem
- * real antes de vender: medida a menos vira prejuízo, porque a transportadora
- * repesa o pacote na postagem e cobra a diferença de você, não do cliente.
+ * ATENÇÃO — estes números definem quanto o frete custa. Confira com a
+ * embalagem real antes de vender: agora o frete é grátis para quem compra, então
+ * medida a menos não vira surpresa no checkout — vira prejuízo direto seu,
+ * porque a transportadora repesa o pacote na postagem e cobra a diferença.
  *
- * As medidas incluem a embalagem, não só o papel:
- *   A3 = 29,7 x 42,0 cm | A4 = 21,0 x 29,7 cm | A5 = 14,8 x 21,0 cm
+ * O pôster sai emoldurado, então o que viaja é o quadro montado, não o papel:
+ *   A3 impresso 29,7 x 42,0 cm -> quadro ~33 x 45 cm
+ *   A4 impresso 21,0 x 29,7 cm -> quadro ~24 x 33 cm
  */
 export const PACKAGE_BY_FORMAT: Record<PosterFormat, PackageSpec> = {
-  // caixa plana com folga sobre o A3 + proteção
-  a3_portrait:  { widthCm: 32, heightCm: 3, lengthCm: 45, weightKg: 0.35 },
-  a3_landscape: { widthCm: 32, heightCm: 3, lengthCm: 45, weightKg: 0.35 },
-  // caixa plana com folga sobre o A4
-  a4_portrait:  { widthCm: 24, heightCm: 3, lengthCm: 33, weightKg: 0.25 },
-  a4_landscape: { widthCm: 24, heightCm: 3, lengthCm: 33, weightKg: 0.25 },
-  // caixa plana com folga sobre o A5
-  a5_portrait:  { widthCm: 18, heightCm: 3, lengthCm: 24, weightKg: 0.2 },
-  a5_landscape: { widthCm: 18, heightCm: 3, lengthCm: 24, weightKg: 0.2 },
+  // quadro A3 emoldurado (30x42 interno, ~33x45 externo) + proteção
+  a3_portrait:  { widthCm: 36, heightCm: 5, lengthCm: 48, weightKg: 0.85 },
+  a3_landscape: { widthCm: 36, heightCm: 5, lengthCm: 48, weightKg: 0.85 },
+  // quadro A4 emoldurado (21x30 interno, ~24x33 externo) + proteção
+  a4_portrait:  { widthCm: 27, heightCm: 5, lengthCm: 36, weightKg: 0.60 },
+  a4_landscape: { widthCm: 27, heightCm: 5, lengthCm: 36, weightKg: 0.60 },
   // produto interno de teste: usa a menor embalagem
   test:         { widthCm: 18, heightCm: 3, lengthCm: 24, weightKg: 0.2 },
 };

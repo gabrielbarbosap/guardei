@@ -340,18 +340,18 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
             <div className="pf-img">
               <Image src="/photos/poster-retrato.png" alt="Pôster de mapa de memórias em retrato" fill style={{ objectFit: "cover" }} sizes="300px" />
             </div>
-            <figcaption className="pf-cap">retrato · A3 / A4 / A5</figcaption>
+            <figcaption className="pf-cap">retrato · A3 ou A4</figcaption>
           </figure>
           <figure className="poster-frame landscape">
             <span className="pf-tape" />
             <div className="pf-img">
               <Image src="/photos/poster-paisagem.jpg" alt="Pôster de mapa de memórias em paisagem" fill style={{ objectFit: "cover" }} sizes="360px" />
             </div>
-            <figcaption className="pf-cap">paisagem · A3 / A4 / A5</figcaption>
+            <figcaption className="pf-cap">paisagem · A3 ou A4</figcaption>
           </figure>
           <div className="poster-price">
             <span>a partir de</span>
-            <strong>{formatPrice(POSTER_PRICES.a5_portrait)}</strong>
+            <strong>{formatPrice(POSTER_PRICES.a4_portrait)}</strong>
           </div>
         </div>
 
@@ -366,14 +366,14 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
           <ul className="poster-list">
             <li><span className="check">✓</span> Suas fotos reais, viradas polaroids sobre o mapa das suas viagens</li>
             <li><span className="check">✓</span> Você escolhe as memórias e compõe o layout do seu jeito</li>
-            <li><span className="check">✓</span> Impressão profissional em A3 ({formatPrice(POSTER_PRICES.a3_portrait)}), A4 ({formatPrice(POSTER_PRICES.a4_portrait)}) ou A5 ({formatPrice(POSTER_PRICES.a5_portrait)})</li>
+            <li><span className="check">✓</span> Impressão profissional, já emoldurado, em A3 ({formatPrice(POSTER_PRICES.a3_portrait)}) ou A4 ({formatPrice(POSTER_PRICES.a4_portrait)})</li>
             <li><span className="check">✓</span> Retrato ou paisagem — entrega em todo o Brasil</li>
           </ul>
           <div className="cta-row">
             <button className="btn-primary" onClick={onLogin}>Quero meu mapa impresso</button>
             <button className="btn-ghost" onClick={onLogin}>começar guardando memórias <IconScribble name="arrow" /></button>
           </div>
-          <div className="poster-fine">crie o mapa grátis · peça o pôster quando quiser · + frete</div>
+          <div className="poster-fine">crie o mapa grátis · peça o pôster quando quiser · frete grátis para todo o Brasil</div>
         </div>
       </div>
     </section>

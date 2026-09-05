@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { Truck, Loader2, Check } from "lucide-react";
-import type { PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
+import { Truck, Loader2, PackageCheck, Sparkles } from "lucide-react";
+import type { PosterFormat, ShippingAddress } from "@/types/poster";
 import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 import { formatCep, lookupCep } from "@/lib/cep";
-import { PRODUCTION_DAYS, totalDeliveryDays } from "@/lib/shipping/policy";
+import { PRODUCTION_DAYS } from "@/lib/shipping/policy";
+import { FORMAT_DIMS } from "@/lib/posterMap";
 
 type Props = {
   format: PosterFormat;
@@ -14,7 +15,6 @@ type Props = {
     customerContact: string,
     contactType: "email" | "whatsapp",
     address: ShippingAddress,
-    shipping: ShippingChoice,
   ) => Promise<void>;
   onBack: () => void;
   submitting: boolean;
@@ -38,29 +38,32 @@ export default function Step4Order({
   const [city, setCity] = useState("");
   const [uf, setUf] = useState("");
 
-  const [options, setOptions] = useState<ShippingChoice[] | null>(null);
-  const [chosenId, setChosenId] = useState<string | null>(null);
-  const [freightLoading, setFreightLoading] = useState(false);
-  const [freightError, setFreightError] = useState("");
+  const [cepLoading, setCepLoading] = useState(false);
+  /* Prazo real deste CEP. Fica nulo enquanto não sabemos: entre 2 e mais de
+     20 dias úteis conforme o destino, um número fixo na tela seria mentira
+     para quem mora longe. */
+  const [prazo, setPrazo] = useState<number | null>(null);
 
-  const chosen = options?.find((o) => o.serviceId === chosenId) ?? null;
   const posterPrice = POSTER_PRICES[format];
 
-  /** Ao completar o CEP: preenche o endereço e cota o frete de uma vez. */
+  /**
+   * Ao completar o CEP: preenche o endereco.
+   *
+   * Antes isto tambem cotava o frete e montava uma lista de opcoes. Agora o
+   * frete e nosso, entao a cotacao saiu daqui — ela acontece no servidor, na
+   * hora do checkout, so para registrarmos o custo.
+   */
   async function handleCepChange(raw: string) {
     const masked = formatCep(raw);
     setCep(masked);
-    setFreightError("");
-    // qualquer mudança de CEP invalida a cotação anterior
-    setOptions(null);
-    setChosenId(null);
 
     const digits = masked.replace(/\D/g, "");
     if (digits.length !== 8) return;
 
-    setFreightLoading(true);
+    setCepLoading(true);
+    setPrazo(null);
     try {
-      const [addr, quoteRes] = await Promise.all([
+      const [addr, prazoRes] = await Promise.all([
         lookupCep(digits),
         fetch("/api/shipping/quote", {
           method: "POST",
@@ -68,25 +71,18 @@ export default function Step4Order({
           body: JSON.stringify({ format, cep: digits }),
         }),
       ]);
-
       if (addr) {
         setStreet(addr.street);
         setDistrict(addr.district);
         setCity(addr.city);
         setUf(addr.state);
       }
-
-      const data = (await quoteRes.json()) as { options?: ShippingChoice[]; error?: string };
-      if (!quoteRes.ok || !data.options?.length) {
-        setFreightError(data.error ?? "Não foi possível calcular o frete.");
-        return;
-      }
-      setOptions(data.options);
-      setChosenId(data.options[0].serviceId); // a mais barata vem primeiro
+      const dados = (await prazoRes.json()) as { deliveryDays?: number | null };
+      if (typeof dados.deliveryDays === "number") setPrazo(dados.deliveryDays);
     } catch {
-      setFreightError("Não foi possível calcular o frete agora.");
+      /* sem o preenchimento automatico a pessoa digita a mao; nao e bloqueio */
     } finally {
-      setFreightLoading(false);
+      setCepLoading(false);
     }
   }
 
@@ -99,14 +95,12 @@ export default function Step4Order({
     if (!street.trim()) return "Informe a rua.";
     if (!number.trim()) return "Informe o número.";
     if (!city.trim() || !uf.trim()) return "Informe cidade e estado.";
-    if (!chosen) return "Escolha uma opção de entrega.";
     return "";
   }
 
   async function handleSubmit() {
     const err = validate();
     if (err) { setError(err); return; }
-    if (!chosen) return;
     setError("");
     await onSubmit(
       name.trim(),
@@ -122,14 +116,13 @@ export default function Step4Order({
         city: city.trim(),
         state: uf.trim().toUpperCase(),
       },
-      chosen,
     );
   }
 
   return (
     <div className="order-form">
       <p className="order-intro">
-        Confirme seus dados e o endereço de entrega. O frete é calculado pelo seu CEP.
+        Falta pouco. Confirme para onde mandamos o seu quadro.
       </p>
 
       <label className="of-field">
@@ -204,64 +197,57 @@ export default function Step4Order({
         </label>
       </div>
 
-      {freightLoading && (
+      {cepLoading && (
         <div className="of-freight-loading">
-          <Loader2 size={14} className="spin" /> calculando o frete…
+          <Loader2 size={14} className="spin" /> buscando seu endereço…
         </div>
       )}
-      {freightError && <span className="of-error">{freightError}</span>}
 
-      {options && options.length > 0 && (
-        <div className="of-freight">
-          <span className="of-freight-label">Como prefere receber?</span>
-          {/* o prazo mostrado ja soma a producao; sem esta linha o numero
-              pareceria so transporte e a data prometida nao existiria */}
-          <span className="of-freight-note">
-            prazos incluem {PRODUCTION_DAYS} dias úteis de produção do pôster
+      {/* O frete é real e sai do nosso bolso: dizer que a pessoa ganhou é
+          verdade verificável, não promessa inventada. */}
+      <div className="of-freegift">
+        <PackageCheck size={18} strokeWidth={1.7} />
+        <div>
+          <strong>Você ganhou frete grátis</strong>
+          <span>
+            {prazo
+              ? `chega em até ${prazo} dias úteis, já contando os ${PRODUCTION_DAYS} de produção do quadro`
+              : "para todo o Brasil — informe o CEP para ver o prazo de entrega"}
           </span>
-          {options.map((o) => (
-            <button
-              key={o.serviceId}
-              type="button"
-              className={`freight-option${chosenId === o.serviceId ? " is-active" : ""}`}
-              onClick={() => setChosenId(o.serviceId)}
-            >
-              <Truck size={15} strokeWidth={1.7} />
-              <span className="fo-name">
-                {o.carrier} {o.name}
-                {totalDeliveryDays(o.deliveryDays) ? (
-                  <em>
-                    {totalDeliveryDays(o.deliveryDays)} dia
-                    {totalDeliveryDays(o.deliveryDays)! > 1 ? "s" : ""} úteis
-                  </em>
-                ) : null}
-              </span>
-              <span className="fo-price">{formatPrice(o.priceCents)}</span>
-              {chosenId === o.serviceId && <Check size={14} strokeWidth={2.4} />}
-            </button>
-          ))}
         </div>
-      )}
+      </div>
 
-      {chosen && (
-        <div className="of-total">
-          <div><span>Pôster</span><span>{formatPrice(posterPrice)}</span></div>
-          <div><span>Frete</span><span>{formatPrice(chosen.priceCents)}</span></div>
-          <div className="of-total-sum">
-            <span>Total</span><strong>{formatPrice(posterPrice + chosen.priceCents)}</strong>
-          </div>
+      <div className="of-total">
+        <div>
+          <span>Quadro {FORMAT_DIMS[format].size} emoldurado</span>
+          <span>{formatPrice(posterPrice)}</span>
         </div>
-      )}
+        <div className="of-total-free">
+          <span>
+            <Truck size={13} strokeWidth={1.8} /> Frete para todo o Brasil
+          </span>
+          <span>
+            <em>grátis</em>
+          </span>
+        </div>
+        <div className="of-total-sum">
+          <span>Total</span>
+          <strong>{formatPrice(posterPrice)}</strong>
+        </div>
+        <div className="of-total-perk">
+          <Sparkles size={12} strokeWidth={1.9} /> nada de taxa surpresa no fim
+        </div>
+      </div>
 
       {(error || submitError) && <span className="of-error">{error || submitError}</span>}
 
       <p className="of-note">
-        Pagamento seguro via Stripe. O pôster é enviado para o endereço acima.
+        Pagamento seguro via Stripe. Enviamos para o endereço acima, sem custo de frete.
       </p>
 
       <div className="of-actions">
         <button className="compose-back" onClick={onBack} disabled={submitting}>← voltar</button>
-        <button className="compose-next" onClick={handleSubmit} disabled={submitting || !chosen}>
+        <button className="compose-next" onClick={handleSubmit} disabled={submitting}>
           {submitting ? (submitStep || "processando...") : "ir para pagamento →"}
         </button>
       </div>

@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { stripe } from "@/lib/stripe";
-import { STRIPE_PRICE_IDS, POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
-import { resolveChosenFreight } from "@/lib/shipping/quote";
-import { FreightError } from "@/lib/shipping/types";
+import { STRIPE_PRICE_IDS, POSTER_PRICES } from "@/lib/posterPricing";
+import { quoteFreight } from "@/lib/shipping/quote";
 import type { PosterFormat, ShippingAddress } from "@/types/poster";
 
 function isPosterFormat(value: unknown): value is PosterFormat {
@@ -26,54 +25,34 @@ export async function POST(req: NextRequest) {
       customerEmail?: string;
       customerName?: string;
       shippingAddress?: unknown;
-      shippingServiceId?: string;
-      shippingPriceCents?: number;
     };
 
-    const { orderId, customerEmail, customerName, shippingServiceId } = body;
+    const { orderId, customerEmail, customerName } = body;
 
     if (!orderId || !isPosterFormat(body.format)) {
       return NextResponse.json({ error: "Parâmetros obrigatórios ausentes." }, { status: 400 });
     }
     const format = body.format;
 
-    if (!isAddress(body.shippingAddress) || !shippingServiceId) {
-      return NextResponse.json({ error: "Endereço ou opção de entrega ausente." }, { status: 400 });
+    if (!isAddress(body.shippingAddress)) {
+      return NextResponse.json({ error: "Endereço de entrega ausente." }, { status: 400 });
     }
     const address = body.shippingAddress;
 
     /* ── Frete ──
-       Recotado no servidor de propósito: aceitar o valor vindo do navegador
-       permitiria forjar um frete de centavos pelo console. */
-    let freight;
-    try {
-      freight = await resolveChosenFreight(format, address.cep, shippingServiceId);
-    } catch (err) {
-      if (err instanceof FreightError) {
-        console.error("[create-checkout] frete:", err.message, err.cause ?? "");
-        return NextResponse.json({ error: err.message }, { status: 422 });
-      }
-      throw err;
-    }
-    if (!freight) {
-      return NextResponse.json(
-        { error: "Essa opção de entrega saiu do ar. Confira o CEP e escolha de novo." },
-        { status: 409 },
-      );
-    }
+       Quem paga somos nós, então a cotação aqui não cobra nada: serve para
+       registrar no pedido quanto a postagem vai custar e por qual transportadora.
 
-    /* Se a transportadora mudou o preço entre a tela e o pagamento, não dá para
-       simplesmente cobrar o novo valor: a pessoa aprovou outro. */
-    const shown = body.shippingPriceCents;
-    if (typeof shown === "number" && shown !== freight.priceCents) {
-      return NextResponse.json(
-        {
-          error:
-            "O frete mudou de " + formatPrice(shown) + " para " + formatPrice(freight.priceCents) +
-            " enquanto você preenchia. Escolha a entrega de novo para confirmar.",
-        },
-        { status: 409 },
-      );
+       Falha na cotação não impede a venda. Antes ela impedia, e fazia sentido
+       quando o valor ia para a conta do cliente; agora barrar a compra por causa
+       de um número que só nós usamos seria perder a venda à toa. */
+    let freight = null;
+    try {
+      const opcoes = await quoteFreight(format, address.cep);
+      // quoteFreight já devolve ordenado da mais barata
+      freight = opcoes[0] ?? null;
+    } catch (err) {
+      console.error("[create-checkout] cotação interna falhou (venda segue):", err);
     }
 
     /* ── Preço do pôster ──
@@ -95,37 +74,28 @@ export async function POST(req: NextRequest) {
 
     const baseUrl = process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000";
     const line2 = [address.complement, address.district].filter(Boolean).join(" - ");
-    const shippingLabel = (freight.carrier + " " + freight.name).trim();
+    const shippingLabel = freight ? (freight.carrier + " " + freight.name).trim() : "";
 
     const session = await stripe.checkout.sessions.create({
       mode: "payment",
       line_items: [{ price: priceId, quantity: 1 }],
       allow_promotion_codes: true,
       customer_email: customerEmail,
+      /* O custo da postagem viaja em metadata, e não como shipping_options: o
+         cliente não pode ver nem pagar por isso. O webhook grava no pedido para
+         o painel saber por onde despachar e quanto custou. */
       metadata: {
         orderId,
         format,
-        shippingServiceId: freight.serviceId,
-        shippingName: shippingLabel,
-        shippingPriceCents: String(freight.priceCents),
+        ...(freight
+          ? {
+              shippingServiceId: freight.serviceId,
+              shippingName: shippingLabel,
+              shippingCostCents: String(freight.priceCents),
+              shippingDays: String(freight.deliveryDays ?? ""),
+            }
+          : {}),
       },
-      shipping_options: [
-        {
-          shipping_rate_data: {
-            type: "fixed_amount",
-            display_name: shippingLabel,
-            fixed_amount: { amount: freight.priceCents, currency: "brl" },
-            ...(freight.deliveryDays
-              ? {
-                  delivery_estimate: {
-                    minimum: { unit: "business_day" as const, value: freight.deliveryDays },
-                    maximum: { unit: "business_day" as const, value: freight.deliveryDays },
-                  },
-                }
-              : {}),
-          },
-        },
-      ],
       payment_intent_data: {
         metadata: { orderId, format },
         /* O endereço fica junto do pagamento: aparece no painel do Stripe e é o

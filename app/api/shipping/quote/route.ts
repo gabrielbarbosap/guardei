@@ -1,9 +1,22 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { quoteFreight, cheapestOptions } from "@/lib/shipping/quote";
+import { quoteFreight } from "@/lib/shipping/quote";
+import { totalDeliveryDays } from "@/lib/shipping/policy";
 import { FreightError } from "@/lib/shipping/types";
 import type { PosterFormat } from "@/types/poster";
 import { POSTER_PRICES } from "@/lib/posterPricing";
 
+/**
+ * Prazo de entrega para um CEP — sem preço.
+ *
+ * Antes esta rota devolvia as opções com valores, porque era o cliente quem
+ * escolhia e pagava a transportadora. Agora o frete é nosso, e o que ele
+ * paga não muda com o CEP: mandar os preços de volta para o navegador só
+ * exporia nosso custo a qualquer um com o console aberto.
+ *
+ * O prazo continua valendo a viagem. Ele varia de 2 a mais de 20 dias úteis
+ * conforme o destino, então prometer um número fixo na tela seria mentira para
+ * quem mora longe.
+ */
 function isPosterFormat(value: unknown): value is PosterFormat {
   return typeof value === "string" && value in POSTER_PRICES;
 }
@@ -22,14 +35,19 @@ export async function POST(req: NextRequest) {
 
   try {
     const options = await quoteFreight(body.format, body.cep);
-    return NextResponse.json({ options: cheapestOptions(options) });
+    // a mais barata é a que vamos despachar; o prazo dela é o que vale prometer
+    const escolhida = options[0];
+    return NextResponse.json({
+      deliveryDays: totalDeliveryDays(escolhida?.deliveryDays ?? null),
+    });
   } catch (err) {
     if (err instanceof FreightError) {
-      // mensagem já é adequada para mostrar a quem está comprando
       console.error("[shipping/quote]", err.message, err.cause ?? "");
-      return NextResponse.json({ error: err.message }, { status: 422 });
+      /* Sem prazo a compra continua: o frete é grátis de qualquer jeito, e
+         travar a venda porque a estimativa falhou seria desproporcional. */
+      return NextResponse.json({ deliveryDays: null });
     }
     console.error("[shipping/quote] erro inesperado:", err);
-    return NextResponse.json({ error: "Erro ao calcular o frete." }, { status: 500 });
+    return NextResponse.json({ deliveryDays: null });
   }
 }

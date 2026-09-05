@@ -122,7 +122,7 @@ export default function PedidosPage() {
               <div><dt>Fotos</dt><dd>{o.items.length}</dd></div>
               <div>
                 <dt>Entrega</dt>
-                <dd>{o.shipping ? `${o.shipping.carrier} ${o.shipping.name}` : "—"}</dd>
+                <dd className="pedido-frete-gratis">frete grátis</dd>
               </div>
               <div>
                 <dt>Endereço</dt>

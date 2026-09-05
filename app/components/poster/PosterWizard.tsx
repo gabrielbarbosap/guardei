@@ -3,7 +3,7 @@
 import { useState } from "react";
 import type { User } from "firebase/auth";
 import type { LocationPhoto } from "@/types/location";
-import type { PosterCaption, PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
+import type { PosterCaption, PosterFormat, ShippingAddress } from "@/types/poster";
 import { savePosterOrder, setPosterOrderImageUrl } from "@/lib/firestore";
 import { renderPosterFromLayout, buildPosterParams } from "@/lib/posterCanvas";
 import type { PlacedPolaroid } from "@/lib/posterLayout";
@@ -71,7 +71,6 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
     customerContact: string,
     contactType: "email" | "whatsapp",
     shippingAddress: ShippingAddress,
-    shipping: ShippingChoice,
   ) {
     setSubmitting(true);
     setSubmitError("");
@@ -98,8 +97,9 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
         customerName,
         customerContact,
         contactType,
+        /* Sem plano de envio ainda: o servidor cota na hora do checkout e o
+           webhook grava. O cliente nao escolhe nem paga transportadora. */
         shippingAddress,
-        shipping,
         status: "pending_payment",
         createdAt: Date.now(),
       });
@@ -167,9 +167,6 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
           customerEmail,
           customerName,
           shippingAddress,
-          shippingServiceId: shipping.serviceId,
-          // o servidor recota e compara com este valor antes de cobrar
-          shippingPriceCents: shipping.priceCents,
         }),
       });
       if (!res.ok) {

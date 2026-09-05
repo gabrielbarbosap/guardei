@@ -130,7 +130,11 @@ export default function AdminPedidos() {
               </div>
               <div>
                 <dt>Entrega</dt>
-                <dd>{o.shipping ? `${o.shipping.carrier} ${o.shipping.name}` : "—"}</dd>
+                <dd>
+                  {o.shipping
+                    ? `${o.shipping.name}${o.shipping.priceCents ? ` · custo ${brl(o.shipping.priceCents)}` : ""}`
+                    : "a definir na postagem"}
+                </dd>
               </div>
             </dl>
 

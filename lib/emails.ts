@@ -117,12 +117,19 @@ function addressBlock(order: PosterOrder): string {
   ].join("<br>");
 }
 
-/** Serviço de entrega escolhido e quanto foi cobrado por ele. */
+/**
+ * Por onde despachar e quanto vai nos custar — só para o e-mail interno.
+ *
+ * O cliente não paga frete, então esse valor deixou de ser algo que ele
+ * aprovou: é custo nosso, e mostrar para ele só criaria dúvida sobre o que
+ * está pagando.
+ */
 function shippingLine(order: PosterOrder): string {
   const s = order.shipping;
-  if (!s) return "—";
+  if (!s) return "a definir na postagem";
   const prazo = s.deliveryDays ? ` · ${s.deliveryDays} dia(s) útil(eis)` : "";
-  return `${s.carrier} ${s.name} — ${formatAmount(s.priceCents)}${prazo}`;
+  const custo = s.priceCents > 0 ? ` — custo ${formatAmount(s.priceCents)}` : "";
+  return `${s.name}${custo}${prazo}`.trim();
 }
 
 function shippingStep(order: PosterOrder): string {
@@ -202,8 +209,7 @@ export async function sendPasswordReset(to: string, link: string) {
    3. PÔSTER CRIADO (aguardando pagamento)
 ───────────────────────────────────────────── */
 export async function sendOrderCreated(order: PosterOrder, orderId: string, to: string) {
-  const frete = order.shipping?.priceCents ?? 0;
-  const total = order.shipping ? `${formatAmount(frete)} de frete` : "";
+
   await deliver({
     from: FROM,
     to: [to],
@@ -230,14 +236,14 @@ export async function sendOrderCreated(order: PosterOrder, orderId: string, to: 
             </tr>
             <tr>
               <td style="padding:8px 0;color:#888">Entrega</td>
-              <td style="padding:8px 0;text-align:right">${shippingLine(order)}</td>
+              <td style="padding:8px 0;text-align:right"><strong style="color:#4a6436">Frete grátis</strong></td>
             </tr>
           </table>
         </div>
 
         <p style="margin:0;font-size:13px;line-height:1.6;color:#888">
           Se você fechou a página antes de pagar, é só voltar ao mapa e montar de novo —
-          nada foi cobrado${total ? ` (${total} incluído no total)` : ""}.
+          nada foi cobrado. O frete continua por nossa conta.
         </p>
         ${helpBox()}
       `,

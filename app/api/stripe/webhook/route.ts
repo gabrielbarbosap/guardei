@@ -55,14 +55,19 @@ export async function POST(req: NextRequest) {
     const alreadyPaid = existing.status === "paid" || Boolean(existing.paidAt);
 
     if (!alreadyPaid) {
-      /* O valor do frete gravado no pedido veio do navegador e não é confiável.
-         O que vale é o que o Stripe efetivamente cobrou. */
-      const chargedShipping = session.shipping_cost?.amount_total;
-      const shippingFromStripe = typeof chargedShipping === "number"
+      /* A entrega não é mais cobrada do cliente, então não há shipping_cost na
+         sessão para conferir. O que interessa gravar é o plano de postagem que o
+         servidor cotou na hora do checkout: por onde despachar e quanto vai nos
+         custar. Vem em metadata justamente para o cliente não ver. */
+      const custo = Number(session.metadata?.shippingCostCents);
+      const dias = Number(session.metadata?.shippingDays);
+      const planoDeEnvio = session.metadata?.shippingName
         ? {
-            ...(existing.shipping ?? { serviceId: "", carrier: "", name: "", deliveryDays: null }),
-            name: session.metadata?.shippingName ?? existing.shipping?.name ?? "Entrega",
-            priceCents: chargedShipping,
+            serviceId: session.metadata?.shippingServiceId ?? "",
+            carrier: "",
+            name: session.metadata.shippingName,
+            priceCents: Number.isFinite(custo) ? custo : 0,
+            deliveryDays: Number.isFinite(dias) && dias > 0 ? dias : null,
           }
         : existing.shipping;
 
@@ -71,7 +76,7 @@ export async function POST(req: NextRequest) {
         stripeSessionId,
         amountPaid,
         paidAt: Date.now(),
-        ...(shippingFromStripe ? { shipping: shippingFromStripe } : {}),
+        ...(planoDeEnvio ? { shipping: planoDeEnvio } : {}),
       });
     }
 

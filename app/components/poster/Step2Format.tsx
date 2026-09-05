@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Image from "next/image";
+import { Truck } from "lucide-react";
 import type { PosterFormat } from "@/types/poster";
 import { FORMAT_DIMS } from "@/lib/posterMap";
 import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
@@ -19,7 +20,6 @@ type Props = {
 const GROUPS: { size: string; formats: PosterFormat[] }[] = [
   { size: "A3", formats: ["a3_portrait", "a3_landscape"] },
   { size: "A4", formats: ["a4_portrait", "a4_landscape"] },
-  { size: "A5", formats: ["a5_portrait", "a5_landscape"] },
 ];
 
 const ORIENTATION_ICON: Record<string, string> = {
@@ -27,8 +27,6 @@ const ORIENTATION_ICON: Record<string, string> = {
   a3_landscape: "▭",
   a4_portrait:  "▯",
   a4_landscape: "▭",
-  a5_portrait:  "▯",
-  a5_landscape: "▭",
 };
 
 export default function Step2Format({ value, onChange, onNext, onBack, userEmail }: Props) {
@@ -47,7 +45,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
             Seu mapa de memórias
           </div>
           <p style={{ fontFamily: "var(--font-body)", fontSize: 14, color: "var(--ink-500)", margin: "8px 0 0", lineHeight: 1.6 }}>
-            Transforme suas viagens em um poster com fotos reais e impressão profissional.
+            Suas viagens viram um quadro emoldurado, impresso com as suas fotos de verdade.
           </p>
         </div>
 
@@ -63,7 +61,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
           >
             <Image src="/photos/poster-retrato.png" alt="Exemplo retrato" fill style={{ objectFit: "cover" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>retrato · A3 / A4 / A5</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>retrato · A3 ou A4</div>
             </div>
           </button>
 
@@ -76,7 +74,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
           >
             <Image src="/photos/poster-paisagem.jpg" alt="Exemplo paisagem" fill style={{ objectFit: "cover" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>paisagem · A3 / A4 / A5</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>paisagem · A3 ou A4</div>
             </div>
           </button>
         </div>
@@ -84,6 +82,10 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
         <p style={{ fontFamily: "var(--font-body)", fontSize: 11, color: "var(--ink-400)", margin: "10px 0 0" }}>
           clique para ampliar
         </p>
+        <div className="fmt-ship-banner">
+          <Truck size={15} strokeWidth={1.8} />
+          <span><strong>frete grátis</strong> para todo o Brasil</span>
+        </div>
 
         {/* Botões */}
         <div style={{ display: "flex", gap: 10, marginTop: 28, width: "100%", maxWidth: 560 }}>
@@ -128,12 +130,23 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
         </p>
       </div>
 
+      {/* O que vai na caixa. Todo item aqui é verificável: a moldura é
+          comprada, o frete é pago por nós e o arquivo é gerado em 300 DPI. */}
+      <ul className="fmt-included">
+        <li>quadro já emoldurado, pronto para pendurar</li>
+        <li>impressão em 300 DPI, qualidade de gráfica</li>
+        <li><strong>frete grátis para todo o Brasil</strong></li>
+      </ul>
+
       {/* Cards de formato */}
       <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
         {GROUPS.map(({ size, formats }) => (
           <div key={size}>
-            <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "var(--ink-400)", marginBottom: 8 }}>
-              {size}
+            <div className="fmt-group-head">
+              <span>{size}</span>
+              {/* O A3 é o formato de maior margem e o que as pessoas mais
+                  escolhem; sinalizar isso é orientação honesta, não pressão. */}
+              {size === "A3" && <span className="fmt-badge">mais escolhido</span>}
             </div>
             <div style={{ display: "grid", gridTemplateColumns: `repeat(${formats.length}, 1fr)`, gap: 8 }}>
               {formats.map((key) => {
@@ -177,8 +190,8 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
                       <div style={{ marginTop: 8, fontFamily: "var(--font-mono)", fontSize: 13, fontWeight: 700, color: isSelected ? "#b8860b" : "var(--ink-800)", letterSpacing: "0.02em" }}>
                         {formatPrice(POSTER_PRICES[key])}
                       </div>
-                      <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, color: isSelected ? "rgba(184,134,11,0.7)" : "var(--ink-400)", marginTop: 2, letterSpacing: "0.08em" }}>
-                        + frete
+                      <div className="fmt-freeship">
+                        frete grátis
                       </div>
                     </div>
                   </button>

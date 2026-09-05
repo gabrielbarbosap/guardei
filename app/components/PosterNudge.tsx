@@ -142,7 +142,7 @@ export default function PosterNudge({ locations, onOpenPoster }: Props) {
         <ArrowRight size={14} strokeWidth={1.8} />
       </button>
       <div className="poster-nudge-price">
-        a partir de {formatPrice(POSTER_PRICES.a5_portrait)} + frete
+        a partir de {formatPrice(POSTER_PRICES.a4_portrait)} · frete grátis
       </div>
     </aside>
   );

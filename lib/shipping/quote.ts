@@ -24,9 +24,9 @@ function activeProvider() {
 /**
  * Cota o frete de um formato para um CEP.
  *
- * Usada tanto pela tela (via /api/shipping/quote) quanto pelo checkout. O
- * checkout recota em vez de aceitar um preço vindo do navegador — senão daria
- * para forjar um frete de R$ 0,01 no console.
+ * Só o servidor chama: o checkout, para registrar quanto a postagem vai nos
+ * custar, e a rota de prazo, que devolve dias e nunca preço. O cliente não
+ * escolhe nem paga transportadora, então nada disso passa pelo navegador.
  */
 export async function quoteFreight(
   format: PosterFormat,
@@ -68,29 +68,4 @@ export async function quoteFreight(
     throw new FreightError("Nenhuma entrega disponivel para esse CEP.");
   }
   return permitidas;
-}
-
-/** Recota e devolve exatamente o serviço escolhido, ou null se sumiu. */
-export async function resolveChosenFreight(
-  format: PosterFormat,
-  destinationCep: string,
-  serviceId: string,
-): Promise<FreightOption | null> {
-  const options = await quoteFreight(format, destinationCep);
-  return options.find((o) => o.serviceId === serviceId) ?? null;
-}
-
-/**
- * As N mais baratas, para a tela.
- *
- * O agregador devolve treze servicos, de Loggi a Azul Cargo — uma parede de
- * botoes onde as ultimas opcoes custam dez vezes a primeira e ninguem escolhe.
- *
- * O corte e so de exibicao: quem revalida no checkout (resolveChosenFreight)
- * continua olhando a lista inteira. Se as duas mais baratas mudarem entre a
- * cotacao e o pagamento, o servico ja escolhido ainda e encontrado em vez de
- * a compra falhar por causa de um corte de interface.
- */
-export function cheapestOptions(options: FreightOption[], n = 2): FreightOption[] {
-  return [...options].sort((a, b) => a.priceCents - b.priceCents).slice(0, n);
 }
