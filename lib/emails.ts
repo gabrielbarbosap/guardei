@@ -389,6 +389,14 @@ export async function sendAdminNotification(
           ${linha("Entrega", shippingLine(order))}
           ${linha("Endereço", addressBlock(order))}
           ${linha("Fotos", String(order.items.length))}
+          ${linha(
+            "Arte para impressão",
+            order.posterImageUrl
+              ? `<a href="${order.posterImageUrl}" style="color:#b8860b">abrir arquivo</a>`
+              // o upload da arte acontece depois de criar o pedido: se falhou,
+              // e melhor o aviso dizer isso do que a linha simplesmente sumir
+              : "<span style=\"color:#c0392b\">não gerada — verificar antes de imprimir</span>",
+          )}
           ${linha("Valor pago", `<strong style="color:#b8860b">${formatAmount(amountPaid)}</strong>`)}
           ${linha("Stripe", `${stripeSessionId}${paymentIntentId ? `<br>${paymentIntentId}` : ""}`)}
         </table>

@@ -48,7 +48,12 @@ export const melhorEnvio: FreightProvider = {
   id: "melhor_envio",
 
   async quote(input: FreightQuoteInput): Promise<FreightOption[]> {
-    const token = process.env.MELHOR_ENVIO_TOKEN;
+    /* O painel de deploy guarda o valor exatamente como foi colado, e um
+       token de 800 caracteres costuma vir com quebra de linha no fim. Um
+       header Authorization com \n faz o fetch estourar antes de sair da
+       maquina, e o erro que sobe e um generico "nao foi possivel falar com
+       a transportadora" — sem nenhuma pista de que a causa era um espaco. */
+    const token = process.env.MELHOR_ENVIO_TOKEN?.trim();
     if (!token) {
       throw new FreightError("Integração de frete não configurada.");
     }
@@ -80,7 +85,7 @@ export const melhorEnvio: FreightProvider = {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
           // a API exige identificação da aplicação com contato técnico
-          "User-Agent": process.env.MELHOR_ENVIO_USER_AGENT ?? "Guardei (contato@guardei.art)",
+          "User-Agent": process.env.MELHOR_ENVIO_USER_AGENT?.trim() || "Guardei (contato@guardei.art)",
         },
         body: JSON.stringify(body),
         // cotação é interativa: não deixa o cliente esperando indefinidamente
@@ -88,7 +93,10 @@ export const melhorEnvio: FreightProvider = {
         cache: "no-store",
       });
     } catch (err) {
-      throw new FreightError("Não foi possível falar com a transportadora.", err);
+      // a causa vai junto: sem ela o log nao distingue timeout de header invalido
+      const motivo = err instanceof Error ? `${err.name}: ${err.message}` : String(err);
+      console.error("[melhorEnvio] falha na chamada:", motivo);
+      throw new FreightError("Não foi possível falar com a transportadora.", motivo);
     }
 
     if (!res.ok) {

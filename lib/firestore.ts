@@ -206,3 +206,19 @@ export async function saveUserProfile(
   }
   await setDoc(doc(db, "users", uid), payload, { merge: true });
 }
+
+/**
+ * Pedidos de uma pessoa, do mais recente para o mais antigo.
+ *
+ * A ordenação é feita aqui e não no Firestore de propósito: combinar filtro por
+ * userId com orderBy exigiria um índice composto, e ninguém tem pedidos em
+ * quantidade que justifique isso.
+ */
+export async function getUserPosterOrders(userId: string): Promise<PosterOrder[]> {
+  const snap = await getDocs(
+    query(collection(db, "posterOrders"), where("userId", "==", userId)),
+  );
+  return snap.docs
+    .map((d) => ({ id: d.id, ...(d.data() as Omit<PosterOrder, "id">) }))
+    .sort((a, b) => b.createdAt - a.createdAt);
+}

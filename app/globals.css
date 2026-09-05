@@ -2115,6 +2115,39 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   border: none; border-radius: var(--radius-sm); padding: 0 16px; cursor: pointer;
 }
 .admin-ship button:disabled { opacity: 0.6; cursor: wait; }
+/* ── compras de quem comprou ── */
+/* diz o que acontece agora, logo abaixo do estado: o rotulo sozinho nao
+   informa se a pessoa precisa fazer algo ou so esperar */
+.pedido-hint {
+  margin: 0 0 14px;
+  font-family: var(--font-body); font-size: 13px; line-height: 1.5;
+  color: var(--ink-500);
+}
+.profile-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 14px; margin-bottom: 8px;
+  border: 1px solid var(--paper-300); border-radius: var(--radius-sm);
+  background: var(--paper-50); color: var(--ink-700);
+  font-family: var(--font-mono); font-size: 12px; letter-spacing: 0.04em;
+  text-decoration: none;
+  transition: all var(--duration) var(--ease-soft);
+}
+.profile-link span { flex: 1; }
+.profile-link:hover { border-color: var(--poster-gold); color: var(--poster-gold); }
+.profile-link.is-admin { border-style: dashed; }
+.pedido-rastreio {
+  display: inline-flex; align-items: center; gap: 4px;
+  margin-left: auto;
+  color: var(--poster-gold); text-decoration: none;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.06em;
+}
+.pedido-rastreio:hover { text-decoration: underline; }
+.pedido-arte {
+  display: inline-flex; align-items: center; gap: 6px; margin-top: 10px;
+  color: var(--ink-500); text-decoration: none;
+  font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.05em;
+}
+.pedido-arte:hover { color: var(--poster-gold); }
 .admin-enviado {
   display: flex; align-items: center; gap: 8px; margin-top: 6px;
   font-family: var(--font-mono); font-size: 11px; letter-spacing: 0.08em;

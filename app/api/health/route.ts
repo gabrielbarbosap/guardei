@@ -35,5 +35,13 @@ export async function GET() {
     adminKeyLines: (process.env.FIREBASE_ADMIN_PRIVATE_KEY ?? "")
       .replace(/\\n/g, "\n")
       .split("\n").length,
+    /* Frete: nomes e formatos, nunca os valores. O CEP de origem e endereco
+       residencial e o token e credencial — o que importa aqui e se chegaram
+       inteiros, nao quanto valem. */
+    shippingOriginCepOk: /^\d{8}$/.test((process.env.SHIPPING_ORIGIN_CEP ?? "").trim()),
+    melhorEnvioTokenLen: (process.env.MELHOR_ENVIO_TOKEN ?? "").length,
+    // diferenca entre bruto e aparado denuncia espaco ou quebra de linha colada
+    melhorEnvioTokenSujo:
+      (process.env.MELHOR_ENVIO_TOKEN ?? "") !== (process.env.MELHOR_ENVIO_TOKEN ?? "").trim(),
   });
 }

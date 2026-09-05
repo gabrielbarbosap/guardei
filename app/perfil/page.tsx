@@ -3,8 +3,10 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import { onAuthStateChanged, type User } from "firebase/auth";
+import Link from "next/link";
 import {
   Check, Link2, LogOut, MapPinned, Globe, Layers, CalendarRange, Loader2,
+  Receipt, ClipboardList, ChevronRight,
 } from "lucide-react";
 import MainNav from "@/app/components/MainNav";
 import { auth, signOutUser } from "@/lib/auth";
@@ -12,6 +14,7 @@ import { getLocations, getUserProfile, saveUserProfile, ensureUsername } from "@
 import { computeProfileStats, flagFor } from "@/lib/profileStats";
 import { formatMemoryDate } from "@/lib/memoryDate";
 import { PROFILE_LIMITS, type UserProfile } from "@/types/user";
+import { ADMIN_EMAILS } from "@/lib/adminEmails";
 import type { LocationPhoto } from "@/types/location";
 
 export default function PerfilPage() {
@@ -251,6 +254,25 @@ export default function PerfilPage() {
             {saving ? <Loader2 size={14} className="spin" /> : saved ? <Check size={14} strokeWidth={2.2} /> : null}
             {saving ? "salvando..." : saved ? "salvo" : "salvar alterações"}
           </button>
+        </section>
+
+        {/* ── compras ──
+            Fica no perfil, e nao na barra de navegacao, porque a barra tem
+            quatro itens fixos por decisao de layout no celular. */}
+        <section className="profile-card">
+          <h2 className="profile-h2">Compras</h2>
+          <Link href="/pedidos" className="profile-link">
+            <Receipt size={15} strokeWidth={1.7} />
+            <span>meus pedidos e rastreio</span>
+            <ChevronRight size={15} strokeWidth={1.7} />
+          </Link>
+          {user?.email && ADMIN_EMAILS.includes(user.email) && (
+            <Link href="/admin/pedidos" className="profile-link is-admin">
+              <ClipboardList size={15} strokeWidth={1.7} />
+              <span>painel de pedidos</span>
+              <ChevronRight size={15} strokeWidth={1.7} />
+            </Link>
+          )}
         </section>
 
         {/* ── conta ── */}

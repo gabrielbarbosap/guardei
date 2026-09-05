@@ -62,6 +62,8 @@ export type PosterOrder = {
   shippingAddress?: ShippingAddress;
   shipping?: ShippingChoice;
   status: "pending_payment" | "paid" | "processing" | "shipped" | "done";
+  /** Arte final enviada para impressao, gravada apos o pedido nascer. */
+  posterImageUrl?: string;
   stripeSessionId?: string;
   amountPaid?: number;
   paidAt?: number;

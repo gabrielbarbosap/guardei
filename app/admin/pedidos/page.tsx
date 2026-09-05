@@ -9,19 +9,12 @@ import { auth } from "@/lib/auth";
 import { db } from "@/lib/firestore";
 import type { PosterOrder } from "@/types/poster";
 import { FORMAT_DIMS, LEGACY_FORMAT_LABELS } from "@/lib/posterMap";
+import { STATUS_LABEL, orderRef } from "@/lib/posterStatus";
 
 const ADMIN_EMAILS = ["gabriel@sistemap.com.br"];
 
 const brl = (cents: number) =>
   (cents / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
-
-const ROTULO: Record<PosterOrder["status"], string> = {
-  pending_payment: "aguardando pagamento",
-  paid: "pago",
-  processing: "em produção",
-  shipped: "enviado",
-  done: "concluído",
-};
 
 export default function AdminPedidos() {
   const router = useRouter();
@@ -109,8 +102,8 @@ export default function AdminPedidos() {
           <section className="profile-card" key={o.id}>
             <div className="admin-head">
               <div>
-                <strong className="admin-ref">#{o.id.slice(0, 8).toUpperCase()}</strong>
-                <span className={`admin-status is-${o.status}`}>{ROTULO[o.status]}</span>
+                <strong className="admin-ref">#{orderRef(o.id)}</strong>
+                <span className={`admin-status is-${o.status}`}>{STATUS_LABEL[o.status]}</span>
               </div>
               <span className="admin-valor">{o.amountPaid ? brl(o.amountPaid) : "—"}</span>
             </div>
