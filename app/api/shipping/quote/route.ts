@@ -1,5 +1,5 @@
 import { NextResponse, type NextRequest } from "next/server";
-import { quoteFreight } from "@/lib/shipping/quote";
+import { quoteFreight, cheapestOptions } from "@/lib/shipping/quote";
 import { FreightError } from "@/lib/shipping/types";
 import type { PosterFormat } from "@/types/poster";
 import { POSTER_PRICES } from "@/lib/posterPricing";
@@ -22,7 +22,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const options = await quoteFreight(body.format, body.cep);
-    return NextResponse.json({ options });
+    return NextResponse.json({ options: cheapestOptions(options) });
   } catch (err) {
     if (err instanceof FreightError) {
       // mensagem já é adequada para mostrar a quem está comprando

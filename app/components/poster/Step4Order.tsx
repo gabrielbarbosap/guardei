@@ -5,6 +5,7 @@ import { Truck, Loader2, Check } from "lucide-react";
 import type { PosterFormat, ShippingAddress, ShippingChoice } from "@/types/poster";
 import { POSTER_PRICES, formatPrice } from "@/lib/posterPricing";
 import { formatCep, lookupCep } from "@/lib/cep";
+import { PRODUCTION_DAYS, totalDeliveryDays } from "@/lib/shipping/policy";
 
 type Props = {
   format: PosterFormat;
@@ -213,6 +214,11 @@ export default function Step4Order({
       {options && options.length > 0 && (
         <div className="of-freight">
           <span className="of-freight-label">Como prefere receber?</span>
+          {/* o prazo mostrado ja soma a producao; sem esta linha o numero
+              pareceria so transporte e a data prometida nao existiria */}
+          <span className="of-freight-note">
+            prazos incluem {PRODUCTION_DAYS} dias úteis de produção do pôster
+          </span>
           {options.map((o) => (
             <button
               key={o.serviceId}
@@ -223,7 +229,12 @@ export default function Step4Order({
               <Truck size={15} strokeWidth={1.7} />
               <span className="fo-name">
                 {o.carrier} {o.name}
-                {o.deliveryDays ? <em>{o.deliveryDays} dia{o.deliveryDays > 1 ? "s" : ""} úteis</em> : null}
+                {totalDeliveryDays(o.deliveryDays) ? (
+                  <em>
+                    {totalDeliveryDays(o.deliveryDays)} dia
+                    {totalDeliveryDays(o.deliveryDays)! > 1 ? "s" : ""} úteis
+                  </em>
+                ) : null}
               </span>
               <span className="fo-price">{formatPrice(o.priceCents)}</span>
               {chosenId === o.serviceId && <Check size={14} strokeWidth={2.4} />}

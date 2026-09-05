@@ -5,6 +5,7 @@ import { melhorEnvio } from "./melhorEnvio";
 import { devStub } from "./devStub";
 import { packageFor, validatePackage } from "./packaging";
 import { FreightError, normalizeCep, type FreightOption } from "./types";
+import { applyCarrierPolicy } from "./policy";
 
 /**
  * Provedor ativo. Trocar aqui troca o frete do site inteiro.
@@ -59,7 +60,14 @@ export async function quoteFreight(
   if (options.length === 0) {
     throw new FreightError("Nenhuma transportadora atende esse CEP.");
   }
-  return options;
+
+  /* A politica entra antes de qualquer coisa ver a lista, inclusive o checkout:
+     e o mesmo caminho que revalida o servico escolhido. */
+  const permitidas = applyCarrierPolicy(options, destinationCep);
+  if (permitidas.length === 0) {
+    throw new FreightError("Nenhuma entrega disponivel para esse CEP.");
+  }
+  return permitidas;
 }
 
 /** Recota e devolve exatamente o serviço escolhido, ou null se sumiu. */
@@ -70,4 +78,19 @@ export async function resolveChosenFreight(
 ): Promise<FreightOption | null> {
   const options = await quoteFreight(format, destinationCep);
   return options.find((o) => o.serviceId === serviceId) ?? null;
+}
+
+/**
+ * As N mais baratas, para a tela.
+ *
+ * O agregador devolve treze servicos, de Loggi a Azul Cargo — uma parede de
+ * botoes onde as ultimas opcoes custam dez vezes a primeira e ninguem escolhe.
+ *
+ * O corte e so de exibicao: quem revalida no checkout (resolveChosenFreight)
+ * continua olhando a lista inteira. Se as duas mais baratas mudarem entre a
+ * cotacao e o pagamento, o servico ja escolhido ainda e encontrado em vez de
+ * a compra falhar por causa de um corte de interface.
+ */
+export function cheapestOptions(options: FreightOption[], n = 2): FreightOption[] {
+  return [...options].sort((a, b) => a.priceCents - b.priceCents).slice(0, n);
 }

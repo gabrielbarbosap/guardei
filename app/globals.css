@@ -1487,6 +1487,12 @@ html { scroll-behavior: smooth; scroll-padding-top: 96px; }
   font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.12em;
   text-transform: uppercase; color: var(--ink-500);
 }
+/* nasce colado no rotulo: e ressalva dele, nao item da lista de opcoes */
+.of-freight-note {
+  margin-top: -4px;
+  font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.04em;
+  color: var(--ink-400);
+}
 .freight-option {
   display: flex; align-items: center; gap: 10px; cursor: pointer; text-align: left;
   padding: 12px 14px; min-height: 48px;
