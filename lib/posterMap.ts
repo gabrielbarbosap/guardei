@@ -20,19 +20,29 @@ export const CONTINENT_LABELS: Record<ContinentKey, string> = {
 };
 
 export const FORMAT_DIMS: Record<PosterFormat, { w: number; h: number; label: string; physical: string; size: string }> = {
-  // A2 — 42 × 59,4 cm (150 DPI)
-  a2_portrait:  { w: 2480, h: 3508, label: "A2 Retrato",  physical: "42 × 59,4 cm", size: "A2" },
-  a2_landscape: { w: 3508, h: 2480, label: "A2 Paisagem", physical: "59,4 × 42 cm", size: "A2" },
-  // A3 — 29,7 × 42 cm (150 DPI) — em breve
-  // a3_portrait:  { w: 1754, h: 2480, label: "A3 Retrato",  physical: "29,7 × 42 cm", size: "A3" },
-  // a3_landscape: { w: 2480, h: 1754, label: "A3 Paisagem", physical: "42 × 29,7 cm", size: "A3" },
-  // A4 — 21 × 29,7 cm — somente paisagem (150 DPI) — em breve
-  // a4_landscape: { w: 1754, h: 1240, label: "A4 Paisagem", physical: "29,7 × 21 cm", size: "A4" },
+  // A3 — 29,7 × 42 cm (150 DPI)
+  a3_portrait:  { w: 1754, h: 2480, label: "A3 Retrato",  physical: "29,7 × 42 cm", size: "A3" },
+  a3_landscape: { w: 2480, h: 1754, label: "A3 Paisagem", physical: "42 × 29,7 cm", size: "A3" },
+  // A4 — 21 × 29,7 cm (150 DPI)
+  a4_portrait:  { w: 1240, h: 1754, label: "A4 Retrato",  physical: "21 × 29,7 cm", size: "A4" },
+  a4_landscape: { w: 1754, h: 1240, label: "A4 Paisagem", physical: "29,7 × 21 cm", size: "A4" },
   // A5 — 14,8 × 21 cm (150 DPI)
   a5_portrait:  { w:  874, h: 1240, label: "A5 Retrato",  physical: "14,8 × 21 cm", size: "A5" },
   a5_landscape: { w: 1240, h:  874, label: "A5 Paisagem", physical: "21 × 14,8 cm", size: "A5" },
   // Produto interno — visível apenas para gabriel@sistemap.com.br
   test:         { w:  874, h: 1240, label: "Teste Interno", physical: "teste", size: "TEST" },
+};
+
+/**
+ * Formatos que nao estao mais a venda.
+ *
+ * O A2 saiu do catalogo quando virou A3, mas os pedidos ja feitos continuam
+ * gravados com ele no banco. Sem este mapa o painel mostraria "a2_portrait"
+ * cru para quem comprou antes da mudanca.
+ */
+export const LEGACY_FORMAT_LABELS: Record<string, string> = {
+  a2_portrait: "A2 Retrato (descontinuado)",
+  a2_landscape: "A2 Paisagem (descontinuado)",
 };
 
 function latToMercatorY(lat: number): number {

@@ -1,6 +1,6 @@
 import { Resend } from "resend";
 import type { PosterOrder } from "@/types/poster";
-import { FORMAT_DIMS } from "@/lib/posterMap";
+import { FORMAT_DIMS, LEGACY_FORMAT_LABELS } from "@/lib/posterMap";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
@@ -33,7 +33,10 @@ function formatAmount(cents: number) {
 }
 
 function formatLabel(format: string) {
-  return FORMAT_DIMS[format as keyof typeof FORMAT_DIMS]?.label ?? format;
+  // pedidos anteriores a troca do A2 pelo A3 ainda chegam aqui para envio
+  return FORMAT_DIMS[format as keyof typeof FORMAT_DIMS]?.label
+    ?? LEGACY_FORMAT_LABELS[format]
+    ?? format;
 }
 
 function orderRef(orderId: string) {

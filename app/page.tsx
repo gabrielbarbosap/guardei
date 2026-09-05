@@ -340,14 +340,14 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
             <div className="pf-img">
               <Image src="/photos/poster-retrato.png" alt="Pôster de mapa de memórias em retrato" fill style={{ objectFit: "cover" }} sizes="300px" />
             </div>
-            <figcaption className="pf-cap">retrato · A2 / A5</figcaption>
+            <figcaption className="pf-cap">retrato · A3 / A4 / A5</figcaption>
           </figure>
           <figure className="poster-frame landscape">
             <span className="pf-tape" />
             <div className="pf-img">
               <Image src="/photos/poster-paisagem.jpg" alt="Pôster de mapa de memórias em paisagem" fill style={{ objectFit: "cover" }} sizes="360px" />
             </div>
-            <figcaption className="pf-cap">paisagem · A2 / A5</figcaption>
+            <figcaption className="pf-cap">paisagem · A3 / A4 / A5</figcaption>
           </figure>
           <div className="poster-price">
             <span>a partir de</span>
@@ -366,7 +366,7 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
           <ul className="poster-list">
             <li><span className="check">✓</span> Suas fotos reais, viradas polaroids sobre o mapa das suas viagens</li>
             <li><span className="check">✓</span> Você escolhe as memórias e compõe o layout do seu jeito</li>
-            <li><span className="check">✓</span> Impressão profissional em A2 ({formatPrice(POSTER_PRICES.a2_portrait)}) ou A5 ({formatPrice(POSTER_PRICES.a5_portrait)})</li>
+            <li><span className="check">✓</span> Impressão profissional em A3 ({formatPrice(POSTER_PRICES.a3_portrait)}), A4 ({formatPrice(POSTER_PRICES.a4_portrait)}) ou A5 ({formatPrice(POSTER_PRICES.a5_portrait)})</li>
             <li><span className="check">✓</span> Retrato ou paisagem — entrega em todo o Brasil</li>
           </ul>
           <div className="cta-row">

@@ -12,11 +12,10 @@ export type PosterScope =
   | { type: "country"; countryCode: string; countryName: string; bbox: [number, number, number, number] };
 
 export type PosterFormat =
-  | "a2_portrait"
-  | "a2_landscape"
-  // | "a3_portrait"
-  // | "a3_landscape"
-  // | "a4_landscape"
+  | "a3_portrait"
+  | "a3_landscape"
+  | "a4_portrait"
+  | "a4_landscape"
   | "a5_portrait"
   | "a5_landscape"
   | "test";

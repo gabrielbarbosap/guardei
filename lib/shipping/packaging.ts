@@ -9,12 +9,15 @@ import type { PackageSpec } from "./types";
  * repesa o pacote na postagem e cobra a diferença de você, não do cliente.
  *
  * As medidas incluem a embalagem, não só o papel:
- *   A2 = 42,0 x 59,4 cm  |  A5 = 14,8 x 21,0 cm
+ *   A3 = 29,7 x 42,0 cm | A4 = 21,0 x 29,7 cm | A5 = 14,8 x 21,0 cm
  */
 export const PACKAGE_BY_FORMAT: Record<PosterFormat, PackageSpec> = {
-  // caixa plana com folga sobre o A2 + proteção
-  a2_portrait:  { widthCm: 45, heightCm: 4, lengthCm: 63, weightKg: 0.6 },
-  a2_landscape: { widthCm: 45, heightCm: 4, lengthCm: 63, weightKg: 0.6 },
+  // caixa plana com folga sobre o A3 + proteção
+  a3_portrait:  { widthCm: 32, heightCm: 3, lengthCm: 45, weightKg: 0.35 },
+  a3_landscape: { widthCm: 32, heightCm: 3, lengthCm: 45, weightKg: 0.35 },
+  // caixa plana com folga sobre o A4
+  a4_portrait:  { widthCm: 24, heightCm: 3, lengthCm: 33, weightKg: 0.25 },
+  a4_landscape: { widthCm: 24, heightCm: 3, lengthCm: 33, weightKg: 0.25 },
   // caixa plana com folga sobre o A5
   a5_portrait:  { widthCm: 18, heightCm: 3, lengthCm: 24, weightKg: 0.2 },
   a5_landscape: { widthCm: 18, heightCm: 3, lengthCm: 24, weightKg: 0.2 },

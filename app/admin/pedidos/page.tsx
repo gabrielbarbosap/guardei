@@ -8,7 +8,7 @@ import { Package, Check, Loader2 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { db } from "@/lib/firestore";
 import type { PosterOrder } from "@/types/poster";
-import { FORMAT_DIMS } from "@/lib/posterMap";
+import { FORMAT_DIMS, LEGACY_FORMAT_LABELS } from "@/lib/posterMap";
 
 const ADMIN_EMAILS = ["gabriel@sistemap.com.br"];
 
@@ -118,7 +118,7 @@ export default function AdminPedidos() {
             <dl className="profile-meta">
               <div><dt>Cliente</dt><dd>{o.customerName}</dd></div>
               <div><dt>Contato</dt><dd>{o.customerContact}</dd></div>
-              <div><dt>Formato</dt><dd>{FORMAT_DIMS[o.format]?.label ?? o.format}</dd></div>
+              <div><dt>Formato</dt><dd>{FORMAT_DIMS[o.format]?.label ?? LEGACY_FORMAT_LABELS[o.format] ?? o.format}</dd></div>
               <div>
                 <dt>Endereço</dt>
                 <dd>

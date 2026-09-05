@@ -17,13 +17,16 @@ type Props = {
 };
 
 const GROUPS: { size: string; formats: PosterFormat[] }[] = [
-  { size: "A2", formats: ["a2_portrait", "a2_landscape"] },
+  { size: "A3", formats: ["a3_portrait", "a3_landscape"] },
+  { size: "A4", formats: ["a4_portrait", "a4_landscape"] },
   { size: "A5", formats: ["a5_portrait", "a5_landscape"] },
 ];
 
 const ORIENTATION_ICON: Record<string, string> = {
-  a2_portrait:  "▯",
-  a2_landscape: "▭",
+  a3_portrait:  "▯",
+  a3_landscape: "▭",
+  a4_portrait:  "▯",
+  a4_landscape: "▭",
   a5_portrait:  "▯",
   a5_landscape: "▭",
 };
@@ -60,7 +63,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
           >
             <Image src="/photos/poster-retrato.png" alt="Exemplo retrato" fill style={{ objectFit: "cover" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>retrato · A2 / A5</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>retrato · A3 / A4 / A5</div>
             </div>
           </button>
 
@@ -73,7 +76,7 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
           >
             <Image src="/photos/poster-paisagem.jpg" alt="Exemplo paisagem" fill style={{ objectFit: "cover" }} />
             <div style={{ position: "absolute", bottom: 0, left: 0, right: 0, background: "linear-gradient(transparent, rgba(0,0,0,0.65))", padding: "24px 12px 10px" }}>
-              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>paisagem · A2 / A5</div>
+              <div style={{ fontFamily: "var(--font-mono)", fontSize: 9, letterSpacing: "0.18em", textTransform: "uppercase", color: "rgba(255,255,255,0.7)" }}>paisagem · A3 / A4 / A5</div>
             </div>
           </button>
         </div>

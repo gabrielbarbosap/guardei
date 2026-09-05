@@ -29,7 +29,7 @@ const STEP_LABELS = ["formato", "composição", "pedido"];
 
 export default function PosterWizard({ user, locations, onClose }: Props) {
   const [step, setStep] = useState<Step>(1);
-  const [format, setFormat] = useState<PosterFormat>("a2_portrait");
+  const [format, setFormat] = useState<PosterFormat>("a3_portrait");
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set(locations.map((l) => l.id)));
   const [featuredId, setFeaturedId] = useState<string>(locations[0]?.id ?? "");
   const [userLayout, setUserLayout] = useState<PlacedPolaroid[] | null>(null);
