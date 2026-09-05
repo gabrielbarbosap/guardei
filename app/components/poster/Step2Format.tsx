@@ -131,10 +131,10 @@ export default function Step2Format({ value, onChange, onNext, onBack, userEmail
       </div>
 
       {/* O que vai na caixa. Todo item aqui é verificável: a moldura é
-          comprada, o frete é pago por nós e o arquivo é gerado em 300 DPI. */}
+          comprada, o frete é pago por nós e o arquivo sai na resolução de gráfica. */}
       <ul className="fmt-included">
         <li>quadro já emoldurado, pronto para pendurar</li>
-        <li>impressão em 300 DPI, qualidade de gráfica</li>
+        <li>impressão nítida até de pertinho, qualidade de gráfica</li>
         <li><strong>frete grátis para todo o Brasil</strong></li>
       </ul>
 

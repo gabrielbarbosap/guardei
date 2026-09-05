@@ -168,7 +168,7 @@ function Hero({ onLogin }: { onLogin: () => void }) {
             <button className="btn-ghost" onClick={onLogin}>ver uma demo <IconScribble name="arrow" /></button>
           </div>
           <a className="hero-note" href="#poster">
-            <span className="hn-new">novo</span> suas memórias impressas num pôster, na parede →
+            <span className="hn-new">novo</span> o seu mapa impresso e emoldurado, na sua parede →
           </a>
           <div className="hero-meta">
             <span><strong>12.483</strong> memórias guardadas</span>
@@ -359,20 +359,43 @@ function PosterSection({ onLogin }: { onLogin: () => void }) {
           <div className="eyebrow"><span className="dot" /> da tela para a parede</div>
           <h2>Suas memórias viram<br />um <em>pôster</em> de verdade.</h2>
           <p className="poster-lead">
-            O mapa que você monta aqui dentro não precisa ficar preso na tela.
-            A gente imprime suas viagens — com suas fotos reais em polaroids sobre o mapa —
-            e manda para a sua casa.
+            Daqui a um mês você passa por essa parede com pressa, olha de canto de olho
+            — e para. O mapa que você monta aqui sai da tela: as suas fotos, em polaroids
+            sobre os lugares onde você esteve, emolduradas e prontas para pendurar.
           </p>
           <ul className="poster-list">
-            <li><span className="check">✓</span> Suas fotos reais, viradas polaroids sobre o mapa das suas viagens</li>
-            <li><span className="check">✓</span> Você escolhe as memórias e compõe o layout do seu jeito</li>
-            <li><span className="check">✓</span> Impressão profissional, já emoldurado, em A3 ({formatPrice(POSTER_PRICES.a3_portrait)}) ou A4 ({formatPrice(POSTER_PRICES.a4_portrait)})</li>
-            <li><span className="check">✓</span> Retrato ou paisagem — entrega em todo o Brasil</li>
+            <li><span className="check">✓</span> Suas fotos de verdade, sobre o mapa dos lugares onde elas aconteceram</li>
+            <li><span className="check">✓</span> Você arrasta cada uma e escreve a frase que fica no rodapé</li>
+            <li><span className="check">✓</span> Impressão nítida até de pertinho, já na moldura — A3 ({formatPrice(POSTER_PRICES.a3_portrait)}) ou A4 ({formatPrice(POSTER_PRICES.a4_portrait)})</li>
+            <li><span className="check">✓</span> Retrato ou paisagem, com frete grátis para todo o Brasil</li>
           </ul>
           <div className="cta-row">
             <button className="btn-primary" onClick={onLogin}>Quero meu mapa impresso</button>
             <button className="btn-ghost" onClick={onLogin}>começar guardando memórias <IconScribble name="arrow" /></button>
           </div>
+          <ol className="poster-steps">
+            <li>
+              <span className="ps-n">1</span>
+              <div>
+                <strong>Você monta</strong>
+                escolhe as memórias, arrasta cada polaroid e escreve a frase.
+              </div>
+            </li>
+            <li>
+              <span className="ps-n">2</span>
+              <div>
+                <strong>A gente imprime e emoldura</strong>
+                pronto para sair em 2 dias úteis, já dentro da moldura.
+              </div>
+            </li>
+            <li>
+              <span className="ps-n">3</span>
+              <div>
+                <strong>Chega na sua casa</strong>
+                frete grátis para todo o Brasil, com código de rastreio.
+              </div>
+            </li>
+          </ol>
           <div className="poster-fine">crie o mapa grátis · peça o pôster quando quiser · frete grátis para todo o Brasil</div>
         </div>
       </div>
@@ -390,7 +413,7 @@ function FinalCTA({ onLogin }: { onLogin: () => void }) {
         <div className="pc-body">
           <div className="eyebrow">um último bilhete</div>
           <h2>Você não vai se<br />lembrar de <em>hoje</em>.<br />A menos que guarde.</h2>
-          <p>Comece seu mapa agora. Escreve três linhas. A gente cuida do resto — o lugar, a data, o cheiro dessa quinta-feira.</p>
+          <p>Comece seu mapa agora. Escreve três linhas. A gente cuida do resto — o lugar, a data, o cheiro dessa quinta-feira. E quando ele estiver cheio, ele cabe numa moldura.</p>
           <div className="cta-row">
             <button className="btn-primary" onClick={onLogin}>Criar meu mapa</button>
           </div>

@@ -110,7 +110,9 @@ export default function PosterWizard({ user, locations, onClose }: Props) {
       /* A maior resolucao que este aparelho aguenta, de 300 DPI para baixo.
          FORMAT_DIMS descreve o poster a 150 DPI, metade do padrao de grafica. */
       const dims = bestExportDims(format);
-      setSubmitStep(`gerando imagem em ${dims.dpi} DPI...`);
+      // dims.dpi vai para o log, não para a tela: número não tranquiliza ninguém
+      console.info(`[poster] exportando em ${dims.dpi} DPI (${dims.w}x${dims.h})`);
+      setSubmitStep("preparando a arte para impressão...");
       const canvas = document.createElement("canvas");
       canvas.width = dims.w;
       canvas.height = dims.h;
