@@ -53,6 +53,21 @@ export async function addLocation(input: NewLocationInput) {
   await addDoc(userLocations(userId), payload);
 }
 
+/**
+ * Abre ou fecha uma memoria ja guardada.
+ *
+ * A visibilidade era decidida so no envio e nao dava para rever depois — quem
+ * marcasse errado, ou mudasse de ideia, teria de apagar a memoria e enviar de
+ * novo, perdendo a data e a posicao no mapa.
+ */
+export async function setLocationVisibility(
+  userId: string,
+  locationId: string,
+  isPublic: boolean,
+) {
+  await updateDoc(doc(db, "users", userId, "locations", locationId), { isPublic });
+}
+
 export async function deleteLocation(userId: string, locationId: string) {
   await deleteDoc(doc(db, "users", userId, "locations", locationId));
 }

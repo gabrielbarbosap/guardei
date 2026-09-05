@@ -12,7 +12,7 @@ import Map, {
   type ViewStateChangeEvent,
 } from "react-map-gl/mapbox";
 import type { FeatureCollection, Point } from "geojson";
-import { Globe, MapPin } from "lucide-react";
+import { Globe, MapPin, Lock } from "lucide-react";
 import type { LocationPhoto } from "@/types/location";
 import { formatMemoryDate, memoryDateOf } from "@/lib/memoryDate";
 import { sharePolaroid } from "@/lib/share";
@@ -24,6 +24,8 @@ type MapViewProps = {
   selectedLocation: { lat: number; lng: number } | null;
   onPickLocation: (coords: { lat: number; lng: number }) => void;
   onDelete: (id: string) => void;
+  /** Ausente em telas de leitura, como o mapa publico de outra pessoa. */
+  onToggleVisibility?: (id: string, isPublic: boolean) => void;
 };
 
 const PHOTO_PIN_SVG = `<svg xmlns="http://www.w3.org/2000/svg" width="24" height="30" viewBox="0 0 24 30">
@@ -152,6 +154,7 @@ export default function MapView({
   selectedLocation,
   onPickLocation,
   onDelete,
+  onToggleVisibility,
 }: MapViewProps) {
   const mapRef = useRef<MapRef>(null);
   const [selected, setSelected] = useState<LocationPhoto | null>(null);
@@ -417,6 +420,33 @@ export default function MapView({
                       </svg>
                       salvar imagem
                     </button>
+                    {onToggleVisibility && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setMenuOpen(false);
+                          /* Fecha junto: o popup guarda uma copia da memoria e
+                             seguiria mostrando o rotulo antigo. O selo no pino
+                             mostra o estado novo assim que a lista recarrega. */
+                          setSelected(null);
+                          onToggleVisibility(selected.id, !selected.isPublic);
+                        }}
+                        style={{
+                          width: "100%", padding: "10px 16px",
+                          background: "none", border: "none", borderBottom: "1px solid var(--paper-200)",
+                          display: "flex", alignItems: "center", gap: 10,
+                          cursor: "pointer", textAlign: "left",
+                          fontFamily: "var(--font-mono)", fontSize: 11,
+                          letterSpacing: "0.08em",
+                          color: selected.isPublic ? "var(--ink-700)" : "var(--accent-cyan)",
+                        }}
+                      >
+                        {selected.isPublic
+                          ? <Lock size={13} strokeWidth={2} style={{ flexShrink: 0 }} />
+                          : <Globe size={13} strokeWidth={2} style={{ flexShrink: 0 }} />}
+                        {selected.isPublic ? "tornar privada" : "tornar pública"}
+                      </button>
+                    )}
                     <button
                       type="button"
                       onClick={() => { setMenuOpen(false); setSelected(null); onDelete(selected.id); }}

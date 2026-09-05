@@ -15,7 +15,7 @@ import MapFilter from "../components/MapFilter";
 import { ALL_MEMORIES, applyDateFilter, memoryDateOf, type DateFilter } from "@/lib/memoryDate";
 import { auth } from "@/lib/auth";
 import { notifyWelcome } from "@/lib/notify";
-import { getLocations, deleteLocation, ensureUsername } from "@/lib/firestore";
+import { getLocations, deleteLocation, ensureUsername, setLocationVisibility } from "@/lib/firestore";
 import type { LocationPhoto } from "@/types/location";
 
 export default function MapPage() {
@@ -87,6 +87,11 @@ export default function MapPage() {
     setDateFilter(ALL_MEMORIES);
   }
 
+  async function handleToggleVisibility(locationId: string, isPublic: boolean) {
+    await setLocationVisibility(user!.uid, locationId, isPublic);
+    await loadLocations(user!.uid);
+  }
+
   async function handleDelete(locationId: string) {
     await deleteLocation(user!.uid, locationId);
     await loadLocations(user!.uid);
@@ -128,6 +133,7 @@ export default function MapPage() {
           selectedLocation={selectedLocation}
           onPickLocation={setSelectedLocation}
           onDelete={handleDelete}
+          onToggleVisibility={handleToggleVisibility}
         />
       </div>
 
